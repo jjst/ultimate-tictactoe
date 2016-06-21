@@ -9,7 +9,7 @@ import Svg.Attributes exposing (..)
 import Player exposing (..)
 
 
-main = 
+main =
     App.beginnerProgram
         { model = init
         , update = update
@@ -18,7 +18,7 @@ main =
 
 -- MODEL
 
-type alias Model = 
+type alias Model =
     { mark : Maybe Player
     , nextPlayer : Player
     }
@@ -29,18 +29,15 @@ init = { mark = Nothing, nextPlayer = X }
 
 -- UPDATE
 
-type Msg
-    = FillX
-    | FillO
+type Msg = PlaceMark
 
 update : Msg -> Model -> Model
 update msg ({mark, nextPlayer} as model) =
-    case mark of
-        Just _ -> model
-        Nothing -> 
-            case msg of
-                FillX -> Model (Just X) (opponent nextPlayer)
-                FillO -> Model (Just O) (opponent nextPlayer)
+    case msg of
+        PlaceMark ->
+            case mark of
+                Just _ -> model
+                Nothing -> Model (Just nextPlayer) (opponent nextPlayer)
 
 
 -- VIEW
@@ -48,16 +45,13 @@ update msg ({mark, nextPlayer} as model) =
 svgView : Model -> Svg Msg
 svgView {mark, nextPlayer} =
     let
-        msg = case nextPlayer of
-           X -> FillX
-           O -> FillO 
         markDrawing = case mark of
             Nothing -> []
             Just X -> [drawCross]
             Just O -> [drawCircle]
     in
           g []
-          ([ rect [ x "0", y "0", width "100", height "100", fill "#0B79CE", onClick msg] [] 
+          ([ rect [ x "0", y "0", width "100", height "100", fill "#0B79CE", onClick PlaceMark] []
           ] ++ markDrawing)
 
 
@@ -70,7 +64,7 @@ helloSvg : Svg a
 helloSvg = Svg.text "hello"
 
 drawCircle : Svg a
-drawCircle = circle [ cx "50", cy "50", r "45", fill "#9B79CE", markStyle ] [] 
+drawCircle = circle [ cx "50", cy "50", r "45", fill "#9B79CE", markStyle ] []
 
 drawCross : Svg a
 drawCross =
@@ -80,6 +74,6 @@ drawCross =
       ]
 
 markStyle : Attribute msg
-markStyle = 
+markStyle =
     Svg.Attributes.style "stroke:black;stroke-width:4"
 
