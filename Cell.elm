@@ -5,6 +5,10 @@ import Html.App as App
 import Html.Events exposing (onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+
+import Player exposing (..)
+
+
 main = 
     App.beginnerProgram
         { model = init
@@ -14,10 +18,6 @@ main =
 
 -- MODEL
 
-type Player
-    = X
-    | O
-
 type alias Model = 
     { mark : Maybe Player
     , nextPlayer : Player
@@ -26,12 +26,6 @@ type alias Model =
 
 init : Model
 init = { mark = Nothing, nextPlayer = X }
-
-opponent : Player -> Player
-opponent player =
-    case player of
-        X -> O
-        O -> X
 
 -- UPDATE
 
