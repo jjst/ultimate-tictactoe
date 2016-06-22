@@ -60,9 +60,6 @@ view model =
     svg [ viewBox "0 0 100 100", width "300px", transform "scale(0.3)" ]
         [(svgView model)]
 
-helloSvg : Svg a
-helloSvg = Svg.text "hello"
-
 drawCircle : Svg a
 drawCircle = circle [ cx "50", cy "50", r "45", fill "#9B79CE", markStyle ] []
 
