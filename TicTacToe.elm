@@ -22,14 +22,14 @@ main =
 
 type alias Model =
     { board : List (List Cell.Model)
-    , nextPlayer : Player
+    , currentPlayer : Player
     }
 
 
 init : Model
 init =
     { board = List.repeat 3 (List.repeat 3 Cell.init)
-    , nextPlayer = X
+    , currentPlayer = X
     }
 
 mapWithIndex : ((Int,Int) -> a -> b) -> List (List a) -> List (List b)
@@ -42,15 +42,15 @@ mapWithIndex f matrix =
 type Msg = PlaceMark Int Int Cell.Msg
 
 update : Msg -> Model -> Model
-update msg ({board, nextPlayer} as model) =
+update msg ({board, currentPlayer} as model) =
     let
-        o = opponent nextPlayer
+        nextPlayer = opponent currentPlayer
     in
         case msg of
             PlaceMark x y msg ->
                 { board = mapWithIndex (\(i,j) cell ->
-                    if (x,y) == (i,j) then Cell.update msg cell else { cell | nextPlayer = o }) board
-                , nextPlayer = o
+                    if (x,y) == (i,j) then Cell.update msg cell else { cell | currentPlayer = nextPlayer }) board
+                , currentPlayer = nextPlayer
                 }
 
 
@@ -62,7 +62,7 @@ view model =
         [(svgView model)]
 
 svgView : Model -> Svg Msg
-svgView {board, nextPlayer} =
+svgView {board, currentPlayer} =
     let
         cells = g [] (L.concat <| mapWithIndex svgViewCell board)
     in

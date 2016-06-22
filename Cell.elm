@@ -20,30 +20,30 @@ main =
 
 type alias Model =
     { mark : Maybe Player
-    , nextPlayer : Player
+    , currentPlayer : Player
     }
 
 
 init : Model
-init = { mark = Nothing, nextPlayer = X }
+init = { mark = Nothing, currentPlayer = X }
 
 -- UPDATE
 
 type Msg = PlaceMark
 
 update : Msg -> Model -> Model
-update msg ({mark, nextPlayer} as model) =
+update msg ({mark, currentPlayer} as model) =
     case msg of
         PlaceMark ->
             case mark of
                 Just _ -> model
-                Nothing -> Model (Just nextPlayer) (opponent nextPlayer)
+                Nothing -> Model (Just currentPlayer) (opponent currentPlayer)
 
 
 -- VIEW
 
 svgView : Model -> Svg Msg
-svgView {mark, nextPlayer} =
+svgView {mark, currentPlayer} =
     let
         markDrawing = case mark of
             Nothing -> []
