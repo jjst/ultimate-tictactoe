@@ -11,7 +11,7 @@ import Svg.Attributes exposing (..)
 
 
 
-main = 
+main =
     App.beginnerProgram
         { model = init
         , update = update
@@ -20,16 +20,16 @@ main =
 
 -- MODEL
 
-type alias Model = 
+type alias Model =
     { board : List (List Cell.Model)
     , nextPlayer : Player
     }
 
 
 init : Model
-init = 
+init =
     { board = List.repeat 3 (List.repeat 3 Cell.init)
-    , nextPlayer = X 
+    , nextPlayer = X
     }
 
 mapWithIndex : ((Int,Int) -> a -> b) -> List (List a) -> List (List b)
@@ -64,9 +64,23 @@ view model =
 svgView : Model -> Svg Msg
 svgView {board, nextPlayer} =
     let
-        cells = L.concat <| mapWithIndex svgViewCell board
+        cells = g [] (L.concat <| mapWithIndex svgViewCell board)
     in
-          g [] cells
+          g [] [ cells, grid ]
+
+grid : Svg a
+grid =
+    g [ gridStyle ]
+      [ line [ x1 "100", y1 "5", x2 "100", y2 "295" ] []
+      , line [ x1 "200", y1 "5", x2 "200", y2 "295" ] []
+      , line [ x1 "5", y1 "100", x2 "295", y2 "100" ] []
+      , line [ x1 "5", y1 "200", x2 "295", y2 "200" ] []
+      ]
+
+gridStyle : Attribute msg
+gridStyle =
+    Svg.Attributes.style "stroke:black;stroke-width:4"
+
 
 svgViewCell : (Int, Int) -> Cell.Model -> Svg Msg
 svgViewCell (i,j) model =

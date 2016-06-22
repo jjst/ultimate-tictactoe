@@ -51,7 +51,7 @@ svgView {mark, nextPlayer} =
             Just O -> [drawCircle]
     in
           g []
-          ([ rect [ x "0", y "0", width "100", height "100", fill "#0B79CE", onClick PlaceMark] []
+          ([ rect [ x "0", y "0", width "100", height "100", fillOpacity "0.0", onClick PlaceMark ] []
           ] ++ markDrawing)
 
 
@@ -61,7 +61,7 @@ view model =
         [(svgView model)]
 
 drawCircle : Svg a
-drawCircle = circle [ cx "50", cy "50", r "45", fill "#9B79CE", markStyle ] []
+drawCircle = circle [ cx "50", cy "50", r "45", fillOpacity "0.0", markStyle ] []
 
 drawCross : Svg a
 drawCross =
