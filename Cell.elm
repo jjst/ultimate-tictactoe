@@ -1,4 +1,4 @@
--- module Cell
+module Cell exposing (Model, Msg, init, update, svgView, view)
 
 import Html exposing (Html, button, div, text)
 import Html.App as App
