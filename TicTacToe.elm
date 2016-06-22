@@ -160,10 +160,10 @@ strikeThrough (i1,j1) (i2,j2) =
         toSvgCoords = \x offset -> (toFloat x + 0.5 + offset) * 100 |> toString
     in
         line [ strikeThroughStyle
-             , x1 (toSvgCoords i1 -0.1)
-             , y1 (toSvgCoords j1 -0.1)
-             , x2 (toSvgCoords i2 0.1)
-             , y2 (toSvgCoords j2 0.1)
+             , x1 (toSvgCoords i1 -0.05)
+             , y1 (toSvgCoords j1 -0.05)
+             , x2 (toSvgCoords i2 0.05)
+             , y2 (toSvgCoords j2 0.05)
              ] []
 
 
