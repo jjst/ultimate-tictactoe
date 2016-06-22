@@ -101,13 +101,6 @@ winner board =
           if hasEmptyCells then Nothing else Just Draw
 
 
-map : (a -> b) -> List a -> List b
-map f list =
-  case list of
-    [] -> []
-    (x::xs) -> (f x) :: map f xs
-
-
 -- UPDATE
 
 type Msg = PlaceMark Int Int Cell.Msg
