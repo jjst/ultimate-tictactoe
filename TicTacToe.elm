@@ -12,6 +12,7 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
 
+type alias TicTacToeBoard = Board Cell.Model
 
 main =
     App.beginnerProgram
@@ -23,7 +24,7 @@ main =
 -- MODEL
 
 type alias Model =
-    { board : Board
+    { board : TicTacToeBoard
     , currentPlayer : Player
     }
 
@@ -32,6 +33,9 @@ init =
     { board = T3.fill (T3.fill Cell.init)
     , currentPlayer = X
     }
+
+cellOwner : Cell.Model -> Maybe Player
+cellOwner cell = cell.mark
 
 
 -- UPDATE
@@ -43,7 +47,7 @@ update msg ({board, currentPlayer} as model) =
     let
         nextPlayer = opponent currentPlayer
     in
-       case winner board of
+       case winner cellOwner board of
            Just _ -> model
            Nothing ->
             case msg of
@@ -65,7 +69,7 @@ svgView : Model -> Svg Msg
 svgView {board, currentPlayer} =
     let
         cells = g [] (flatten <| (indexedMap svgViewCell board))
-        st = case (winningRow board) of
+        st = case (winningRow cellOwner board) of
             Just (first,middle,last) -> [ strikeThrough first last ]
             _ -> []
     in

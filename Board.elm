@@ -1,6 +1,5 @@
-module Board exposing (Board, Coords, Row, flatten, indexedMap, allRows, winningRow, cellAt, winner)
+module Board exposing (Board, Coords, Row, flatten, indexedMap, allRows, winningRow, get, winner)
 
-import Cell
 import Player exposing (..)
 import Tuple3 exposing (..)
 import Tuple3 as T3
@@ -9,7 +8,7 @@ import List as L
 import Maybe exposing (withDefault, andThen)
 
 
-type alias Board = Tuple3 (Tuple3 Cell.Model)
+type alias Board a = Tuple3 (Tuple3 a)
 
 type alias Coords = (T3.Index, T3.Index)
 
@@ -39,43 +38,41 @@ flatten board =
     |> T3.toList
     |> L.concat
 
+get : Board a -> Coords -> a
+get board (x, y) =
+    (board !! x) !! y
 
-winningRow : Board -> Maybe Row
-winningRow board =
+
+type alias OwnerFunction a = (a -> Maybe Player)
+
+winningRow : OwnerFunction a -> Board a -> Maybe Row
+winningRow owner board =
   allRows
-    |> L.filter (\r -> isWinningRow board r)
+    |> L.filter (\r -> isWinningRow owner board r)
     |> L.head
 
-isWinningRow : Board -> Row -> Bool
-isWinningRow board row =
+isWinningRow : OwnerFunction a -> Board a -> Row -> Bool
+isWinningRow owner board row =
   let
-    marks =
+    owners =
         row
-        |> T3.map (\coords -> (cellAt board coords).mark)
+        |> T3.map (\coords -> owner (get board coords))
         |> toList
   in
-     L.all (\m -> m == Just X) marks || L.all (\m -> m == Just O) marks
-
-get : Int -> List a -> Maybe a
-get idx list =
-    list |> L.drop idx |> L.head
-
-cellAt : Board -> Coords -> Cell.Model
-cellAt board (x, y) =
-    (board !! x) !! y
+     L.all (\m -> m == Just X) owners || L.all (\m -> m == Just O) owners
 
 -- Returns who the winner is (can be a draw),
 -- or Nothing if the game is still in progress.
 
-winner : Board -> Maybe Winner
-winner board =
-    case winningRow board of
-      Just (first, _, _) -> Maybe.map Left (cellAt board first).mark
+winner : OwnerFunction a -> Board a -> Maybe Winner
+winner owner board =
+    case winningRow owner board of
+      Just (first, _, _) -> Maybe.map Left (owner (get board first))
       _ ->
         let
           -- flatten board and !check for any unmarked
           hasEmptyCells = board
             |> flatten
-            |> L.any (\cell -> cell.mark == Nothing)
+            |> L.any (\cell -> owner cell == Nothing)
         in
           if hasEmptyCells then Nothing else Just (Right Draw)
