@@ -4,6 +4,7 @@ import Board exposing (..)
 import SvgUtils
 
 import List as L
+import Tuple3 as T3
 import Html exposing (Html, button, div, text)
 import Html.App as App
 import Html.Events exposing (onClick)
@@ -28,14 +29,14 @@ type alias Model =
 
 init : Model
 init =
-    { board = List.repeat 3 (List.repeat 3 Cell.init)
+    { board = T3.fill (T3.fill Cell.init)
     , currentPlayer = X
     }
 
 
 -- UPDATE
 
-type Msg = PlaceMark Int Int Cell.Msg
+type Msg = PlaceMark T3.Index T3.Index Cell.Msg
 
 update : Msg -> Model -> Model
 update msg ({board, currentPlayer} as model) =
@@ -47,7 +48,7 @@ update msg ({board, currentPlayer} as model) =
            Nothing ->
             case msg of
                 PlaceMark x y msg ->
-                    { board = mapWithIndex (\(i,j) cell ->
+                    { board = indexedMap (\(i,j) cell ->
                         if (x,y) == (i,j) then Cell.update msg cell else { cell | currentPlayer = nextPlayer }) board
                     , currentPlayer = nextPlayer
                     }
@@ -63,9 +64,9 @@ view model =
 svgView : Model -> Svg Msg
 svgView {board, currentPlayer} =
     let
-        cells = g [] (L.concat <| mapWithIndex svgViewCell board)
+        cells = g [] (flatten <| (indexedMap svgViewCell board))
         st = case (winningRow board) of
-            Just [first,middle,last] -> [ strikeThrough first last ]
+            Just (first,middle,last) -> [ strikeThrough first last ]
             _ -> []
     in
           g [] ([ cells, grid ] ++ st)
@@ -79,10 +80,10 @@ grid =
       , line [ x1 "5", y1 "200", x2 "295", y2 "200" ] []
       ]
 
-strikeThrough: (Int,Int) -> (Int,Int) -> Svg a
+strikeThrough: Coords -> Coords -> Svg a
 strikeThrough (i1,j1) (i2,j2) =
     let
-        toSvgCoords = \x offset -> (toFloat x + 0.5 + offset) * 100 |> toString
+        toSvgCoords = \x offset -> (T3.toFloat x + 0.5 + offset) * 100 |> toString
     in
         line [ strikeThroughStyle
              , x1 (toSvgCoords i1 -0.05)
@@ -101,6 +102,6 @@ strikeThroughStyle =
     Svg.Attributes.style "stroke:red;stroke-width:7"
 
 
-svgViewCell : (Int, Int) -> Cell.Model -> Svg Msg
+svgViewCell : Coords -> Cell.Model -> Svg Msg
 svgViewCell (i,j) model =
-    App.map (PlaceMark i j) (SvgUtils.translate (i*100) (j*100) (Cell.svgView model))
+    App.map (PlaceMark i j) (SvgUtils.translate ((T3.toFloat i)*100) ((T3.toFloat j)*100) (Cell.svgView model))

@@ -1,29 +1,43 @@
-module Board exposing (Board, Row, mapWithIndex, allRows, winningRow, cellAt, winner)
+module Board exposing (Board, Coords, Row, flatten, indexedMap, allRows, winningRow, cellAt, winner)
 
 import Cell
 import Player exposing (..)
+import Tuple3 exposing (..)
+import Tuple3 as T3
 
 import List as L
 import Maybe exposing (withDefault, andThen)
 
 
-type alias Board = List (List Cell.Model)
+type alias Board = Tuple3 (Tuple3 Cell.Model)
 
-type alias Row = List (Int, Int)
+type alias Coords = (T3.Index, T3.Index)
 
-mapWithIndex : ((Int,Int) -> a -> b) -> List (List a) -> List (List b)
-mapWithIndex f matrix =
-    L.indexedMap (\i row -> L.indexedMap (\j val -> f (i,j) val) row) matrix
+type alias Row = Tuple3 Coords
+
+indexedMap : (Coords -> a -> b) -> Tuple3 (Tuple3 a) -> Tuple3 (Tuple3 b)
+indexedMap f mat3 =
+    mat3 |> T3.indexedMap (\i row -> row |> T3.indexedMap (\j val -> f (i,j) val))
 
 allRows : List Row
 allRows =
     let
-        range = [0..2]
-        horizontals = List.map (\y -> List.map (\x -> (x,y)) range) range
-        verticals = List.map (\y -> List.map (\x -> (y,x)) range) range
-        diagonals = [[(0,0), (1,1), (2,2)], [(0,2), (1,1), (2,0)]]
+        range = T3.range
+        horizontals = T3.map (\y -> T3.map (\x -> (x,y)) range) range |> T3.toList
+        verticals = T3.map (\y -> T3.map (\x -> (y,x)) range) range |> T3.toList
+        diagonals =
+            [ ( (I1,I1), (I2,I2), (I3,I3) )
+            , ( (I1,I3), (I2,I2), (I3,I1) )
+            ]
     in
         horizontals  ++ verticals ++ diagonals
+
+flatten : Tuple3 (Tuple3 a) -> List a
+flatten board =
+  board
+    |> T3.map T3.toList
+    |> T3.toList
+    |> L.concat
 
 
 winningRow : Board -> Maybe Row
@@ -35,7 +49,10 @@ winningRow board =
 isWinningRow : Board -> Row -> Bool
 isWinningRow board row =
   let
-    marks = L.map (\coords -> (cellAt board coords).mark) row
+    marks =
+        row
+        |> T3.map (\coords -> (cellAt board coords).mark)
+        |> toList
   in
      L.all (\m -> m == Just X) marks || L.all (\m -> m == Just O) marks
 
@@ -43,13 +60,9 @@ get : Int -> List a -> Maybe a
 get idx list =
     list |> L.drop idx |> L.head
 
-cellAt : Board -> (Int, Int) -> Cell.Model
+cellAt : Board -> Coords -> Cell.Model
 cellAt board (x, y) =
-    let
-        cell = (get x board) `andThen` (get y)
-    in
-       withDefault (Cell.init) cell -- FIXME don't like having to use withDefault here
-
+    (board !! x) !! y
 
 -- Returns who the winner is (can be a draw),
 -- or Nothing if the game is still in progress.
@@ -57,12 +70,12 @@ cellAt board (x, y) =
 winner : Board -> Maybe Winner
 winner board =
     case winningRow board of
-      Just (first::_) -> Maybe.map Left (cellAt board first).mark
+      Just (first, _, _) -> Maybe.map Left (cellAt board first).mark
       _ ->
         let
           -- flatten board and !check for any unmarked
           hasEmptyCells = board
-            |> L.concat
+            |> flatten
             |> L.any (\cell -> cell.mark == Nothing)
         in
           if hasEmptyCells then Nothing else Just (Right Draw)
