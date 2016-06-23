@@ -57,7 +57,7 @@ cellAt board (x, y) =
 winner : Board -> Maybe Winner
 winner board =
     case winningRow board of
-      Just (first::_) -> Maybe.map fromPlayer (cellAt board first).mark
+      Just (first::_) -> Maybe.map Left (cellAt board first).mark
       _ ->
         let
           -- flatten board and !check for any unmarked
@@ -65,4 +65,4 @@ winner board =
             |> L.concat
             |> L.any (\cell -> cell.mark == Nothing)
         in
-          if hasEmptyCells then Nothing else Just Draw
+          if hasEmptyCells then Nothing else Just (Right Draw)

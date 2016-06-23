@@ -1,9 +1,12 @@
 module Player exposing (..)
 
 
+
 type Player
     = X
     | O
+
+type Either a b = Left a | Right b
 
 opponent : Player -> Player
 opponent player =
@@ -11,9 +14,6 @@ opponent player =
         X -> O
         O -> X
 
-type Winner = Cross | Circle | Draw
+type Draw = Draw
 
-fromPlayer : Player -> Winner
-fromPlayer player = case player of
-  O -> Circle
-  X -> Cross
+type alias Winner = Either Player Draw
