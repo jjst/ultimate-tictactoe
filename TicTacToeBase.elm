@@ -67,12 +67,15 @@ strikeThroughStyle =
 cellSize : Int
 cellSize = 220
 
+boardSize : Int
+boardSize = cellSize * 3
+
 type alias SvgViewCell a b = (Coords -> a -> Svg b)
 
 view : OwnerFunction a -> SvgViewCell a b -> Model a -> Html b
 view owner svgViewCell model =
     let
-        size = (toString (cellSize*3))
+        size = (toString boardSize)
         divStyle =
           Html.Attributes.style
             [ ("margin", "auto")
@@ -87,10 +90,10 @@ view owner svgViewCell model =
 
 
 svgView : OwnerFunction a -> SvgViewCell a b -> Model a -> Svg b
-svgView owner svgViewCell {board, currentPlayer} =
+svgView owner svgViewCell model =
     let
-        cells = g [] (flatten <| (indexedMap svgViewCell board))
-        st = case (winningRow owner board) of
+        cells = g [] (flatten <| (indexedMap svgViewCell model.board))
+        st = case (winningRow owner model.board) of
             Just (first,middle,last) -> [ strikeThrough cellSize first last ]
             _ -> []
     in
