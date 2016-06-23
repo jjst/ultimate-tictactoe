@@ -8,15 +8,16 @@ applyTransform eltTransform element =
     g [ transform eltTransform ]
       [ element ]
 
-scale : number -> number -> Svg a -> Svg a
-scale x y elt = 
+scale : number -> Svg a -> Svg a
+scale x elt =
     let
-        transform = "scale(" ++ toString x ++ "," ++ toString y ++ ")"
+        s = toString x
+        transform = "scale(" ++ s ++ "," ++ s ++ ")"
     in
         applyTransform transform elt
 
 translate : number -> number -> Svg a -> Svg a
-translate x y elt = 
+translate x y elt =
     let
         transform = "translate(" ++ toString x ++ "," ++ toString y ++ ")"
     in
