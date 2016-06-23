@@ -1,5 +1,7 @@
 module Tuple3 exposing (..)
 
+import Basics as B
+
 type alias Tuple3 a = (a, a, a)
 
 type Index = I1 | I2 | I3
@@ -15,11 +17,15 @@ get (first,second,third) idx =
         I3 -> third
 
 toFloat : Index -> Float
-toFloat index =
+toFloat index = index |> toInt |> B.toFloat
+
+toInt : Index -> Int
+toInt index =
   case index of
     I1 -> 0
     I2 -> 1
     I3 -> 2
+
 
 (!!) : Tuple3 a -> Index -> a
 (!!) tuple idx = get tuple idx

@@ -1,4 +1,4 @@
-module Board exposing (Board, Coords, Row, flatten, indexedMap, allRows, winningRow, get, winner)
+module Board exposing (Board, Coords, Row, OwnerFunction, flatten, indexedMap, allRows, winningRow, get, winner)
 
 import Player exposing (..)
 import Tuple3 exposing (..)
