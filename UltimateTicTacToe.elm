@@ -29,14 +29,14 @@ main =
 type alias Model =
     { board : UltimateTicTacToeBoard
     , currentPlayer : Player
-    , currentBoardCoords : Board.Coords
+    , currentBoardCoords : Maybe Board.Coords
     }
 
 init : Model
 init =
     { board = T3.fill (T3.fill TicTacToe.init)
     , currentPlayer = X
-    , currentBoardCoords = (T3.I2, T3.I2) -- FIXME!!!!
+    , currentBoardCoords = Nothing
     }
 
 boardOwner : TicTacToe.Model -> Maybe Player
@@ -65,12 +65,20 @@ update msg ({board, currentPlayer, currentBoardCoords} as model) =
            Nothing ->
             case msg of
                 MetaPlaceMark (x,y) ((TicTacToe.PlaceMark cellCoords cellMsg) as msg) ->
-                    if (x,y) == currentBoardCoords then
-                        { board = indexedMap (\(i,j) subBoard ->
-                            if (x,y) == (i,j) then TicTacToe.update msg subBoard else TicTacToe.update TicTacToe.TogglePlayer subBoard) board
-                        , currentPlayer = nextPlayer
-                        , currentBoardCoords = cellCoords
-                        }
+                    case currentBoardCoords of
+                        Nothing ->
+                            { board = indexedMap (\(i,j) subBoard ->
+                                if (x,y) == (i,j) then TicTacToe.update msg subBoard else TicTacToe.update TicTacToe.TogglePlayer subBoard) board
+                            , currentPlayer = nextPlayer
+                            , currentBoardCoords = if (TicTacToe.winner (get board cellCoords).board == Nothing) then Just cellCoords else Nothing
+                            }
+                        Just c ->
+                            if (x,y) == c then
+                                { board = indexedMap (\(i,j) subBoard ->
+                                    if (x,y) == (i,j) then TicTacToe.update msg subBoard else TicTacToe.update TicTacToe.TogglePlayer subBoard) board
+                                , currentPlayer = nextPlayer
+                                , currentBoardCoords = if (TicTacToe.winner (get board cellCoords).board == Nothing) then Just cellCoords else Nothing
+                                }
                     else
                         model
                 _ -> model
@@ -109,11 +117,13 @@ svgView model =
 
 
 
-svgViewBoard : Coords -> Coords -> TicTacToe.Model -> Svg Msg
+svgViewBoard : (Maybe Coords) -> Coords -> TicTacToe.Model -> Svg Msg
 svgViewBoard currentBoardCoords ((i,j) as coords) ({board, currentPlayer} as model) =
     let
         node = TicTacToe.svgView model
-        nodeWithOpacity = if coords /= currentBoardCoords then g [ opacity "0.25", fill "red" ] [ node ] else node
+        nodeWithOpacity = case currentBoardCoords of
+            Just cds -> if (coords /= cds) then (g [ opacity "0.15" ] [ node ]) else node
+            Nothing -> node
     in
        nodeWithOpacity
           |> SvgUtils.scale (1.0/3.0)
