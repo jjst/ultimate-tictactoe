@@ -121,11 +121,16 @@ svgViewBoard : (Maybe Coords) -> Coords -> TicTacToe.Model -> Svg Msg
 svgViewBoard currentBoardCoords ((i,j) as coords) ({board, currentPlayer} as model) =
     let
         node = TicTacToe.svgView model
-        nodeWithOpacity = case currentBoardCoords of
-            Just cds -> if (coords /= cds) then (g [ opacity "0.15" ] [ node ]) else node
+        s = (toString TicTacToeBase.boardSize)
+        group = case currentBoardCoords of
+            Just cds ->
+                if (coords /= cds) then
+                   g [ opacity "0.20" ] [ node ]
+                else
+                   g [] [ rect [ x "0", y "0", fill "cyan", width s, height s, fillOpacity "0.05" ] [], node ]
             Nothing -> node
     in
-       nodeWithOpacity
+       group
           |> SvgUtils.scale (1.0/3.0)
           |> SvgUtils.translate ((T3.toInt i)*TicTacToeBase.cellSize) ((T3.toInt j)*TicTacToeBase.cellSize)
           |> App.map (MetaPlaceMark coords)
