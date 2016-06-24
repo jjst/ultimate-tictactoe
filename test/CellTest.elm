@@ -1,4 +1,4 @@
-module Main exposing (..)
+module CellTest exposing (..)
 
 import ElmTest exposing (..)
 
