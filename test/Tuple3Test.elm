@@ -1,6 +1,7 @@
 module Tuple3Test exposing (..)
 
-import ElmTest exposing (..)
+import ElmTest exposing (runSuite)
+import ElmTestBDDStyle exposing (..)
 
 import Tuple3 exposing (..)
 
@@ -8,28 +9,43 @@ fruits = ("apple", "banana", "strawberry")
 
 tests : Test
 tests =
-  suite
-    "Tuple3"
-    [ test "range" (assertEqual (I1, I2, I3) range)
-    , test "get I1" (assertEqual "apple" (get fruits I1))
-    , test "get I2" (assertEqual "banana" (get fruits I2))
-    , test "get I3" (assertEqual "strawberry" (get fruits I3))
-    , test "toInt I1" (assertEqual 0 (toInt I1))
-    , test "toInt I2" (assertEqual 1 (toInt I2))
-    , test "toInt I3" (assertEqual 2 (toInt I3))
-    , test "toFloat I1" (assertEqual 0.0 (Tuple3.toFloat I1))
-    , test "!! operator" (assertEqual "apple" (fruits !! I1))
-    , test "first" (assertEqual "apple" (first fruits))
-    , test "second" (assertEqual "banana" (second fruits))
-    , test "third" (assertEqual "strawberry" (third fruits))
-    , test "last" (assertEqual "strawberry" (last fruits))
-    , test "map" (assertEqual (2, 4, 6) (map (\x -> x*2) (1, 2, 3)))
-    , test "indexedMap" (assertEqual ((I1, 2), (I2, 4), (I3, 6)) (indexedMap (\i x -> (i,x*2)) (1, 2, 3)))
-    , test "fill" (assertEqual (0, 0, 0) (fill 0))
-    , test "toList" (assertEqual [1, 2, 3] (toList (1, 2, 3)))
-    , test "fromList right size" (assertEqual (Just (1, 2, 3)) (fromList [1, 2, 3]))
-    , test "fromList too short" (assertEqual Nothing (fromList [1, 2]))
-    , test "fromList too long" (assertEqual Nothing (fromList [1, 2, 3, 4]))
+  describe "A Tuple3"
+    [ it "enumerates indices with range"
+        <| expect range toBe (I1, I2, I3)
+    , it "returns the first item when calling get with I1"
+        <| expect (get fruits I1) toBe "apple"
+    , it "returns the second item when calling get with I2"
+        <| expect (get fruits I2) toBe "banana"
+    , it "returns the third item when calling get with I3"
+        <| expect (get fruits I3) toBe "strawberry"
+    , it "converts indices to integers"
+        <| expect (map toInt range) toBe (0, 1, 2)
+    , it "converts indices to floats"
+        <| expect (map Tuple3.toFloat range) toBe (0.0, 1.0, 2.0)
+    , it "allows item access with !!"
+        <| expect (fruits !! I1) toBe "apple"
+    , it "returns the first item"
+        <| expect (first fruits) toBe "apple"
+    , it "returns the second item"
+        <| expect (second fruits) toBe "banana"
+    , it "returns the third item"
+        <| expect (third fruits) toBe "strawberry"
+    , it "returns the last item"
+        <| expect (last fruits) toBe "strawberry"
+    , it "maps a function over each element of the tuple"
+        <| expect (map (\x -> x*2) (1, 2, 3)) toBe (2, 4, 6)
+    , it "maps a function taking an index  over each element of the tuple"
+        <| expect (indexedMap (\i x -> (i,x*2)) (1, 2, 3)) toBe ((I1, 2), (I2, 4), (I3, 6))
+    , it "fills a tuple with the given value"
+        <| expect (fill 0) toBe (0, 0, 0)
+    , it "converts tuples to lists"
+        <| expect (toList (1, 2, 3)) toBe [1, 2, 3]
+    , it "converts lists of the right size to tuples"
+        <| expect (fromList [1, 2, 3]) toBe (Just (1, 2, 3))
+    , it "fails to convert lists too short"
+        <| expect (fromList [1, 2]) toBe Nothing
+    , it "fails to convert lists too long"
+        <| expect (fromList [1, 2, 3, 4]) toBe Nothing
     ]
 
 
