@@ -1,6 +1,8 @@
 # Elmtimate Tic-tac-toe
 An implementation of [Ultimate Tic-tac-toe](https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/) in your browser, in Elm.
 
+![board](http://i.imgur.com/y30gf8m.png)
+
 ## Install and run
 
 If you haven't already done so, install [Elm](http://elm-lang.org/):
