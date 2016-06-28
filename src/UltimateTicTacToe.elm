@@ -118,23 +118,20 @@ update msg ({board, currentPlayer, currentBoardCoords} as model) =
            Just _ -> model
            Nothing ->
             case msg of
-                MetaPlaceMark (x,y) ((TicTacToe.PlaceMark cellCoords cellMsg) as msg) ->
-                    case currentBoardCoords of
-                        Nothing ->
-                            { board = indexedMap (\(i,j) subBoard ->
-                                if (x,y) == (i,j) then TicTacToe.update msg subBoard else TicTacToe.update TicTacToe.TogglePlayer subBoard) board
+                MetaPlaceMark boardCoords ((TicTacToe.PlaceMark cellCoords cellMsg) as msg) ->
+                    let
+                        updatedBoard = board |> indexedMap (\(i,j) subBoard ->
+                            if boardCoords == (i,j) then TicTacToe.update msg subBoard else TicTacToe.update TicTacToe.TogglePlayer subBoard)
+                        updatedBoardWinner = TicTacToe.winner (get updatedBoard cellCoords).board
+                        updatedModel =
+                            { board = updatedBoard
                             , currentPlayer = nextPlayer
-                            , currentBoardCoords = if (TicTacToe.winner (get board cellCoords).board == Nothing) then Just cellCoords else Nothing
+                            , currentBoardCoords = if updatedBoardWinner == Nothing then Just cellCoords else Nothing
                             }
-                        Just c ->
-                            if (x,y) == c then
-                                { board = indexedMap (\(i,j) subBoard ->
-                                    if (x,y) == (i,j) then TicTacToe.update msg subBoard else TicTacToe.update TicTacToe.TogglePlayer subBoard) board
-                                , currentPlayer = nextPlayer
-                                , currentBoardCoords = if (TicTacToe.winner (get board cellCoords).board == Nothing) then Just cellCoords else Nothing
-                                }
-                    else
-                        model
+                    in
+                        case currentBoardCoords of
+                            Nothing -> updatedModel
+                            Just c -> if c == boardCoords then updatedModel else model
                 _ -> model
 
 
