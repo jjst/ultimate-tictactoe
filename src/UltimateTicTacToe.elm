@@ -160,8 +160,12 @@ svgView model =
         board = model.board
         vb = svgViewBoard model.currentBoardCoords
         cells = g [] (flatten <| (indexedMap vb board))
-        st = case (winningRow boardOwner board) of
-            Just (first,middle,last) -> [ strikeThrough cellSize first last ]
+        st = case (winningRow boardOwner board, winner board) of
+            (Just (first,middle,last), Just winner) ->
+                case winner of
+                    Left Player.O -> [ strikeThrough "red" cellSize first last ]
+                    Left Player.X -> [ strikeThrough "blue" cellSize first last ]
+                    _ -> []
             _ -> []
     in
           g [] ([ cells, (grid cellSize) ] ++ st)

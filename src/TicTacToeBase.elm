@@ -13,6 +13,7 @@ import Html.App as App
 import Html.Events exposing (onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import Svg.Attributes as SA
 
 
 -- MODEL
@@ -43,12 +44,12 @@ grid cellSize =
           , line [ x1 (toString offset), y1 (toString (2*cellSize)), x2 (toString (3*cellSize - offset)), y2 (toString (2*cellSize)) ] []
           ]
 
-strikeThrough: Int -> Coords -> Coords -> Svg a
-strikeThrough cellSize (i1,j1) (i2,j2) =
+strikeThrough: String -> Int -> Coords -> Coords -> Svg a
+strikeThrough color cellSize (i1,j1) (i2,j2) =
     let
         toSvgCoords = \x offset -> (T3.toFloat x + 0.5 + offset) * (toFloat cellSize) |> toString
     in
-        line [ strikeThroughStyle
+        line [ SA.style ("stroke-width:10;stroke:" ++ color)
              , x1 (toSvgCoords i1 -0.05)
              , y1 (toSvgCoords j1 -0.05)
              , x2 (toSvgCoords i2 0.05)
@@ -59,10 +60,6 @@ strikeThrough cellSize (i1,j1) (i2,j2) =
 gridStyle : Attribute msg
 gridStyle =
     Svg.Attributes.style "stroke:black;stroke-width:4"
-
-strikeThroughStyle : Attribute msg
-strikeThroughStyle =
-    Svg.Attributes.style "stroke:red;stroke-width:7"
 
 cellSize : Int
 cellSize = 220
@@ -93,8 +90,13 @@ svgView : OwnerFunction a -> SvgViewCell a b -> Model a -> Svg b
 svgView owner svgViewCell model =
     let
         cells = g [] (flatten <| (indexedMap svgViewCell model.board))
-        st = case (winningRow owner model.board) of
-            Just (first,middle,last) -> [ strikeThrough cellSize first last ]
+        board = model.board
+        st = case (winningRow owner board, winner owner board) of
+            (Just (first,middle,last), Just winner) ->
+                case winner of
+                    Left Player.O -> [ strikeThrough "red" cellSize first last ]
+                    Left Player.X -> [ strikeThrough "blue" cellSize first last ]
+                    _ -> []
             _ -> []
     in
           g [] ([ cells, (grid cellSize) ] ++ st)

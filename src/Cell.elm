@@ -76,16 +76,11 @@ view model =
         [(svgView model)]
 
 drawCircle : Svg a
-drawCircle = circle [ cx "50", cy "50", r "40", fillOpacity "0.0", markStyle ] []
+drawCircle = circle [ cx "50", cy "50", r "40", fillOpacity "0.0", SA.style "stroke:red;stroke-width:6" ] []
 
 drawCross : Svg a
 drawCross =
-    g [ markStyle ]
+    g [ SA.style "stroke:blue;stroke-width:6" ]
       [ line [ x1 "10", y1 "10", x2 "90", y2 "90" ] []
       , line [ x1 "10", y1 "90", x2 "90", y2 "10" ] []
       ]
-
-markStyle : Attribute msg
-markStyle =
-    Svg.Attributes.style "stroke:black;stroke-width:6"
-
