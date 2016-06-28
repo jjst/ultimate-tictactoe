@@ -1,3 +1,5 @@
+module UltimateTicTacToe exposing (..)
+
 import TicTacToe
 import Player exposing (..)
 import Board exposing (..)
@@ -5,6 +7,8 @@ import SvgUtils
 import TicTacToeBase
 import TicTacToeBase exposing (strikeThrough, cellSize, boardSize, grid)
 
+import Regex
+import String
 import List as L
 import Tuple3 as T3
 import Html.Attributes
@@ -38,6 +42,56 @@ init =
     , currentPlayer = X
     , currentBoardCoords = Nothing
     }
+
+transpose : List (List a) -> List (List a)
+transpose ll =
+  case ll of
+    [] ->
+      []
+
+    ([] :: xss) ->
+      transpose xss
+
+    ((x::xs) :: xss) ->
+      let
+        heads =
+          List.filterMap List.head xss
+
+        tails =
+          List.filterMap List.tail xss
+      in
+        (x :: heads) :: transpose (xs :: tails)
+
+fromString : Player -> Maybe Board.Coords -> String -> Result String Model
+fromString player currentBoardCoords str =
+    let
+        liftResult : List (Result a b) -> Result a (List b)
+        liftResult list =
+            list |> L.foldr (\result listResult -> listResult `Result.andThen` (\list -> Result.map (flip (::) list) result)) (Ok [])
+        subBoardsAsStrings : List (List String)
+        subBoardsAsStrings =
+            str
+              |> Regex.split Regex.All (Regex.regex "-.+")
+              |> List.map (String.trim >> String.lines >> List.map (String.trim >> String.split ("|")) >> transpose >> List.map (String.join "\n"))
+        subBoards = subBoardsAsStrings
+            |> List.map (List.map (TicTacToe.fromString player) >> liftResult) |> liftResult
+        boardResult =
+           Result.map (
+               L.map (
+                   T3.fromList >> Result.fromMaybe "Wrong number of items in row"
+               )
+           ) subBoards
+           `Result.andThen` liftResult
+           `Result.andThen` (
+               T3.fromList >> Result.fromMaybe "Wrong number of rows"
+           )
+    in boardResult |> Result.map (\b -> {
+        board = b,
+        currentBoardCoords = currentBoardCoords,
+        currentPlayer = player
+        })
+
+
 
 boardOwner : TicTacToe.Model -> Maybe Player
 boardOwner boardModel =

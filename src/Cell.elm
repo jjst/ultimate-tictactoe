@@ -1,10 +1,11 @@
-module Cell exposing (Model, Msg, init, update, svgView, view)
+module Cell exposing (..)
 
 import Html exposing (Html, button, div, text)
 import Html.App as App
 import Html.Events exposing (onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import String
 
 import Player exposing (..)
 
@@ -26,6 +27,19 @@ type alias Model =
 
 init : Model
 init = { mark = Nothing, currentPlayer = X }
+
+fromString : Player -> String -> Result String Model
+fromString p s =
+    let
+        mark =
+            case (String.toLower s) of
+                "o" -> Ok (Just Player.O)
+                "x" -> Ok (Just Player.X)
+                "_" -> Ok (Nothing)
+                other -> Err <| "Invalid character: " ++ other
+    in
+      Result.map (\m -> { mark = m, currentPlayer = p }) mark
+
 
 -- UPDATE
 
