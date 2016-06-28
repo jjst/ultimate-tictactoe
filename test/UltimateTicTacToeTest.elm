@@ -12,6 +12,11 @@ import TicTacToe
 import Cell as C
 import Player
 
+orCrash : Result String a -> a
+orCrash result = case result of
+    Err s -> Debug.crash s
+    Ok a -> a
+
 initialBoard = init
 
 tests : Test
@@ -57,15 +62,12 @@ tests =
              _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
             """
-          subBoardResult = TicTacToe.fromString Player.X
+          subBoard = TicTacToe.fromString Player.X
             """
              _ _ _
              x _ _
              _ _ o
-            """
-          subBoard = case subBoardResult of
-            Ok b -> b
-            Err msg -> Debug.crash msg
+            """ |> orCrash
       in
           it "should contain the expected subboard"
             <| expect
@@ -74,6 +76,43 @@ tests =
                  (Ok { initialBoard | board = Board.indexedMap (\coords s ->
                        if coords == (I2, I3) then subBoard else s) initialBoard.board
                  })
+    , let
+          currentBoard = fromString Player.O (Just (I2,I2))
+            """
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o _ o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            """ |> orCrash
+          expectedBoard = fromString Player.X Nothing
+            """
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            """ |> orCrash
+          msg = MetaPlaceMark (I2,I2) (TicTacToe.PlaceMark (I2,I2) C.PlaceMark)
+          nextBoardCoords = (update msg currentBoard).currentBoardCoords
+      in
+          it "should send the opposite player to another board if the current one has been won"
+            <| expect
+                 nextBoardCoords
+               toBe
+                 Nothing
     ]
 
 
