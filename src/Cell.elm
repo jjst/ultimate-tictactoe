@@ -4,6 +4,7 @@ import Html exposing (Html, button, div, text)
 import Html.App as App
 import Html.Events exposing (onClick)
 import Svg exposing (..)
+import Svg.Attributes as SA
 import Svg.Attributes exposing (..)
 import String
 
@@ -75,16 +76,16 @@ view model =
         [(svgView model)]
 
 drawCircle : Svg a
-drawCircle = circle [ cx "50", cy "50", r "45", fillOpacity "0.0", markStyle ] []
+drawCircle = circle [ cx "50", cy "50", r "40", fillOpacity "0.0", markStyle ] []
 
 drawCross : Svg a
 drawCross =
-    g []
-      [ line [ x1 "5", y1 "5", x2 "95", y2 "95", markStyle ] []
-      , line [ x1 "5", y1 "95", x2 "95", y2 "5", markStyle ] []
+    g [ markStyle ]
+      [ line [ x1 "10", y1 "10", x2 "90", y2 "90" ] []
+      , line [ x1 "10", y1 "90", x2 "90", y2 "10" ] []
       ]
 
 markStyle : Attribute msg
 markStyle =
-    Svg.Attributes.style "stroke:black;stroke-width:4"
+    Svg.Attributes.style "stroke:black;stroke-width:6"
 
