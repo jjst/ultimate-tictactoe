@@ -6,6 +6,7 @@ import Board exposing (..)
 import SvgUtils
 import TicTacToeBase
 import TicTacToeBase exposing (strikeThrough, cellSize, boardSize, grid)
+import Cell
 
 import Regex
 import String
@@ -176,14 +177,19 @@ svgViewBoard : (Maybe Coords) -> Coords -> TicTacToe.Model -> Svg Msg
 svgViewBoard currentBoardCoords ((i,j) as coords) ({board, currentPlayer} as model) =
     let
         node = TicTacToe.svgView model
+        winningMark = case TicTacToe.winner board of
+            Just (Left Player.X) -> [ Cell.drawCross |> SvgUtils.scale ((toFloat TicTacToeBase.boardSize)/100.0) ]
+            Just (Left Player.O) -> [ Cell.drawCircle |> SvgUtils.scale ((toFloat TicTacToeBase.boardSize)/100.0) ]
+            _ -> []
         s = (toString TicTacToeBase.boardSize)
-        group = case currentBoardCoords of
+        subGroup = case currentBoardCoords of
             Just cds ->
                 if (coords /= cds) then
                    g [ opacity "0.20" ] [ node ]
                 else
                    g [] [ rect [ x "0", y "0", fill "cyan", width s, height s, fillOpacity "0.05" ] [], node ]
             Nothing -> node
+        group = g [] (winningMark ++ [ subGroup ])
     in
        group
           |> SvgUtils.scale (1.0/3.0)
