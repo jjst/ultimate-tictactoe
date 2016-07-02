@@ -176,8 +176,9 @@ svgView model =
 svgViewBoard : (Maybe Coords) -> Coords -> TicTacToe.Model -> Svg Msg
 svgViewBoard currentBoardCoords ((i,j) as coords) ({board, currentPlayer} as model) =
     let
-        node = TicTacToe.svgView model
-        winningMark = case TicTacToe.winner board of
+        ticTacToeView = TicTacToe.svgView model
+        boardWinner = TicTacToe.winner board
+        winningMark = case boardWinner of
             Just (Left Player.X) -> [ Cell.drawCross |> SvgUtils.scale ((toFloat TicTacToeBase.boardSize)/100.0) ]
             Just (Left Player.O) -> [ Cell.drawCircle |> SvgUtils.scale ((toFloat TicTacToeBase.boardSize)/100.0) ]
             _ -> []
@@ -185,10 +186,13 @@ svgViewBoard currentBoardCoords ((i,j) as coords) ({board, currentPlayer} as mod
         subGroup = case currentBoardCoords of
             Just cds ->
                 if (coords /= cds) then
-                   g [ opacity "0.20" ] [ node ]
+                   g [ opacity "0.15" ] [ ticTacToeView ]
                 else
-                   g [] [ rect [ x "0", y "0", fill "cyan", width s, height s, fillOpacity "0.05" ] [], node ]
-            Nothing -> node
+                   ticTacToeView
+            Nothing ->
+                case boardWinner of
+                    Just _ -> g [ opacity "0.20" ] [ ticTacToeView ]
+                    Nothing -> ticTacToeView
         group = g [] (winningMark ++ [ subGroup ])
     in
        group

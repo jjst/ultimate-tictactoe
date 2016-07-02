@@ -48,15 +48,15 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg ({ticTacToe, windowSize} as model) =
     let
-        model =
+        newModel =
             case msg of
                 TicTacToeMessage msg ->
-                    { ticTacToe = (UltimateTicTacToe.update msg ticTacToe), windowSize = windowSize }
+                    { model | ticTacToe = (UltimateTicTacToe.update msg ticTacToe) }
                 NewWindowSize size ->
-                    { ticTacToe = ticTacToe, windowSize = size }
+                    { model | windowSize = size }
                 _ -> model
     in
-       (model, Cmd.none)
+       (newModel, Cmd.none)
 
 
 getWindowSize : Cmd Msg
