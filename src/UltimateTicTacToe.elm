@@ -159,7 +159,7 @@ svgView : Model -> Svg Msg
 svgView model =
     let
         board = model.board
-        vb = svgViewBoard model.currentBoardCoords
+        vb = svgViewBoard model
         cells = g [] (flatten <| (indexedMap vb board))
         st = case (winningRow boardOwner board, winner board) of
             (Just (first,middle,last), Just winner) ->
@@ -173,29 +173,42 @@ svgView model =
 
 
 
-svgViewBoard : (Maybe Coords) -> Coords -> TicTacToe.Model -> Svg Msg
-svgViewBoard currentBoardCoords ((i,j) as coords) ({board, currentPlayer} as model) =
+svgViewBoard : Model -> Coords -> TicTacToe.Model -> Svg Msg
+svgViewBoard model ((i,j) as coords) ({board, currentPlayer} as subBoardModel) =
     let
-        ticTacToeView = TicTacToe.svgView model
+        ticTacToeView = TicTacToe.svgView subBoardModel
         boardWinner = TicTacToe.winner board
         winningMark = case boardWinner of
             Just (Left Player.X) -> [ Cell.drawCross |> SvgUtils.scale ((toFloat TicTacToeBase.boardSize)/100.0) ]
             Just (Left Player.O) -> [ Cell.drawCircle |> SvgUtils.scale ((toFloat TicTacToeBase.boardSize)/100.0) ]
             _ -> []
-        s = (toString TicTacToeBase.boardSize)
-        subGroup = case currentBoardCoords of
-            Just cds ->
-                if (coords /= cds) then
-                   g [ opacity "0.15" ] [ ticTacToeView ]
-                else
-                   ticTacToeView
-            Nothing ->
-                case boardWinner of
-                    Just _ -> g [ opacity "0.20" ] [ ticTacToeView ]
-                    Nothing -> ticTacToeView
-        group = g [] (winningMark ++ [ subGroup ])
+        s = TicTacToeBase.boardSize |> toString
+        o = boardOpacity model coords subBoardModel |> toString
+        group = g [] (winningMark ++ [ g [ opacity o ] [ ticTacToeView ] ])
     in
        group
           |> SvgUtils.scale (1.0/3.0)
           |> SvgUtils.translate ((T3.toInt i)*TicTacToeBase.cellSize) ((T3.toInt j)*TicTacToeBase.cellSize)
           |> App.map (MetaPlaceMark coords)
+
+
+boardOpacity : Model -> Coords -> TicTacToe.Model -> Float
+boardOpacity model subBoardCoords subBoardModel =
+    let
+        boardWinner = TicTacToe.winner subBoardModel.board
+        fadedOutValue = 0.15
+        normalValue = 1.0
+    in
+        case winner model.board of
+            Just _ -> fadedOutValue
+            _ ->
+            case model.currentBoardCoords of
+                Just cds ->
+                    if (subBoardCoords /= cds) then
+                       fadedOutValue
+                    else
+                       normalValue
+                Nothing ->
+                    case boardWinner of
+                        Just _ -> fadedOutValue
+                        Nothing -> normalValue
