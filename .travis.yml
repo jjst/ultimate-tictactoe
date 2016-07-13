@@ -1,0 +1,10 @@
+language: node_js
+cache:
+  directories:
+    - elm-stuff
+node_js:
+  - "4.3"
+install:
+  - npm install -g elm@0.17.0
+  - elm-package install -y
+script: sh runtests.sh
