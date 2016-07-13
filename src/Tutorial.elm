@@ -68,24 +68,33 @@ view pageNumber =
             Nothing -> span [] []
             Just num ->
                 let
+                    skipTutorialButton =
+                      button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Let me play already!" ]
                     buttons =
                         if num == 0 then
                            [ button [ style [ ("visibility", "hidden") ], onClick PreviousPage ] [ text "Previous" ]
                            , button [ onClick NextPage ] [ text "Next" ]
-                           , button [ onClick SkipTutorial ] [ text "Skip Tutorial" ]
+                           , skipTutorialButton
                            ]
                         else if num == Array.length pages - 1 then
                            [ button [ onClick PreviousPage ] [ text "Previous" ]
-                           , button [ onClick SkipTutorial ] [ text "Finish" ]
+                           , button [ onClick SkipTutorial ] [ text "Play!" ]
                            ]
                         else
                            [ button [ onClick PreviousPage ] [ text "Previous" ]
                            , button [ onClick NextPage ] [ text "Next" ]
-                           , button [ onClick SkipTutorial ] [ text "Skip Tutorial" ]
+                           , skipTutorialButton
                            ]
                     content = pageContent num
+                    tutorialStyle = style
+                      [ ("border-radius", "25px")
+                      , ("border", "2px solid #73AD21")
+                      , ("background", "white")
+                      , ("padding", "20px")
+                      , ("overflow", "hidden")
+                      ]
                 in
-                    div [] ([ content ] ++ buttons)
+                    div [ tutorialStyle ] ([ content ] ++ buttons)
 
 pageContent : Int -> Html msg
 pageContent index =

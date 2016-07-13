@@ -1,6 +1,7 @@
 import UltimateTicTacToe
 import TicTacToeBase
 import SvgUtils
+import Tutorial
 
 import Task
 import Window
@@ -9,6 +10,7 @@ import Html exposing (Html, div)
 import Html.App as App
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+
 
 
 
@@ -24,6 +26,7 @@ main =
 
 type alias Model =
     { ticTacToe : UltimateTicTacToe.Model
+    , tutorialPage : Tutorial.Model
     , windowSize : Window.Size
     }
 
@@ -32,6 +35,7 @@ init =
     let
         model =
             { ticTacToe = UltimateTicTacToe.init
+            , tutorialPage = Just 0
             , windowSize = { width = 800, height = 600 }
             }
     in
@@ -44,19 +48,21 @@ type Msg
     = TicTacToeMessage UltimateTicTacToe.Msg
     | NewWindowSize Window.Size
     | SizeUpdateFailure String -- any chance of this failing? look up doc
+    | TutorialMessage Tutorial.Msg
 
 update : Msg -> Model -> (Model, Cmd Msg)
-update msg ({ticTacToe, windowSize} as model) =
-    let
-        newModel =
-            case msg of
-                TicTacToeMessage msg ->
-                    { model | ticTacToe = (UltimateTicTacToe.update msg ticTacToe) }
-                NewWindowSize size ->
-                    { model | windowSize = size }
-                _ -> model
-    in
-       (newModel, Cmd.none)
+update msg ({ticTacToe, tutorialPage, windowSize} as model) =
+    case msg of
+        TicTacToeMessage msg ->
+            ({ model | ticTacToe = (UltimateTicTacToe.update msg ticTacToe) }, Cmd.none)
+        NewWindowSize size ->
+            ({ model | windowSize = size }, Cmd.none)
+        TutorialMessage msg ->
+            let
+                (newPage, cmd) = Tutorial.update msg tutorialPage
+            in
+                ({ model | tutorialPage = newPage }, Cmd.map TutorialMessage cmd)
+        _ -> (model, Cmd.none)
 
 
 getWindowSize : Cmd Msg
@@ -67,30 +73,44 @@ getWindowSize = Task.perform SizeUpdateFailure NewWindowSize Window.size
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Window.resizes NewWindowSize
+  Sub.batch
+    [ Window.resizes NewWindowSize
+    , Sub.map TutorialMessage (Tutorial.subscriptions model.tutorialPage)
+    ]
 
 
 -- VIEW
 
 view : Model -> Html Msg
-view ({ticTacToe, windowSize} as model) =
+view ({ticTacToe, tutorialPage, windowSize} as model) =
     let
         baseBoardSize = TicTacToeBase.boardSize |> toFloat
         minSize = (Basics.min windowSize.width windowSize.height) |> toFloat
         scale = minSize / baseBoardSize
         size = (toString minSize)
-        divStyle =
-          Html.Attributes.style
-            [ ("margin", "auto")
-            , ("width", size ++ "px")
-            ]
         svgView =
             UltimateTicTacToe.svgView ticTacToe
             |> SvgUtils.scale scale
             |> App.map TicTacToeMessage
-    in
-        div [ divStyle ]
-            [
-            svg [ viewBox ("0 0 " ++ size ++ " " ++ size), width (size ++ "px") ]
-                [ svgView ]
+        tutorialView =
+            Tutorial.view tutorialPage
+            |> App.map TutorialMessage
+        mainDivStyle =
+          Html.Attributes.style
+            [ ("margin", "auto")
+            , ("position", "relative")
+            , ("width", size ++ "px")
             ]
+        tutorialStyle =
+          Html.Attributes.style
+            [ ("z-index", "1")
+            , ("left", "5%")
+            , ("top", "5%")
+            , ("position", "absolute")
+            , ("width", "90%")
+            ]
+    in
+        div [ mainDivStyle ]
+          [ svg [ viewBox ("0 0 " ++ size ++ " " ++ size), width (size ++ "px") ] [ svgView ]
+          , div [ tutorialStyle ] [ tutorialView ]
+          ]
