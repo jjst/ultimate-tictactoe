@@ -108,6 +108,7 @@ view ({ticTacToe, tutorialPage, windowSize} as model) =
             , ("top", "5%")
             , ("position", "absolute")
             , ("width", "90%")
+            , ("font-family", "'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif")
             ]
     in
         div [ mainDivStyle ]

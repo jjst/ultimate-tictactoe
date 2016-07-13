@@ -68,30 +68,16 @@ view pageNumber =
             Nothing -> span [] []
             Just num ->
                 let
-                    skipTutorialButton =
-                      button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Let me play already!" ]
-                    buttons =
-                        if num == 0 then
-                           [ button [ style [ ("visibility", "hidden") ], onClick PreviousPage ] [ text "Previous" ]
-                           , button [ onClick NextPage ] [ text "Next" ]
-                           , skipTutorialButton
-                           ]
-                        else if num == Array.length pages - 1 then
-                           [ button [ onClick PreviousPage ] [ text "Previous" ]
-                           , button [ onClick SkipTutorial ] [ text "Play!" ]
-                           ]
-                        else
-                           [ button [ onClick PreviousPage ] [ text "Previous" ]
-                           , button [ onClick NextPage ] [ text "Next" ]
-                           , skipTutorialButton
-                           ]
+                    finishButton = button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Got it!" ]
+                    buttons = [ finishButton ]
                     content = pageContent num
                     tutorialStyle = style
                       [ ("border-radius", "25px")
                       , ("border", "2px solid #73AD21")
-                      , ("background", "white")
+                      , ("background", "#EEEEEE")
                       , ("padding", "20px")
                       , ("overflow", "hidden")
+                      , ("opacity", "0.95")
                       ]
                 in
                     div [ tutorialStyle ] ([ content ] ++ buttons)
@@ -103,23 +89,10 @@ pageContent index =
 
 pages = Array.fromList
     [ """
-# Apple Pie Recipe
-
-  1. Invent the universe.
-  2. Bake an apple pie.
-
-"""
-    , """
-# Ouiche Recipe
-
-  1. Invent the universe.
-  2. Bake a ouiche.
-
-""" , """
-# Hummus Recipe
-
-  1. Invent the universe.
-  2. Bake hummus.
-
+Ultimate Tic-Tac-Toe is a modern, funky twist on the venerable (but ultimately
+[dull and predictable](https://xkcd.com/832/)) Tic-Tac-Toe we all know.
+In Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe grid.
+Check out <a href="https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/" target="_blank">this page</a> for
+instructions on how to play.
 """
     ]
