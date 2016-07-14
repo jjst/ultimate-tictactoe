@@ -196,7 +196,7 @@ boardOpacity : Model -> Coords -> TicTacToe.Model -> Float
 boardOpacity model subBoardCoords subBoardModel =
     let
         boardWinner = TicTacToe.winner subBoardModel.board
-        fadedOutValue = 0.15
+        fadedOutValue = 0.25
         normalValue = 1.0
     in
         case winner model.board of
