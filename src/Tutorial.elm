@@ -68,7 +68,7 @@ view pageNumber =
             Nothing -> span [] []
             Just num ->
                 let
-                    finishButton = button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Got it!" ]
+                    finishButton = button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Got the rules, let me play now!" ]
                     buttons = [ finishButton ]
                     content = pageContent num
                     tutorialStyle = style
@@ -89,10 +89,16 @@ pageContent index =
 
 pages = Array.fromList
     [ """
-Ultimate Tic-Tac-Toe is a modern, funky twist on the venerable (but ultimately
-[dull and predictable](https://xkcd.com/832/)) Tic-Tac-Toe we all know.
-In Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe grid.
-Check out <a href="https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/" target="_blank">this page</a> for
-instructions on how to play.
+# This is Ultimate Tic-Tac-Toe
+Ultimate Tic-Tac-Toe is a modern, funky variant of the venerable (but ultimately
+<a href="https://xkcd.com/832/" target="_blank">dull and predictable</a>)
+2-player Tic-Tac-Toe we all know.
+
+In Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe board. You have to win three cells in a row to
+win the game. But there's a twist! You don't get to pick which board to play in: whichever _cell_ your opponent picks
+determines the _board_ you must play in next.
+
+If you've never played before, check out <a href="https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/" target="_blank">this page</a>
+for instructions before you get started. It's a short read, promise!
 """
     ]
