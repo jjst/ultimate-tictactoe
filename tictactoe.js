@@ -10301,7 +10301,7 @@ var _user$project$UltimateTicTacToe$main = {
 
 var _user$project$Tutorial$pages = _elm_lang$core$Array$fromList(
 	_elm_lang$core$Native_List.fromArray(
-		['\nUltimate Tic-Tac-Toe is a modern, funky twist on the venerable (but ultimately\n[dull and predictable](https://xkcd.com/832/)) Tic-Tac-Toe we all know.\nIn Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe grid.\nCheck out <a href=\"https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/\" target=\"_blank\">this page</a> for\ninstructions on how to play.\n']));
+		['\n# This is Ultimate Tic-Tac-Toe\nUltimate Tic-Tac-Toe is a modern, funky variant of the venerable (but ultimately\n<a href=\"https://xkcd.com/832/\" target=\"_blank\">dull and predictable</a>)\n2-player Tic-Tac-Toe we all know.\n\nIn Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe board. You have to win three cells in a row to\nwin the game. But there\'s a twist! You don\'t get to pick which board to play in: whichever _cell_ your opponent picks\ndetermines the _board_ you must play in next.\n\nIf you\'ve never played before, check out <a href=\"https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/\" target=\"_blank\">this page</a>\nfor instructions before you get started. It\'s a short read, promise!\n']));
 var _user$project$Tutorial$pageContent = function (index) {
 	return A2(
 		_evancz$elm_markdown$Markdown$toHtml,
@@ -10384,7 +10384,7 @@ var _user$project$Tutorial$view = function (pageNumber) {
 				]),
 			_elm_lang$core$Native_List.fromArray(
 				[
-					_elm_lang$html$Html$text('Got it!')
+					_elm_lang$html$Html$text('Got the rules, let me play now!')
 				]));
 		var buttons = _elm_lang$core$Native_List.fromArray(
 			[finishButton]);
