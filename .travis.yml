@@ -7,4 +7,8 @@ node_js:
 install:
   - npm install -g elm@0.17.0
   - elm-package install -y
-script: sh runtests.sh
+script:
+  - sh runtests.sh
+  - elm make src/Main.elm --output=tictactoe.js
+after_success:
+  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
