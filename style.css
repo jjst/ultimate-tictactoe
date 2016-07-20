@@ -1,0 +1,42 @@
+button {
+    background-color: #CBE86B;
+    border: none;
+    color: #1C140D;
+    padding: 15px 32px;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 16px;
+}
+
+div.tutorial {
+  border-radius: 25px;
+  border: 2px solid #1C140D;
+  background: #F2E9E1;
+  padding: 20px;
+  overflow: hidden;
+  opacity: 0.95;
+}
+
+h1 {
+  color: #1C140D;
+}
+
+
+/* unvisited link */
+a:link {
+    color: #1C140D;
+}
+
+/* visited link */
+a:visited {
+    color: #2C240D;
+}
+
+/* mouse over link */
+a:hover {
+    color: #5C540D;
+}

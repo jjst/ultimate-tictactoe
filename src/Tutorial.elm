@@ -68,19 +68,11 @@ view pageNumber =
             Nothing -> span [] []
             Just num ->
                 let
-                    finishButton = button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Got it, let me play now!" ]
+                    finishButton = button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Enough reading, let me play now!" ]
                     buttons = [ finishButton ]
                     content = pageContent num
-                    tutorialStyle = style
-                      [ ("border-radius", "25px")
-                      , ("border", "2px solid #73AD21")
-                      , ("background", "#EEEEEE")
-                      , ("padding", "20px")
-                      , ("overflow", "hidden")
-                      , ("opacity", "0.95")
-                      ]
                 in
-                    div [ tutorialStyle ] ([ content ] ++ buttons)
+                    div [ class "tutorial" ] ([ content ] ++ buttons)
 
 pageContent : Int -> Html msg
 pageContent index =
