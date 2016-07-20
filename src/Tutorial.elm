@@ -68,7 +68,7 @@ view pageNumber =
             Nothing -> span [] []
             Just num ->
                 let
-                    finishButton = button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Got the rules, let me play now!" ]
+                    finishButton = button [ style [ ("float", "right") ], onClick SkipTutorial ] [ text "Got it, let me play now!" ]
                     buttons = [ finishButton ]
                     content = pageContent num
                     tutorialStyle = style
@@ -100,5 +100,8 @@ determines the _board_ you must play in next.
 
 If you've never played before, check out <a href="https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/" target="_blank">this page</a>
 for instructions before you get started. It's a short read, promise!
+
+This is a 2-player game, so you will need to fetch you a human companion. A one player version is coming soon for people preferring
+the company of robots.
 """
     ]
