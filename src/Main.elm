@@ -12,8 +12,6 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
 
-
-
 main =
     App.program
         { init = init
@@ -85,7 +83,7 @@ view : Model -> Html Msg
 view ({ticTacToe, tutorialPage, windowSize} as model) =
     let
         baseBoardSize = TicTacToeBase.boardSize |> toFloat
-        minSize = (Basics.min windowSize.width windowSize.height) |> toFloat
+        minSize = ((Basics.min windowSize.width windowSize.height) |> toFloat) - 5
         scale = minSize / baseBoardSize
         size = (toString minSize)
         svgView =
