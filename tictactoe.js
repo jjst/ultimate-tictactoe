@@ -5615,6 +5615,11 @@ function badOneOf(problems)
 	return { tag: 'oneOf', problems: problems };
 }
 
+function badCustom(msg)
+{
+	return { tag: 'custom', msg: msg };
+}
+
 function bad(msg)
 {
 	return { tag: 'fail', msg: msg };
@@ -5651,6 +5656,11 @@ function badToString(problem)
 				return 'I ran into the following problems'
 					+ (context === '_' ? '' : ' at ' + context)
 					+ ':\n\n' + problems.join('\n');
+
+			case 'custom':
+				return 'A `customDecode` failed'
+					+ (context === '_' ? '' : ' at ' + context)
+					+ ' with the message: ' + problem.msg;
 
 			case 'fail':
 				return 'I ran into a `fail` decoder'
@@ -5854,7 +5864,7 @@ function runHelp(decoder, value)
 			var realResult = decoder.callback(result.value);
 			if (realResult.ctor === 'Err')
 			{
-				return badPrimitive('something custom', value);
+				return badCustom(realResult._0);
 			}
 			return ok(realResult._0);
 
@@ -9991,7 +10001,7 @@ var _user$project$UltimateTicTacToe$update = F2(
 var _user$project$UltimateTicTacToe$boardOpacity = F3(
 	function (model, subBoardCoords, subBoardModel) {
 		var normalValue = 1.0;
-		var fadedOutValue = 0.15;
+		var fadedOutValue = 0.25;
 		var boardWinner = _user$project$TicTacToe$winner(subBoardModel.board);
 		var _p13 = _user$project$UltimateTicTacToe$winner(model.board);
 		if (_p13.ctor === 'Just') {
@@ -10301,7 +10311,7 @@ var _user$project$UltimateTicTacToe$main = {
 
 var _user$project$Tutorial$pages = _elm_lang$core$Array$fromList(
 	_elm_lang$core$Native_List.fromArray(
-		['\n# This is Ultimate Tic-Tac-Toe\nUltimate Tic-Tac-Toe is a modern, funky variant of the venerable (but ultimately\n<a href=\"https://xkcd.com/832/\" target=\"_blank\">dull and predictable</a>)\n2-player Tic-Tac-Toe we all know.\n\nIn Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe board. You have to win three cells in a row to\nwin the game. But there\'s a twist! You don\'t get to pick which board to play in: whichever _cell_ your opponent picks\ndetermines the _board_ you must play in next.\n\nIf you\'ve never played before, check out <a href=\"https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/\" target=\"_blank\">this page</a>\nfor instructions before you get started. It\'s a short read, promise!\n']));
+		['\n# This is Ultimate Tic-Tac-Toe\nUltimate Tic-Tac-Toe is a modern, funky variant of the venerable (but ultimately\n<a href=\"https://xkcd.com/832/\" target=\"_blank\">dull and predictable</a>)\n2-player Tic-Tac-Toe we all know.\n\nIn Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe board. You have to win three cells in a row to\nwin the game. But there\'s a twist! You don\'t get to pick which board to play in: whichever _cell_ your opponent picks\ndetermines the _board_ you must play in next.\n\nIf you\'ve never played before, check out <a href=\"https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/\" target=\"_blank\">this page</a>\nfor instructions before you get started. It\'s a short read, promise!\n\nThis is a 2-player game, so you will need to fetch you a human companion. A one player version is coming soon for people preferring\nthe company of robots.\n']));
 var _user$project$Tutorial$pageContent = function (index) {
 	return A2(
 		_evancz$elm_markdown$Markdown$toHtml,
@@ -10360,16 +10370,6 @@ var _user$project$Tutorial$view = function (pageNumber) {
 			_elm_lang$core$Native_List.fromArray(
 				[]));
 	} else {
-		var tutorialStyle = _elm_lang$html$Html_Attributes$style(
-			_elm_lang$core$Native_List.fromArray(
-				[
-					{ctor: '_Tuple2', _0: 'border-radius', _1: '25px'},
-					{ctor: '_Tuple2', _0: 'border', _1: '2px solid #73AD21'},
-					{ctor: '_Tuple2', _0: 'background', _1: '#EEEEEE'},
-					{ctor: '_Tuple2', _0: 'padding', _1: '20px'},
-					{ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'},
-					{ctor: '_Tuple2', _0: 'opacity', _1: '0.95'}
-				]));
 		var content = _user$project$Tutorial$pageContent(_p1._0);
 		var finishButton = A2(
 			_elm_lang$html$Html$button,
@@ -10384,14 +10384,16 @@ var _user$project$Tutorial$view = function (pageNumber) {
 				]),
 			_elm_lang$core$Native_List.fromArray(
 				[
-					_elm_lang$html$Html$text('Got the rules, let me play now!')
+					_elm_lang$html$Html$text('Enough reading, let me play now!')
 				]));
 		var buttons = _elm_lang$core$Native_List.fromArray(
 			[finishButton]);
 		return A2(
 			_elm_lang$html$Html$div,
 			_elm_lang$core$Native_List.fromArray(
-				[tutorialStyle]),
+				[
+					_elm_lang$html$Html_Attributes$class('tutorial')
+				]),
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				_elm_lang$core$Native_List.fromArray(
@@ -10513,7 +10515,7 @@ var _user$project$Main$view = function (_p5) {
 		_user$project$Main$TutorialMessage,
 		_user$project$Tutorial$view(_p6.tutorialPage));
 	var minSize = _elm_lang$core$Basics$toFloat(
-		A2(_elm_lang$core$Basics$min, _p7.width, _p7.height));
+		A2(_elm_lang$core$Basics$min, _p7.width, _p7.height)) - 5;
 	var size = _elm_lang$core$Basics$toString(minSize);
 	var mainDivStyle = _elm_lang$html$Html_Attributes$style(
 		_elm_lang$core$Native_List.fromArray(
