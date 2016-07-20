@@ -13,6 +13,6 @@ git fetch upstream
 git reset upstream/gh-pages
 
 
-git add -A tictactoe.js
+git add -A tictactoe.js index.html style.css
 git commit -m "Rebuild pages at ${rev}"
 git push -q upstream HEAD:gh-pages
