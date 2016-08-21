@@ -52,15 +52,15 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg ({ticTacToe, tutorialPage, windowSize} as model) =
     case msg of
         TicTacToeMessage msg ->
-            ({ model | ticTacToe = (UltimateTicTacToe.update msg ticTacToe) }, Cmd.none)
+            { model | ticTacToe = (UltimateTicTacToe.update msg ticTacToe) } ! []
         NewWindowSize size ->
-            ({ model | windowSize = size }, Cmd.none)
+            { model | windowSize = size } ! []
         TutorialMessage msg ->
             let
                 (newPage, cmd) = Tutorial.update msg tutorialPage
             in
-                ({ model | tutorialPage = newPage }, Cmd.map TutorialMessage cmd)
-        _ -> (model, Cmd.none)
+                { model | tutorialPage = newPage } ! [ Cmd.map TutorialMessage cmd ]
+        SizeUpdateFailure _ -> model ! []
 
 
 getWindowSize : Cmd Msg
