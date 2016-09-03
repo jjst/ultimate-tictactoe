@@ -24,20 +24,21 @@ main =
 
 type alias Model =
     { ticTacToe : UltimateTicTacToe.Model
-    , tutorialPage : Tutorial.Model
+    , tutorial : Tutorial.Model
     , windowSize : Window.Size
     }
 
 init : (Model, Cmd Msg)
 init =
     let
+        (tutorial, tutorialMsg) = Tutorial.init
         model =
             { ticTacToe = UltimateTicTacToe.init
-            , tutorialPage = Just 0
+            , tutorial = tutorial
             , windowSize = { width = 800, height = 600 }
             }
     in
-       (model, getWindowSize)
+       model ! [ Cmd.map TutorialMessage tutorialMsg, getWindowSize ]
 
 
 -- UPDATE
@@ -49,7 +50,7 @@ type Msg
     | TutorialMessage Tutorial.Msg
 
 update : Msg -> Model -> (Model, Cmd Msg)
-update msg ({ticTacToe, tutorialPage, windowSize} as model) =
+update msg ({ticTacToe, tutorial, windowSize} as model) =
     case msg of
         TicTacToeMessage msg ->
             { model | ticTacToe = (UltimateTicTacToe.update msg ticTacToe) } ! []
@@ -57,9 +58,9 @@ update msg ({ticTacToe, tutorialPage, windowSize} as model) =
             { model | windowSize = size } ! []
         TutorialMessage msg ->
             let
-                (newPage, cmd) = Tutorial.update msg tutorialPage
+                (newTutorial, cmd) = Tutorial.update msg tutorial
             in
-                { model | tutorialPage = newPage } ! [ Cmd.map TutorialMessage cmd ]
+                { model | tutorial = newTutorial } ! [ Cmd.map TutorialMessage cmd ]
         SizeUpdateFailure _ -> model ! []
 
 
@@ -73,14 +74,14 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch
     [ Window.resizes NewWindowSize
-    , Sub.map TutorialMessage (Tutorial.subscriptions model.tutorialPage)
+    , Sub.map TutorialMessage (Tutorial.subscriptions model.tutorial)
     ]
 
 
 -- VIEW
 
 view : Model -> Html Msg
-view ({ticTacToe, tutorialPage, windowSize} as model) =
+view ({ticTacToe, tutorial, windowSize} as model) =
     let
         baseBoardSize = TicTacToeBase.boardSize |> toFloat
         minSize = ((Basics.min windowSize.width windowSize.height) |> toFloat) - 5
@@ -91,7 +92,7 @@ view ({ticTacToe, tutorialPage, windowSize} as model) =
             |> SvgUtils.scale scale
             |> App.map TicTacToeMessage
         tutorialView =
-            Tutorial.view tutorialPage
+            Tutorial.view tutorial
             |> App.map TutorialMessage
         mainDivStyle =
           Html.Attributes.style
