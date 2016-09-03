@@ -5,11 +5,11 @@ import Tutorial
 
 import Task
 import Window
-import Html.Attributes
-import Html exposing (Html, div)
+import Html.Attributes as HA
+import Html exposing (Html, div, node)
 import Html.App as App
-import Svg exposing (..)
-import Svg.Attributes exposing (..)
+import Svg exposing (svg)
+import Svg.Attributes as SA
 
 
 main =
@@ -95,13 +95,13 @@ view ({ticTacToe, tutorial, windowSize} as model) =
             Tutorial.view tutorial
             |> App.map TutorialMessage
         mainDivStyle =
-          Html.Attributes.style
+          HA.style
             [ ("margin", "auto")
             , ("position", "relative")
             , ("width", size ++ "px")
             ]
         tutorialStyle =
-          Html.Attributes.style
+          HA.style
             [ ("z-index", "1")
             , ("left", "5%")
             , ("top", "5%")
@@ -111,6 +111,11 @@ view ({ticTacToe, tutorial, windowSize} as model) =
             ]
     in
         div [ mainDivStyle ]
-          [ svg [ viewBox ("0 0 " ++ size ++ " " ++ size), width (size ++ "px") ] [ svgView ]
+          [ css "style.css"
+          , svg [ SA.viewBox ("0 0 " ++ size ++ " " ++ size), SA.width (size ++ "px") ] [ svgView ]
           , div [ tutorialStyle ] [ tutorialView ]
           ]
+
+css : String -> Html a
+css path =
+  node "link" [ HA.rel "stylesheet", HA.href path ] []
