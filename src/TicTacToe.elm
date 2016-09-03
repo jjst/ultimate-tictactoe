@@ -20,13 +20,6 @@ import Svg.Attributes exposing (..)
 
 type alias TicTacToeBoard = Board Cell.Model
 
-main =
-    App.beginnerProgram
-        { model = init
-        , update = update
-        , view = view
-        }
-
 -- MODEL
 
 type alias Model = TicTacToeBase.Model Cell.Model

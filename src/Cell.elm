@@ -11,13 +11,6 @@ import String
 import Player exposing (..)
 
 
-main =
-    App.beginnerProgram
-        { model = init
-        , update = update
-        , view = view
-        }
-
 -- MODEL
 
 type alias Model =
