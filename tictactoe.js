@@ -1518,22 +1518,124 @@ var _elm_lang$core$List$intersperse = F2(
 			return A2(_elm_lang$core$List_ops['::'], _p21._0, spersed);
 		}
 	});
-var _elm_lang$core$List$take = F2(
+var _elm_lang$core$List$takeReverse = F3(
+	function (n, list, taken) {
+		takeReverse:
+		while (true) {
+			if (_elm_lang$core$Native_Utils.cmp(n, 0) < 1) {
+				return taken;
+			} else {
+				var _p22 = list;
+				if (_p22.ctor === '[]') {
+					return taken;
+				} else {
+					var _v23 = n - 1,
+						_v24 = _p22._1,
+						_v25 = A2(_elm_lang$core$List_ops['::'], _p22._0, taken);
+					n = _v23;
+					list = _v24;
+					taken = _v25;
+					continue takeReverse;
+				}
+			}
+		}
+	});
+var _elm_lang$core$List$takeTailRec = F2(
 	function (n, list) {
+		return _elm_lang$core$List$reverse(
+			A3(
+				_elm_lang$core$List$takeReverse,
+				n,
+				list,
+				_elm_lang$core$Native_List.fromArray(
+					[])));
+	});
+var _elm_lang$core$List$takeFast = F3(
+	function (ctr, n, list) {
 		if (_elm_lang$core$Native_Utils.cmp(n, 0) < 1) {
 			return _elm_lang$core$Native_List.fromArray(
 				[]);
 		} else {
-			var _p22 = list;
-			if (_p22.ctor === '[]') {
-				return list;
-			} else {
-				return A2(
-					_elm_lang$core$List_ops['::'],
-					_p22._0,
-					A2(_elm_lang$core$List$take, n - 1, _p22._1));
-			}
+			var _p23 = {ctor: '_Tuple2', _0: n, _1: list};
+			_v26_5:
+			do {
+				_v26_1:
+				do {
+					if (_p23.ctor === '_Tuple2') {
+						if (_p23._1.ctor === '[]') {
+							return list;
+						} else {
+							if (_p23._1._1.ctor === '::') {
+								switch (_p23._0) {
+									case 1:
+										break _v26_1;
+									case 2:
+										return _elm_lang$core$Native_List.fromArray(
+											[_p23._1._0, _p23._1._1._0]);
+									case 3:
+										if (_p23._1._1._1.ctor === '::') {
+											return _elm_lang$core$Native_List.fromArray(
+												[_p23._1._0, _p23._1._1._0, _p23._1._1._1._0]);
+										} else {
+											break _v26_5;
+										}
+									default:
+										if ((_p23._1._1._1.ctor === '::') && (_p23._1._1._1._1.ctor === '::')) {
+											var _p28 = _p23._1._1._1._0;
+											var _p27 = _p23._1._1._0;
+											var _p26 = _p23._1._0;
+											var _p25 = _p23._1._1._1._1._0;
+											var _p24 = _p23._1._1._1._1._1;
+											return (_elm_lang$core$Native_Utils.cmp(ctr, 1000) > 0) ? A2(
+												_elm_lang$core$List_ops['::'],
+												_p26,
+												A2(
+													_elm_lang$core$List_ops['::'],
+													_p27,
+													A2(
+														_elm_lang$core$List_ops['::'],
+														_p28,
+														A2(
+															_elm_lang$core$List_ops['::'],
+															_p25,
+															A2(_elm_lang$core$List$takeTailRec, n - 4, _p24))))) : A2(
+												_elm_lang$core$List_ops['::'],
+												_p26,
+												A2(
+													_elm_lang$core$List_ops['::'],
+													_p27,
+													A2(
+														_elm_lang$core$List_ops['::'],
+														_p28,
+														A2(
+															_elm_lang$core$List_ops['::'],
+															_p25,
+															A3(_elm_lang$core$List$takeFast, ctr + 1, n - 4, _p24)))));
+										} else {
+											break _v26_5;
+										}
+								}
+							} else {
+								if (_p23._0 === 1) {
+									break _v26_1;
+								} else {
+									break _v26_5;
+								}
+							}
+						}
+					} else {
+						break _v26_5;
+					}
+				} while(false);
+				return _elm_lang$core$Native_List.fromArray(
+					[_p23._1._0]);
+			} while(false);
+			return list;
 		}
+	});
+var _elm_lang$core$List$take = F2(
+	function (n, list) {
+		return A3(_elm_lang$core$List$takeFast, 0, n, list);
 	});
 var _elm_lang$core$List$repeatHelp = F3(
 	function (result, n, value) {
@@ -1542,12 +1644,12 @@ var _elm_lang$core$List$repeatHelp = F3(
 			if (_elm_lang$core$Native_Utils.cmp(n, 0) < 1) {
 				return result;
 			} else {
-				var _v23 = A2(_elm_lang$core$List_ops['::'], value, result),
-					_v24 = n - 1,
-					_v25 = value;
-				result = _v23;
-				n = _v24;
-				value = _v25;
+				var _v27 = A2(_elm_lang$core$List_ops['::'], value, result),
+					_v28 = n - 1,
+					_v29 = value;
+				result = _v27;
+				n = _v28;
+				value = _v29;
 				continue repeatHelp;
 			}
 		}
@@ -2224,17 +2326,40 @@ var incomingPortMap = F2(function subMap(tagger, finalTagger)
 
 function setupIncomingPort(name, callback)
 {
+	var sentBeforeInit = [];
 	var subs = _elm_lang$core$Native_List.Nil;
 	var converter = effectManagers[name].converter;
+	var currentOnEffects = preInitOnEffects;
+	var currentSend = preInitSend;
 
 	// CREATE MANAGER
 
 	var init = _elm_lang$core$Native_Scheduler.succeed(null);
 
-	function onEffects(router, subList, state)
+	function preInitOnEffects(router, subList, state)
+	{
+		var postInitResult = postInitOnEffects(router, subList, state);
+
+		for(var i = 0; i < sentBeforeInit.length; i++)
+		{
+			postInitSend(sentBeforeInit[i]);
+		}
+
+		sentBeforeInit = null; // to release objects held in queue
+		currentSend = postInitSend;
+		currentOnEffects = postInitOnEffects;
+		return postInitResult;
+	}
+
+	function postInitOnEffects(router, subList, state)
 	{
 		subs = subList;
 		return init;
+	}
+
+	function onEffects(router, subList, state)
+	{
+		return currentOnEffects(router, subList, state);
 	}
 
 	effectManagers[name].init = init;
@@ -2242,9 +2367,14 @@ function setupIncomingPort(name, callback)
 
 	// PUBLIC API
 
-	function send(value)
+	function preInitSend(value)
 	{
-		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, value);
+		sentBeforeInit.push(value);
+	}
+
+	function postInitSend(incomingValue)
+	{
+		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
 		if (result.ctor === 'Err')
 		{
 			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
@@ -2257,6 +2387,11 @@ function setupIncomingPort(name, callback)
 			callback(temp._0(value));
 			temp = temp._1;
 		}
+	}
+
+	function send(incomingValue)
+	{
+		currentSend(incomingValue);
 	}
 
 	return { send: send };
@@ -2281,6 +2416,7 @@ return {
 };
 
 }();
+
 //import Native.Utils //
 
 var _elm_lang$core$Native_Scheduler = function() {
@@ -2530,7 +2666,10 @@ function work()
 	var process;
 	while (numSteps < MAX_STEPS && (process = workQueue.shift()))
 	{
-		numSteps = step(numSteps, process);
+		if (process.root)
+		{
+			numSteps = step(numSteps, process);
+		}
 	}
 	if (!process)
 	{
@@ -4036,13 +4175,21 @@ function endsWith(sub, str)
 function indexes(sub, str)
 {
 	var subLen = sub.length;
+	
+	if (subLen < 1)
+	{
+		return _elm_lang$core$Native_List.Nil;
+	}
+
 	var i = 0;
 	var is = [];
+
 	while ((i = str.indexOf(sub, i)) > -1)
 	{
 		is.push(i);
 		i = i + subLen;
-	}
+	}	
+	
 	return _elm_lang$core$Native_List.fromArray(is);
 }
 
@@ -4171,6 +4318,7 @@ return {
 };
 
 }();
+
 //import Native.Utils //
 
 var _elm_lang$core$Native_Char = function() {
@@ -5658,7 +5806,7 @@ function badToString(problem)
 					+ ':\n\n' + problems.join('\n');
 
 			case 'custom':
-				return 'A `customDecode` failed'
+				return 'A `customDecoder` failed'
 					+ (context === '_' ? '' : ' at ' + context)
 					+ ' with the message: ' + problem.msg;
 
@@ -7409,7 +7557,7 @@ function applyPatch(domNode, patch)
 	switch (patch.type)
 	{
 		case 'p-redraw':
-			return redraw(domNode, patch.data, patch.eventNode);
+			return applyPatchRedraw(domNode, patch.data, patch.eventNode);
 
 		case 'p-facts':
 			applyFacts(domNode, patch.eventNode, patch.data);
@@ -7458,57 +7606,7 @@ function applyPatch(domNode, patch)
 			return domNode;
 
 		case 'p-reorder':
-			var data = patch.data;
-
-			// end inserts
-			var endInserts = data.endInserts;
-			var end;
-			if (typeof endInserts !== 'undefined')
-			{
-				if (endInserts.length === 1)
-				{
-					var insert = endInserts[0];
-					var entry = insert.entry;
-					var end = entry.tag === 'move'
-						? entry.data
-						: render(entry.vnode, patch.eventNode);
-				}
-				else
-				{
-					end = document.createDocumentFragment();
-					for (var i = 0; i < endInserts.length; i++)
-					{
-						var insert = endInserts[i];
-						var entry = insert.entry;
-						var node = entry.tag === 'move'
-							? entry.data
-							: render(entry.vnode, patch.eventNode);
-						end.appendChild(node);
-					}
-				}
-			}
-
-			// removals
-			domNode = applyPatchesHelp(domNode, data.patches);
-
-			// inserts
-			var inserts = data.inserts;
-			for (var i = 0; i < inserts.length; i++)
-			{
-				var insert = inserts[i];
-				var entry = insert.entry;
-				var node = entry.tag === 'move'
-					? entry.data
-					: render(entry.vnode, patch.eventNode);
-				domNode.insertBefore(node, domNode.childNodes[insert.index]);
-			}
-
-			if (typeof end !== 'undefined')
-			{
-				domNode.appendChild(end);
-			}
-
-			return domNode;
+			return applyPatchReorder(domNode, patch);
 
 		case 'p-custom':
 			var impl = patch.data;
@@ -7520,7 +7618,7 @@ function applyPatch(domNode, patch)
 }
 
 
-function redraw(domNode, vNode, eventNode)
+function applyPatchRedraw(domNode, vNode, eventNode)
 {
 	var parentNode = domNode.parentNode;
 	var newNode = render(vNode, eventNode);
@@ -7535,6 +7633,59 @@ function redraw(domNode, vNode, eventNode)
 		parentNode.replaceChild(newNode, domNode);
 	}
 	return newNode;
+}
+
+
+function applyPatchReorder(domNode, patch)
+{
+	var data = patch.data;
+
+	// remove end inserts
+	var frag = applyPatchReorderEndInsertsHelp(data.endInserts, patch);
+
+	// removals
+	domNode = applyPatchesHelp(domNode, data.patches);
+
+	// inserts
+	var inserts = data.inserts;
+	for (var i = 0; i < inserts.length; i++)
+	{
+		var insert = inserts[i];
+		var entry = insert.entry;
+		var node = entry.tag === 'move'
+			? entry.data
+			: render(entry.vnode, patch.eventNode);
+		domNode.insertBefore(node, domNode.childNodes[insert.index]);
+	}
+
+	// add end inserts
+	if (typeof frag !== 'undefined')
+	{
+		domNode.appendChild(frag);
+	}
+
+	return domNode;
+}
+
+
+function applyPatchReorderEndInsertsHelp(endInserts, patch)
+{
+	if (typeof endInserts === 'undefined')
+	{
+		return;
+	}
+
+	var frag = document.createDocumentFragment();
+	for (var i = 0; i < endInserts.length; i++)
+	{
+		var insert = endInserts[i];
+		var entry = insert.entry;
+		frag.appendChild(entry.tag === 'move'
+			? entry.data
+			: render(entry.vnode, patch.eventNode)
+		);
+	}
+	return frag;
 }
 
 
@@ -7908,9 +8059,150 @@ function on(node)
 	};
 }
 
+var rAF = typeof requestAnimationFrame !== 'undefined'
+	? requestAnimationFrame
+	: function(callback) { callback(); };
+
+function withNode(id, doStuff)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		rAF(function()
+		{
+			var node = document.getElementById(id);
+			if (node === null)
+			{
+				callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'NotFound', _0: id }));
+				return;
+			}
+			callback(_elm_lang$core$Native_Scheduler.succeed(doStuff(node)));
+		});
+	});
+}
+
+
+// FOCUS
+
+function focus(id)
+{
+	return withNode(id, function(node) {
+		node.focus();
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+function blur(id)
+{
+	return withNode(id, function(node) {
+		node.blur();
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+
+// SCROLLING
+
+function getScrollTop(id)
+{
+	return withNode(id, function(node) {
+		return node.scrollTop;
+	});
+}
+
+function setScrollTop(id, desiredScrollTop)
+{
+	return withNode(id, function(node) {
+		node.scrollTop = desiredScrollTop;
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+function toBottom(id)
+{
+	return withNode(id, function(node) {
+		node.scrollTop = node.scrollHeight;
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+function getScrollLeft(id)
+{
+	return withNode(id, function(node) {
+		return node.scrollLeft;
+	});
+}
+
+function setScrollLeft(id, desiredScrollLeft)
+{
+	return withNode(id, function(node) {
+		node.scrollLeft = desiredScrollLeft;
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+function toRight(id)
+{
+	return withNode(id, function(node) {
+		node.scrollLeft = node.scrollWidth;
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+
+// SIZE
+
+function width(options, id)
+{
+	return withNode(id, function(node) {
+		switch (options.ctor)
+		{
+			case 'Content':
+				return node.scrollWidth;
+			case 'VisibleContent':
+				return node.clientWidth;
+			case 'VisibleContentWithBorders':
+				return node.offsetWidth;
+			case 'VisibleContentWithBordersAndMargins':
+				var rect = node.getBoundingClientRect();
+				return rect.right - rect.left;
+		}
+	});
+}
+
+function height(options, id)
+{
+	return withNode(id, function(node) {
+		switch (options.ctor)
+		{
+			case 'Content':
+				return node.scrollHeight;
+			case 'VisibleContent':
+				return node.clientHeight;
+			case 'VisibleContentWithBorders':
+				return node.offsetHeight;
+			case 'VisibleContentWithBordersAndMargins':
+				var rect = node.getBoundingClientRect();
+				return rect.bottom - rect.top;
+		}
+	});
+}
+
 return {
 	onDocument: F3(on(document)),
-	onWindow: F3(on(window))
+	onWindow: F3(on(window)),
+
+	focus: focus,
+	blur: blur,
+
+	getScrollTop: getScrollTop,
+	setScrollTop: F2(setScrollTop),
+	getScrollLeft: getScrollLeft,
+	setScrollLeft: F2(setScrollLeft),
+	toBottom: toBottom,
+	toRight: toRight,
+
+	height: F2(height),
+	width: F2(width)
 };
 
 }();
@@ -9537,10 +9829,6 @@ var _user$project$Cell$view = function (model) {
 				_user$project$Cell$svgView(model)
 			]));
 };
-var _user$project$Cell$main = {
-	main: _elm_lang$html$Html_App$beginnerProgram(
-		{model: _user$project$Cell$init, update: _user$project$Cell$update, view: _user$project$Cell$view})
-};
 
 var _user$project$SvgUtils$applyTransform = F2(
 	function (eltTransform, element) {
@@ -9937,10 +10225,6 @@ var _user$project$TicTacToe$svgViewCell = F2(
 	});
 var _user$project$TicTacToe$svgView = A2(_user$project$TicTacToeBase$svgView, _user$project$TicTacToe$cellOwner, _user$project$TicTacToe$svgViewCell);
 var _user$project$TicTacToe$view = A2(_user$project$TicTacToeBase$view, _user$project$TicTacToe$cellOwner, _user$project$TicTacToe$svgViewCell);
-var _user$project$TicTacToe$main = {
-	main: _elm_lang$html$Html_App$beginnerProgram(
-		{model: _user$project$TicTacToe$init, update: _user$project$TicTacToe$update, view: _user$project$TicTacToe$view})
-};
 
 var _user$project$UltimateTicTacToe$boardOwner = function (boardModel) {
 	var _p0 = _user$project$TicTacToe$winner(boardModel.board);
@@ -10309,60 +10593,45 @@ var _user$project$UltimateTicTacToe$main = {
 		{model: _user$project$UltimateTicTacToe$init, update: _user$project$UltimateTicTacToe$update, view: _user$project$UltimateTicTacToe$view})
 };
 
-var _user$project$Tutorial$pages = _elm_lang$core$Array$fromList(
+var _user$project$Tutorial$tutorialText = '\n# This is Ultimate Tic-Tac-Toe\nUltimate Tic-Tac-Toe is a modern, funky variant of the venerable (but ultimately\n<a href=\"https://xkcd.com/832/\" target=\"_blank\">dull and predictable</a>)\n2-player Tic-Tac-Toe we all know.\n\nIn Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe board. You have to win three cells in a row to\nwin the game. But there\'s a twist! You don\'t get to pick which board to play in: whichever _cell_ your opponent picks\ndetermines the _board_ you must play in next.\n\nIf you\'ve never played before, check out <a href=\"https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/\" target=\"_blank\">this page</a>\nfor instructions before you get started. It\'s a short read, promise!\n\nThis is a 2-player game, so you will need to fetch you a human companion. A one player version is coming soon for people preferring\nthe company of robots.\n';
+var _user$project$Tutorial$pageContent = A2(
+	_evancz$elm_markdown$Markdown$toHtml,
 	_elm_lang$core$Native_List.fromArray(
-		['\n# This is Ultimate Tic-Tac-Toe\nUltimate Tic-Tac-Toe is a modern, funky variant of the venerable (but ultimately\n<a href=\"https://xkcd.com/832/\" target=\"_blank\">dull and predictable</a>)\n2-player Tic-Tac-Toe we all know.\n\nIn Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe board. You have to win three cells in a row to\nwin the game. But there\'s a twist! You don\'t get to pick which board to play in: whichever _cell_ your opponent picks\ndetermines the _board_ you must play in next.\n\nIf you\'ve never played before, check out <a href=\"https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/\" target=\"_blank\">this page</a>\nfor instructions before you get started. It\'s a short read, promise!\n\nThis is a 2-player game, so you will need to fetch you a human companion. A one player version is coming soon for people preferring\nthe company of robots.\n']));
-var _user$project$Tutorial$pageContent = function (index) {
-	return A2(
-		_evancz$elm_markdown$Markdown$toHtml,
-		_elm_lang$core$Native_List.fromArray(
-			[
-				_elm_lang$html$Html_Attributes$class('content')
-			]),
-		A2(
-			_elm_lang$core$Maybe$withDefault,
-			'',
-			A2(_elm_lang$core$Array$get, index, _user$project$Tutorial$pages)));
-};
+		[
+			_elm_lang$html$Html_Attributes$class('content')
+		]),
+	_user$project$Tutorial$tutorialText);
+var _user$project$Tutorial$escapeKey = 27;
+var _user$project$Tutorial$Hidden = {ctor: 'Hidden'};
 var _user$project$Tutorial$update = F2(
 	function (msg, model) {
 		var newModel = function () {
 			var _p0 = msg;
-			switch (_p0.ctor) {
-				case 'NextPage':
-					return A2(
-						_elm_lang$core$Maybe$map,
-						function (pageNumber) {
-							return (_elm_lang$core$Native_Utils.cmp(
-								pageNumber,
-								_elm_lang$core$Array$length(_user$project$Tutorial$pages) - 1) < 0) ? (pageNumber + 1) : pageNumber;
-						},
-						model);
-				case 'PreviousPage':
-					return A2(
-						_elm_lang$core$Maybe$map,
-						function (pageNumber) {
-							return (_elm_lang$core$Native_Utils.cmp(pageNumber, 0) > 0) ? (pageNumber - 1) : pageNumber;
-						},
-						model);
-				case 'SkipTutorial':
-					return _elm_lang$core$Maybe$Nothing;
-				default:
-					return model;
+			if (_p0.ctor === 'HideTutorial') {
+				return _user$project$Tutorial$Hidden;
+			} else {
+				return model;
 			}
 		}();
-		return {ctor: '_Tuple2', _0: newModel, _1: _elm_lang$core$Platform_Cmd$none};
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			newModel,
+			_elm_lang$core$Native_List.fromArray(
+				[]));
 	});
-var _user$project$Tutorial$init = {
-	ctor: '_Tuple2',
-	_0: _elm_lang$core$Maybe$Just(0),
-	_1: _elm_lang$core$Platform_Cmd$none
-};
+var _user$project$Tutorial$Visible = {ctor: 'Visible'};
+var _user$project$Tutorial$init = {ctor: '_Tuple2', _0: _user$project$Tutorial$Visible, _1: _elm_lang$core$Platform_Cmd$none};
 var _user$project$Tutorial$NoOp = {ctor: 'NoOp'};
-var _user$project$Tutorial$SkipTutorial = {ctor: 'SkipTutorial'};
-var _user$project$Tutorial$view = function (pageNumber) {
-	var _p1 = pageNumber;
-	if (_p1.ctor === 'Nothing') {
+var _user$project$Tutorial$HideTutorial = {ctor: 'HideTutorial'};
+var _user$project$Tutorial$subscriptions = function (model) {
+	return _elm_lang$keyboard$Keyboard$downs(
+		function (key) {
+			return _elm_lang$core$Native_Utils.eq(key, _user$project$Tutorial$escapeKey) ? _user$project$Tutorial$HideTutorial : _user$project$Tutorial$NoOp;
+		});
+};
+var _user$project$Tutorial$view = function (model) {
+	var _p1 = model;
+	if (_p1.ctor === 'Hidden') {
 		return A2(
 			_elm_lang$html$Html$span,
 			_elm_lang$core$Native_List.fromArray(
@@ -10370,8 +10639,7 @@ var _user$project$Tutorial$view = function (pageNumber) {
 			_elm_lang$core$Native_List.fromArray(
 				[]));
 	} else {
-		var content = _user$project$Tutorial$pageContent(_p1._0);
-		var finishButton = A2(
+		var hideTutorialButton = A2(
 			_elm_lang$html$Html$button,
 			_elm_lang$core$Native_List.fromArray(
 				[
@@ -10380,51 +10648,38 @@ var _user$project$Tutorial$view = function (pageNumber) {
 						[
 							{ctor: '_Tuple2', _0: 'float', _1: 'right'}
 						])),
-					_elm_lang$html$Html_Events$onClick(_user$project$Tutorial$SkipTutorial)
+					_elm_lang$html$Html_Events$onClick(_user$project$Tutorial$HideTutorial)
 				]),
 			_elm_lang$core$Native_List.fromArray(
 				[
 					_elm_lang$html$Html$text('Enough reading, let me play now!')
 				]));
-		var buttons = _elm_lang$core$Native_List.fromArray(
-			[finishButton]);
 		return A2(
 			_elm_lang$html$Html$div,
 			_elm_lang$core$Native_List.fromArray(
 				[
 					_elm_lang$html$Html_Attributes$class('tutorial')
 				]),
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				_elm_lang$core$Native_List.fromArray(
-					[content]),
-				buttons));
+			_elm_lang$core$Native_List.fromArray(
+				[_user$project$Tutorial$pageContent, hideTutorialButton]));
 	}
-};
-var _user$project$Tutorial$PreviousPage = {ctor: 'PreviousPage'};
-var _user$project$Tutorial$NextPage = {ctor: 'NextPage'};
-var _user$project$Tutorial$switchPage = function (keyPress) {
-	var _p2 = keyPress;
-	switch (_p2) {
-		case 37:
-			return _user$project$Tutorial$PreviousPage;
-		case 39:
-			return _user$project$Tutorial$NextPage;
-		default:
-			return _user$project$Tutorial$NoOp;
-	}
-};
-var _user$project$Tutorial$subscriptions = function (model) {
-	return _elm_lang$keyboard$Keyboard$presses(_user$project$Tutorial$switchPage);
-};
-var _user$project$Tutorial$main = {
-	main: _elm_lang$html$Html_App$program(
-		{init: _user$project$Tutorial$init, update: _user$project$Tutorial$update, view: _user$project$Tutorial$view, subscriptions: _user$project$Tutorial$subscriptions})
 };
 
+var _user$project$Main$css = function (path) {
+	return A3(
+		_elm_lang$html$Html$node,
+		'link',
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$rel('stylesheet'),
+				_elm_lang$html$Html_Attributes$href(path)
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[]));
+};
 var _user$project$Main$Model = F3(
 	function (a, b, c) {
-		return {ticTacToe: a, tutorialPage: b, windowSize: c};
+		return {ticTacToe: a, tutorial: b, windowSize: c};
 	});
 var _user$project$Main$TutorialMessage = function (a) {
 	return {ctor: 'TutorialMessage', _0: a};
@@ -10436,36 +10691,42 @@ var _user$project$Main$update = F2(
 		var _p2 = msg;
 		switch (_p2.ctor) {
 			case 'TicTacToeMessage':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
 						_p4,
 						{
 							ticTacToe: A2(_user$project$UltimateTicTacToe$update, _p2._0, _p1.ticTacToe)
 						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+					_elm_lang$core$Native_List.fromArray(
+						[]));
 			case 'NewWindowSize':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
 						_p4,
 						{windowSize: _p2._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+					_elm_lang$core$Native_List.fromArray(
+						[]));
 			case 'TutorialMessage':
-				var _p3 = A2(_user$project$Tutorial$update, _p2._0, _p1.tutorialPage);
-				var newPage = _p3._0;
+				var _p3 = A2(_user$project$Tutorial$update, _p2._0, _p1.tutorial);
+				var newTutorial = _p3._0;
 				var cmd = _p3._1;
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
 						_p4,
-						{tutorialPage: newPage}),
-					_1: A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$TutorialMessage, cmd)
-				};
+						{tutorial: newTutorial}),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$TutorialMessage, cmd)
+						]));
 			default:
-				return {ctor: '_Tuple2', _0: _p4, _1: _elm_lang$core$Platform_Cmd$none};
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_p4,
+					_elm_lang$core$Native_List.fromArray(
+						[]));
 		}
 	});
 var _user$project$Main$SizeUpdateFailure = function (a) {
@@ -10476,12 +10737,22 @@ var _user$project$Main$NewWindowSize = function (a) {
 };
 var _user$project$Main$getWindowSize = A3(_elm_lang$core$Task$perform, _user$project$Main$SizeUpdateFailure, _user$project$Main$NewWindowSize, _elm_lang$window$Window$size);
 var _user$project$Main$init = function () {
+	var _p5 = _user$project$Tutorial$init;
+	var tutorial = _p5._0;
+	var tutorialMsg = _p5._1;
 	var model = {
 		ticTacToe: _user$project$UltimateTicTacToe$init,
-		tutorialPage: _elm_lang$core$Maybe$Just(0),
+		tutorial: tutorial,
 		windowSize: {width: 800, height: 600}
 	};
-	return {ctor: '_Tuple2', _0: model, _1: _user$project$Main$getWindowSize};
+	return A2(
+		_elm_lang$core$Platform_Cmd_ops['!'],
+		model,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$TutorialMessage, tutorialMsg),
+				_user$project$Main$getWindowSize
+			]));
 }();
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$batch(
@@ -10491,15 +10762,15 @@ var _user$project$Main$subscriptions = function (model) {
 				A2(
 				_elm_lang$core$Platform_Sub$map,
 				_user$project$Main$TutorialMessage,
-				_user$project$Tutorial$subscriptions(model.tutorialPage))
+				_user$project$Tutorial$subscriptions(model.tutorial))
 			]));
 };
 var _user$project$Main$TicTacToeMessage = function (a) {
 	return {ctor: 'TicTacToeMessage', _0: a};
 };
-var _user$project$Main$view = function (_p5) {
-	var _p6 = _p5;
-	var _p7 = _p6.windowSize;
+var _user$project$Main$view = function (_p6) {
+	var _p7 = _p6;
+	var _p8 = _p7.windowSize;
 	var tutorialStyle = _elm_lang$html$Html_Attributes$style(
 		_elm_lang$core$Native_List.fromArray(
 			[
@@ -10513,9 +10784,9 @@ var _user$project$Main$view = function (_p5) {
 	var tutorialView = A2(
 		_elm_lang$html$Html_App$map,
 		_user$project$Main$TutorialMessage,
-		_user$project$Tutorial$view(_p6.tutorialPage));
+		_user$project$Tutorial$view(_p7.tutorial));
 	var minSize = _elm_lang$core$Basics$toFloat(
-		A2(_elm_lang$core$Basics$min, _p7.width, _p7.height)) - 5;
+		A2(_elm_lang$core$Basics$min, _p8.width, _p8.height)) - 5;
 	var size = _elm_lang$core$Basics$toString(minSize);
 	var mainDivStyle = _elm_lang$html$Html_Attributes$style(
 		_elm_lang$core$Native_List.fromArray(
@@ -10536,13 +10807,14 @@ var _user$project$Main$view = function (_p5) {
 		A2(
 			_user$project$SvgUtils$scale,
 			scale,
-			_user$project$UltimateTicTacToe$svgView(_p6.ticTacToe)));
+			_user$project$UltimateTicTacToe$svgView(_p7.ticTacToe)));
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
 			[mainDivStyle]),
 		_elm_lang$core$Native_List.fromArray(
 			[
+				_user$project$Main$css('style.css'),
 				A2(
 				_elm_lang$svg$Svg$svg,
 				_elm_lang$core$Native_List.fromArray(
