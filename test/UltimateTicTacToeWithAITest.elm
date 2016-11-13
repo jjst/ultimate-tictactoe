@@ -91,6 +91,48 @@ tests =
                  (AI.nextMove currentBoard)
                toBe
                  (Just {boardCoords = (I2,I2), cellCoords = (I2,I3)})
+    , let
+          currentBoard = fromString Player.O (Just (I2,I2))
+            """
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            """ |> orCrash
+      in
+          it "evalPosition gives 100 bonus per won board"
+            <| expect
+                 (AI.evalPosition currentBoard)
+               toBe
+                 (200)
+    , let
+          currentBoard = fromString Player.O (Just (I2,I2))
+            """
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | x x x | _ _ _
+             _ _ _ | _ _ _ | x x x
+            """ |> orCrash
+      in
+          it "evalPosition gives -100 malus per lost board"
+            <| expect
+                 (AI.evalPosition currentBoard)
+               toBe
+                 (-100)
     ]
 
 

@@ -21,16 +21,17 @@ nextMove : Model -> Maybe Move
 nextMove board =
     let
         minimaxScore : Move -> Int
-        minimaxScore move = minimax (applyMove move board) 2 Maximize
+        minimaxScore move = minimax (applyMove move board) 1 Minimize
         potentialMoves = validMoves board
-        scoredMoves = potentialMoves |> List.map (\m -> (m, minimaxScore m))
+        scoredMoves = potentialMoves |> List.map (\m -> (m, minimaxScore m)) |> Debug.log "available moves"
         nextMove = scoredMoves
             |> List.sortBy snd
             |> List.reverse
             |> List.head
+            |> Debug.log "next move"
             |> Maybe.map fst
     in
-       Debug.log "next move" nextMove
+       nextMove
 
 toMsg : Move -> UltimateTicTacToe.Msg
 toMsg { boardCoords, cellCoords } =
@@ -110,8 +111,21 @@ minimax ticTacToe depth action =
                            min
 
 
+-- Heuristic to evaluate the current board
 evalPosition : Model -> Int
-evalPosition m = 0
+evalPosition model =
+    let
+       wonBoardsDelta = (wonBoards model O - wonBoards model X) * 100
+    in
+       wonBoardsDelta
+
+wonBoards : Model -> Player -> Int
+wonBoards model player =
+    let
+        subBoards = Board.flatten model.board
+        wonBoards = subBoards |> List.filter (\b -> TicTacToe.winner b.board == Just (Left player)) |> List.length
+    in wonBoards
+
 
 -- UPDATE
 
