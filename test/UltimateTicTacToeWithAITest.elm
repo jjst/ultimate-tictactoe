@@ -4,6 +4,7 @@ import ElmTest exposing (runSuite)
 import ElmTestBDDStyle exposing (..)
 
 import UltimateTicTacToe exposing (..)
+import TicTacToe as T
 import UltimateTicTacToeWithAI as AI
 import TicTacToe
 import Player
@@ -133,6 +134,87 @@ tests =
                  (AI.evalPosition currentBoard)
                toBe
                  (-100)
+    , let
+          currentBoard = fromString Player.O (Nothing)
+            """
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | x x x
+            """ |> orCrash
+      in
+          it "evalPosition gives 70 bonus if free to play anywhere"
+            <| expect
+                 (AI.evalPosition currentBoard)
+               toBe
+                 (70)
+    , let
+          currentBoard = fromString Player.X (Nothing)
+            """
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | x x x
+            """ |> orCrash
+      in
+          it "evalPosition gives -70 malus if opponent free to play anywhere"
+            <| expect
+                 (AI.evalPosition currentBoard)
+               toBe
+                 (-70)
+    , let
+          board = T.fromString Player.X
+            """
+            o o _
+            _ _ _
+            _ _ _
+            """ |> orCrash
+      in
+          it "detects a tictactoe with 2 in a row as winnable"
+            <| expect
+                 (AI.isWinnable board Player.O)
+               toBe <|
+                 (True)
+    , let
+          board = T.fromString Player.X
+            """
+            o o x
+            _ _ _
+            _ _ _
+            """ |> orCrash
+      in
+          it "detects a blocked tictactoe with 2 in a row as non-winnable"
+            <| expect
+                 (AI.isWinnable board Player.O)
+               toBe <|
+                 (False)
+    , let
+          board = T.fromString Player.X
+            """
+            o x _
+            _ _ _
+            _ _ x
+            """ |> orCrash
+      in
+          it "detects a tictactoe without 2 in a row as non winnable"
+            <| expect
+                 (AI.isWinnable board Player.X)
+               toBe <|
+                 (False)
     ]
 
 
