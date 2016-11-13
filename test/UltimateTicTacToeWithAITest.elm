@@ -3,10 +3,15 @@ module AITest exposing (..)
 import ElmTest exposing (runSuite)
 import ElmTestBDDStyle exposing (..)
 
-import AI
+import UltimateTicTacToeWithAI as AI
 import TicTacToe
 import Player
 import Tuple3 exposing (..)
+
+orCrash : Result String a -> a
+orCrash result = case result of
+    Err s -> Debug.crash s
+    Ok a -> a
 
 tests : Test
 tests =
@@ -43,6 +48,27 @@ tests =
                  (AI.validMovesOnBoard board)
                toBe
                  ([(I2,I2),(I2,I3),(I3,I1)])
+    , let
+          currentBoard = fromString Player.O (Just (I2,I2))
+            """
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            """ |> orCrash
+      in
+          it "plays the winning move"
+            <| expect
+                 (AI.nextMove currentBoard)
+               toBe
+                 ({boardCoords = (I2,I2), cellCoords = (I2,I3)})
     ]
 
 
