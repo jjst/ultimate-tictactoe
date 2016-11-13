@@ -10593,67 +10593,288 @@ var _user$project$UltimateTicTacToe$main = {
 		{model: _user$project$UltimateTicTacToe$init, update: _user$project$UltimateTicTacToe$update, view: _user$project$UltimateTicTacToe$view})
 };
 
-var _user$project$Tutorial$tutorialText = '\n# This is Ultimate Tic-Tac-Toe\nUltimate Tic-Tac-Toe is a modern, funky variant of the venerable (but ultimately\n<a href=\"https://xkcd.com/832/\" target=\"_blank\">dull and predictable</a>)\n2-player Tic-Tac-Toe we all know.\n\nIn Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe board. You have to win three cells in a row to\nwin the game. But there\'s a twist! You don\'t get to pick which board to play in: whichever _cell_ your opponent picks\ndetermines the _board_ you must play in next.\n\nIf you\'ve never played before, check out <a href=\"https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/\" target=\"_blank\">this page</a>\nfor instructions before you get started. It\'s a short read, promise!\n\nThis is a 2-player game, so you will need to fetch you a human companion. A one player version is coming soon for people preferring\nthe company of robots.\n';
-var _user$project$Tutorial$pageContent = A2(
+var _user$project$UltimateTicTacToeWithAI$view = _user$project$UltimateTicTacToe$view;
+var _user$project$UltimateTicTacToeWithAI$wonBoards = F2(
+	function (model, player) {
+		var subBoards = _user$project$Board$flatten(model.board);
+		var wonBoards = _elm_lang$core$List$length(
+			A2(
+				_elm_lang$core$List$filter,
+				function (b) {
+					return _elm_lang$core$Native_Utils.eq(
+						_user$project$TicTacToe$winner(b.board),
+						_elm_lang$core$Maybe$Just(
+							_user$project$Player$Left(player)));
+				},
+				subBoards));
+		return wonBoards;
+	});
+var _user$project$UltimateTicTacToeWithAI$isWinnable = F2(
+	function (ticTacToe, player) {
+		var board = ticTacToe.board;
+		var rows = A2(
+			_elm_lang$core$List$map,
+			function (row) {
+				return A2(
+					_elm_lang$core$List$map,
+					function (coords) {
+						return A2(_user$project$Board$get, board, coords).mark;
+					},
+					_user$project$Tuple3$toList(row));
+			},
+			_user$project$Board$allRows);
+		var isWinnable = function (row) {
+			var markCount = _elm_lang$core$List$length(
+				A2(
+					_elm_lang$core$List$filter,
+					function (e) {
+						return _elm_lang$core$Native_Utils.eq(
+							e,
+							_elm_lang$core$Maybe$Just(player));
+					},
+					row));
+			return _elm_lang$core$Native_Utils.eq(markCount, 2) && A2(_elm_lang$core$List$member, _elm_lang$core$Maybe$Nothing, row);
+		};
+		return A2(_elm_lang$core$List$any, isWinnable, rows);
+	});
+var _user$project$UltimateTicTacToeWithAI$winnableBoards = F2(
+	function (model, player) {
+		return _elm_lang$core$List$length(
+			A2(
+				_elm_lang$core$List$filter,
+				function (b) {
+					return A2(_user$project$UltimateTicTacToeWithAI$isWinnable, b, player);
+				},
+				_user$project$Board$flatten(model.board)));
+	});
+var _user$project$UltimateTicTacToeWithAI$evalPosition = function (model) {
+	var unrestrictedMovementBonus = function () {
+		var _p0 = model.currentBoardCoords;
+		if (_p0.ctor === 'Nothing') {
+			var _p1 = model.currentPlayer;
+			if (_p1.ctor === 'O') {
+				return 70;
+			} else {
+				return -70;
+			}
+		} else {
+			return 0;
+		}
+	}();
+	var winnableBoardsDelta = A2(_user$project$UltimateTicTacToeWithAI$winnableBoards, model, _user$project$Player$O) - A2(_user$project$UltimateTicTacToeWithAI$winnableBoards, model, _user$project$Player$X);
+	var wonBoardsDelta = A2(_user$project$UltimateTicTacToeWithAI$wonBoards, model, _user$project$Player$O) - A2(_user$project$UltimateTicTacToeWithAI$wonBoards, model, _user$project$Player$X);
+	return ((wonBoardsDelta * 100) + (winnableBoardsDelta * 35)) + unrestrictedMovementBonus;
+};
+var _user$project$UltimateTicTacToeWithAI$maxValue = 100000;
+var _user$project$UltimateTicTacToeWithAI$validMovesOnBoard = function (ticTacToe) {
+	var _p2 = _user$project$TicTacToe$winner(ticTacToe.board);
+	if (_p2.ctor === 'Nothing') {
+		return A2(
+			_elm_lang$core$List$filterMap,
+			_elm_lang$core$Basics$identity,
+			_user$project$Board$flatten(
+				A2(
+					_user$project$Board$indexedMap,
+					F2(
+						function (coords, cell) {
+							return _elm_lang$core$Native_Utils.eq(cell.mark, _elm_lang$core$Maybe$Nothing) ? _elm_lang$core$Maybe$Just(coords) : _elm_lang$core$Maybe$Nothing;
+						}),
+					ticTacToe.board)));
+	} else {
+		return _elm_lang$core$Native_List.fromArray(
+			[]);
+	}
+};
+var _user$project$UltimateTicTacToeWithAI$validMoves = function (_p3) {
+	var _p4 = _p3;
+	var _p8 = _p4.board;
+	var _p5 = _user$project$UltimateTicTacToe$winner(_p8);
+	if (_p5.ctor === 'Nothing') {
+		var _p6 = _p4.currentBoardCoords;
+		if (_p6.ctor === 'Nothing') {
+			var moves = _elm_lang$core$List$concat(
+				_user$project$Board$flatten(
+					A2(
+						_user$project$Board$indexedMap,
+						F2(
+							function (coords, b) {
+								return A2(
+									_elm_lang$core$List$map,
+									function (c) {
+										return {boardCoords: coords, cellCoords: c};
+									},
+									_user$project$UltimateTicTacToeWithAI$validMovesOnBoard(b));
+							}),
+						_p8)));
+			return moves;
+		} else {
+			var _p7 = _p6._0;
+			return A2(
+				_elm_lang$core$List$map,
+				function (c) {
+					return {boardCoords: _p7, cellCoords: c};
+				},
+				_user$project$UltimateTicTacToeWithAI$validMovesOnBoard(
+					A2(_user$project$Board$get, _p8, _p7)));
+		}
+	} else {
+		return _elm_lang$core$Native_List.fromArray(
+			[]);
+	}
+};
+var _user$project$UltimateTicTacToeWithAI$toMsg = function (_p9) {
+	var _p10 = _p9;
+	return A2(
+		_user$project$UltimateTicTacToe$MetaPlaceMark,
+		_p10.boardCoords,
+		A2(_user$project$TicTacToe$PlaceMark, _p10.cellCoords, _user$project$Cell$PlaceMark));
+};
+var _user$project$UltimateTicTacToeWithAI$applyMove = F2(
+	function (move, board) {
+		return A2(
+			_user$project$UltimateTicTacToe$update,
+			_user$project$UltimateTicTacToeWithAI$toMsg(move),
+			board);
+	});
+var _user$project$UltimateTicTacToeWithAI$Move = F2(
+	function (a, b) {
+		return {boardCoords: a, cellCoords: b};
+	});
+var _user$project$UltimateTicTacToeWithAI$Minimize = {ctor: 'Minimize'};
+var _user$project$UltimateTicTacToeWithAI$Maximize = {ctor: 'Maximize'};
+var _user$project$UltimateTicTacToeWithAI$minimax = F3(
+	function (ticTacToe, depth, action) {
+		var _p11 = _user$project$UltimateTicTacToe$winner(ticTacToe.board);
+		if (_p11.ctor === 'Just') {
+			var _p12 = _p11._0;
+			if (_p12.ctor === 'Left') {
+				if (_p12._0.ctor === 'X') {
+					return 0 - _user$project$UltimateTicTacToeWithAI$maxValue;
+				} else {
+					return _user$project$UltimateTicTacToeWithAI$maxValue;
+				}
+			} else {
+				return 0;
+			}
+		} else {
+			if (_elm_lang$core$Native_Utils.eq(depth, 0)) {
+				return _user$project$UltimateTicTacToeWithAI$evalPosition(ticTacToe);
+			} else {
+				var _p13 = action;
+				if (_p13.ctor === 'Maximize') {
+					var values = A2(
+						_elm_lang$core$List$map,
+						function (move) {
+							return A3(
+								_user$project$UltimateTicTacToeWithAI$minimax,
+								A2(_user$project$UltimateTicTacToeWithAI$applyMove, move, ticTacToe),
+								depth - 1,
+								_user$project$UltimateTicTacToeWithAI$Minimize);
+						},
+						_user$project$UltimateTicTacToeWithAI$validMoves(ticTacToe));
+					var max = A2(
+						_elm_lang$core$Maybe$withDefault,
+						0 - _user$project$UltimateTicTacToeWithAI$maxValue,
+						_elm_lang$core$List$maximum(values));
+					return max;
+				} else {
+					var values = A2(
+						_elm_lang$core$List$map,
+						function (move) {
+							return A3(
+								_user$project$UltimateTicTacToeWithAI$minimax,
+								A2(_user$project$UltimateTicTacToeWithAI$applyMove, move, ticTacToe),
+								depth - 1,
+								_user$project$UltimateTicTacToeWithAI$Maximize);
+						},
+						_user$project$UltimateTicTacToeWithAI$validMoves(ticTacToe));
+					var min = A2(
+						_elm_lang$core$Maybe$withDefault,
+						_user$project$UltimateTicTacToeWithAI$maxValue,
+						_elm_lang$core$List$minimum(values));
+					return min;
+				}
+			}
+		}
+	});
+var _user$project$UltimateTicTacToeWithAI$nextMove = function (board) {
+	var potentialMoves = _user$project$UltimateTicTacToeWithAI$validMoves(board);
+	var minimaxScore = function (move) {
+		return A3(
+			_user$project$UltimateTicTacToeWithAI$minimax,
+			A2(_user$project$UltimateTicTacToeWithAI$applyMove, move, board),
+			1,
+			_user$project$UltimateTicTacToeWithAI$Minimize);
+	};
+	var scoredMoves = A2(
+		_elm_lang$core$Debug$log,
+		'available moves',
+		A2(
+			_elm_lang$core$List$map,
+			function (m) {
+				return {
+					ctor: '_Tuple2',
+					_0: m,
+					_1: minimaxScore(m)
+				};
+			},
+			potentialMoves));
+	var nextMove = A2(
+		_elm_lang$core$Maybe$map,
+		_elm_lang$core$Basics$fst,
+		A2(
+			_elm_lang$core$Debug$log,
+			'next move',
+			_elm_lang$core$List$head(
+				_elm_lang$core$List$reverse(
+					A2(_elm_lang$core$List$sortBy, _elm_lang$core$Basics$snd, scoredMoves)))));
+	return nextMove;
+};
+var _user$project$UltimateTicTacToeWithAI$update = F2(
+	function (msg, _p14) {
+		var _p15 = _p14;
+		var updatedModelAfterPlayerMove = A2(_user$project$UltimateTicTacToe$update, msg, _p15);
+		var aiMove = _user$project$UltimateTicTacToeWithAI$nextMove(updatedModelAfterPlayerMove);
+		var updatedModelAfterAIMove = function () {
+			var _p16 = aiMove;
+			if (_p16.ctor === 'Just') {
+				return A2(
+					_user$project$UltimateTicTacToe$update,
+					_user$project$UltimateTicTacToeWithAI$toMsg(_p16._0),
+					updatedModelAfterPlayerMove);
+			} else {
+				return updatedModelAfterPlayerMove;
+			}
+		}();
+		return updatedModelAfterAIMove;
+	});
+
+var _user$project$Menu$tutorialText = '\n# This is Ultimate Tic-Tac-Toe\nUltimate Tic-Tac-Toe is a modern, funky variant of the venerable (but ultimately\n<a href=\"https://xkcd.com/832/\" target=\"_blank\">dull and predictable</a>)\n2-player Tic-Tac-Toe we all know.\n\nIn Ultimate Tic-Tac-Toe, each cell is divided into another Tic-Tac-Toe board. You have to win three cells in a row to\nwin the game. But there\'s a twist! You don\'t get to pick which board to play in: whichever _cell_ your opponent picks\ndetermines the _board_ you must play in next.\n\nIf you\'ve never played before, check out <a href=\"https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/\" target=\"_blank\">this page</a>\nfor instructions before you get started. It\'s a short read, promise!\n';
+var _user$project$Menu$pageContent = A2(
 	_evancz$elm_markdown$Markdown$toHtml,
 	_elm_lang$core$Native_List.fromArray(
 		[
 			_elm_lang$html$Html_Attributes$class('content')
 		]),
-	_user$project$Tutorial$tutorialText);
-var _user$project$Tutorial$escapeKey = 27;
-var _user$project$Tutorial$Hidden = {ctor: 'Hidden'};
-var _user$project$Tutorial$update = F2(
+	_user$project$Menu$tutorialText);
+var _user$project$Menu$TwoPlayers = {ctor: 'TwoPlayers'};
+var _user$project$Menu$OnePlayerVsAI = {ctor: 'OnePlayerVsAI'};
+var _user$project$Menu$update = F2(
 	function (msg, model) {
-		var newModel = function () {
-			var _p0 = msg;
-			if (_p0.ctor === 'HideTutorial') {
-				return _user$project$Tutorial$Hidden;
-			} else {
-				return model;
-			}
-		}();
-		return A2(
-			_elm_lang$core$Platform_Cmd_ops['!'],
-			newModel,
-			_elm_lang$core$Native_List.fromArray(
-				[]));
+		var _p0 = msg;
+		if (_p0.ctor === 'Choose1P') {
+			return _user$project$Menu$OnePlayerVsAI;
+		} else {
+			return _user$project$Menu$TwoPlayers;
+		}
 	});
-var _user$project$Tutorial$Visible = {ctor: 'Visible'};
-var _user$project$Tutorial$init = {ctor: '_Tuple2', _0: _user$project$Tutorial$Visible, _1: _elm_lang$core$Platform_Cmd$none};
-var _user$project$Tutorial$NoOp = {ctor: 'NoOp'};
-var _user$project$Tutorial$HideTutorial = {ctor: 'HideTutorial'};
-var _user$project$Tutorial$subscriptions = function (model) {
-	return _elm_lang$keyboard$Keyboard$downs(
-		function (key) {
-			return _elm_lang$core$Native_Utils.eq(key, _user$project$Tutorial$escapeKey) ? _user$project$Tutorial$HideTutorial : _user$project$Tutorial$NoOp;
-		});
-};
-var _user$project$Tutorial$view = function (model) {
+var _user$project$Menu$NotChosen = {ctor: 'NotChosen'};
+var _user$project$Menu$init = _user$project$Menu$NotChosen;
+var _user$project$Menu$Choose2P = {ctor: 'Choose2P'};
+var _user$project$Menu$Choose1P = {ctor: 'Choose1P'};
+var _user$project$Menu$view = function (model) {
 	var _p1 = model;
-	if (_p1.ctor === 'Hidden') {
-		return A2(
-			_elm_lang$html$Html$span,
-			_elm_lang$core$Native_List.fromArray(
-				[]),
-			_elm_lang$core$Native_List.fromArray(
-				[]));
-	} else {
-		var hideTutorialButton = A2(
-			_elm_lang$html$Html$button,
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$html$Html_Attributes$style(
-					_elm_lang$core$Native_List.fromArray(
-						[
-							{ctor: '_Tuple2', _0: 'float', _1: 'right'}
-						])),
-					_elm_lang$html$Html_Events$onClick(_user$project$Tutorial$HideTutorial)
-				]),
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$html$Html$text('Enough reading, let me play now!')
-				]));
+	if (_p1.ctor === 'NotChosen') {
 		return A2(
 			_elm_lang$html$Html$div,
 			_elm_lang$core$Native_List.fromArray(
@@ -10661,7 +10882,49 @@ var _user$project$Tutorial$view = function (model) {
 					_elm_lang$html$Html_Attributes$class('tutorial')
 				]),
 			_elm_lang$core$Native_List.fromArray(
-				[_user$project$Tutorial$pageContent, hideTutorialButton]));
+				[
+					_user$project$Menu$pageContent,
+					A2(
+					_elm_lang$html$Html$div,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$style(
+							_elm_lang$core$Native_List.fromArray(
+								[
+									{ctor: '_Tuple2', _0: 'float', _1: 'right'}
+								]))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							A2(
+							_elm_lang$html$Html$button,
+							_elm_lang$core$Native_List.fromArray(
+								[
+									_elm_lang$html$Html_Events$onClick(_user$project$Menu$Choose1P)
+								]),
+							_elm_lang$core$Native_List.fromArray(
+								[
+									_elm_lang$html$Html$text('1 Player vs AI')
+								])),
+							A2(
+							_elm_lang$html$Html$button,
+							_elm_lang$core$Native_List.fromArray(
+								[
+									_elm_lang$html$Html_Events$onClick(_user$project$Menu$Choose2P)
+								]),
+							_elm_lang$core$Native_List.fromArray(
+								[
+									_elm_lang$html$Html$text('2 Players')
+								]))
+						]))
+				]));
+	} else {
+		return A2(
+			_elm_lang$html$Html$span,
+			_elm_lang$core$Native_List.fromArray(
+				[]),
+			_elm_lang$core$Native_List.fromArray(
+				[]));
 	}
 };
 
@@ -10677,58 +10940,58 @@ var _user$project$Main$css = function (path) {
 		_elm_lang$core$Native_List.fromArray(
 			[]));
 };
-var _user$project$Main$Model = F3(
-	function (a, b, c) {
-		return {ticTacToe: a, tutorial: b, windowSize: c};
-	});
-var _user$project$Main$TutorialMessage = function (a) {
-	return {ctor: 'TutorialMessage', _0: a};
-};
 var _user$project$Main$update = F2(
 	function (msg, _p0) {
 		var _p1 = _p0;
-		var _p4 = _p1;
-		var _p2 = msg;
-		switch (_p2.ctor) {
-			case 'TicTacToeMessage':
-				return A2(
-					_elm_lang$core$Platform_Cmd_ops['!'],
-					_elm_lang$core$Native_Utils.update(
-						_p4,
+		var _p5 = _p1;
+		var _p4 = _p1.menu;
+		var newModel = function () {
+			var _p2 = msg;
+			switch (_p2.ctor) {
+				case 'TicTacToeMessage':
+					var update = function () {
+						var _p3 = _p4;
+						switch (_p3.ctor) {
+							case 'OnePlayerVsAI':
+								return _user$project$UltimateTicTacToeWithAI$update;
+							case 'TwoPlayers':
+								return _user$project$UltimateTicTacToe$update;
+							default:
+								return _user$project$UltimateTicTacToe$update;
+						}
+					}();
+					return _elm_lang$core$Native_Utils.update(
+						_p5,
 						{
-							ticTacToe: A2(_user$project$UltimateTicTacToe$update, _p2._0, _p1.ticTacToe)
-						}),
-					_elm_lang$core$Native_List.fromArray(
-						[]));
-			case 'NewWindowSize':
-				return A2(
-					_elm_lang$core$Platform_Cmd_ops['!'],
-					_elm_lang$core$Native_Utils.update(
-						_p4,
-						{windowSize: _p2._0}),
-					_elm_lang$core$Native_List.fromArray(
-						[]));
-			case 'TutorialMessage':
-				var _p3 = A2(_user$project$Tutorial$update, _p2._0, _p1.tutorial);
-				var newTutorial = _p3._0;
-				var cmd = _p3._1;
-				return A2(
-					_elm_lang$core$Platform_Cmd_ops['!'],
-					_elm_lang$core$Native_Utils.update(
-						_p4,
-						{tutorial: newTutorial}),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$TutorialMessage, cmd)
-						]));
-			default:
-				return A2(
-					_elm_lang$core$Platform_Cmd_ops['!'],
-					_p4,
-					_elm_lang$core$Native_List.fromArray(
-						[]));
-		}
+							ticTacToe: A2(update, _p2._0, _p1.ticTacToe)
+						});
+				case 'NewWindowSize':
+					return _elm_lang$core$Native_Utils.update(
+						_p5,
+						{windowSize: _p2._0});
+				case 'MenuMessage':
+					return _elm_lang$core$Native_Utils.update(
+						_p5,
+						{
+							menu: A2(_user$project$Menu$update, _p2._0, _p4)
+						});
+				default:
+					return _p5;
+			}
+		}();
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			newModel,
+			_elm_lang$core$Native_List.fromArray(
+				[]));
 	});
+var _user$project$Main$Model = F3(
+	function (a, b, c) {
+		return {ticTacToe: a, menu: b, windowSize: c};
+	});
+var _user$project$Main$MenuMessage = function (a) {
+	return {ctor: 'MenuMessage', _0: a};
+};
 var _user$project$Main$SizeUpdateFailure = function (a) {
 	return {ctor: 'SizeUpdateFailure', _0: a};
 };
@@ -10737,32 +11000,22 @@ var _user$project$Main$NewWindowSize = function (a) {
 };
 var _user$project$Main$getWindowSize = A3(_elm_lang$core$Task$perform, _user$project$Main$SizeUpdateFailure, _user$project$Main$NewWindowSize, _elm_lang$window$Window$size);
 var _user$project$Main$init = function () {
-	var _p5 = _user$project$Tutorial$init;
-	var tutorial = _p5._0;
-	var tutorialMsg = _p5._1;
 	var model = {
 		ticTacToe: _user$project$UltimateTicTacToe$init,
-		tutorial: tutorial,
+		menu: _user$project$Menu$init,
 		windowSize: {width: 800, height: 600}
 	};
 	return A2(
 		_elm_lang$core$Platform_Cmd_ops['!'],
 		model,
 		_elm_lang$core$Native_List.fromArray(
-			[
-				A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$TutorialMessage, tutorialMsg),
-				_user$project$Main$getWindowSize
-			]));
+			[_user$project$Main$getWindowSize]));
 }();
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$batch(
 		_elm_lang$core$Native_List.fromArray(
 			[
-				_elm_lang$window$Window$resizes(_user$project$Main$NewWindowSize),
-				A2(
-				_elm_lang$core$Platform_Sub$map,
-				_user$project$Main$TutorialMessage,
-				_user$project$Tutorial$subscriptions(model.tutorial))
+				_elm_lang$window$Window$resizes(_user$project$Main$NewWindowSize)
 			]));
 };
 var _user$project$Main$TicTacToeMessage = function (a) {
@@ -10771,7 +11024,7 @@ var _user$project$Main$TicTacToeMessage = function (a) {
 var _user$project$Main$view = function (_p6) {
 	var _p7 = _p6;
 	var _p8 = _p7.windowSize;
-	var tutorialStyle = _elm_lang$html$Html_Attributes$style(
+	var menuStyle = _elm_lang$html$Html_Attributes$style(
 		_elm_lang$core$Native_List.fromArray(
 			[
 				{ctor: '_Tuple2', _0: 'z-index', _1: '1'},
@@ -10781,10 +11034,10 @@ var _user$project$Main$view = function (_p6) {
 				{ctor: '_Tuple2', _0: 'width', _1: '90%'},
 				{ctor: '_Tuple2', _0: 'font-family', _1: '\'Source Sans Pro\', \'Trebuchet MS\', \'Lucida Grande\', \'Bitstream Vera Sans\', \'Helvetica Neue\', sans-serif'}
 			]));
-	var tutorialView = A2(
+	var menuView = A2(
 		_elm_lang$html$Html_App$map,
-		_user$project$Main$TutorialMessage,
-		_user$project$Tutorial$view(_p7.tutorial));
+		_user$project$Main$MenuMessage,
+		_user$project$Menu$view(_p7.menu));
 	var minSize = _elm_lang$core$Basics$toFloat(
 		A2(_elm_lang$core$Basics$min, _p8.width, _p8.height)) - 5;
 	var size = _elm_lang$core$Basics$toString(minSize);
@@ -10835,9 +11088,9 @@ var _user$project$Main$view = function (_p6) {
 				A2(
 				_elm_lang$html$Html$div,
 				_elm_lang$core$Native_List.fromArray(
-					[tutorialStyle]),
+					[menuStyle]),
 				_elm_lang$core$Native_List.fromArray(
-					[tutorialView]))
+					[menuView]))
 			]));
 };
 var _user$project$Main$main = {
