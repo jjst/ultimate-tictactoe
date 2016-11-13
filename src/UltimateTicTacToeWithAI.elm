@@ -21,11 +21,11 @@ nextMove : Model -> Maybe Move
 nextMove board =
     let
         minimaxScore : Move -> Int
-        minimaxScore move = minimax (applyMove move board) 1 Maximize
+        minimaxScore move = minimax (applyMove move board) 2 Maximize
         potentialMoves = validMoves board
         scoredMoves = potentialMoves |> List.map (\m -> (m, minimaxScore m))
         nextMove = scoredMoves
-            |> List.sortBy (\move -> Debug.log "minimax score" (snd move))
+            |> List.sortBy snd
             |> List.reverse
             |> List.head
             |> Maybe.map fst

@@ -1,3 +1,4 @@
+import UltimateTicTacToeWithAI
 import UltimateTicTacToe
 import TicTacToeBase
 import SvgUtils
@@ -53,7 +54,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg ({ticTacToe, tutorial, windowSize} as model) =
     case msg of
         TicTacToeMessage msg ->
-            { model | ticTacToe = (UltimateTicTacToe.update msg ticTacToe) } ! []
+            { model | ticTacToe = (UltimateTicTacToeWithAI.update msg ticTacToe) } ! []
         NewWindowSize size ->
             { model | windowSize = size } ! []
         TutorialMessage msg ->
