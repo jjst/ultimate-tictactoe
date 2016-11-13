@@ -19,15 +19,18 @@ type alias Move =
 
 nextMove : Model -> Maybe Move
 nextMove board =
-    let 
+    let
         minimaxScore : Move -> Int
         minimaxScore move = minimax (applyMove move board) 1 Maximize
         potentialMoves = validMoves board
-    in
-        potentialMoves 
-            |> List.sortBy (\move -> Debug.log "minimax score" (minimaxScore move))
-            |> List.reverse 
+        scoredMoves = potentialMoves |> List.map (\m -> (m, minimaxScore m))
+        nextMove = scoredMoves
+            |> List.sortBy (\move -> Debug.log "minimax score" (snd move))
+            |> List.reverse
             |> List.head
+            |> Maybe.map fst
+    in
+       Debug.log "next move" nextMove
 
 toMsg : Move -> UltimateTicTacToe.Msg
 toMsg { boardCoords, cellCoords } =
@@ -91,7 +94,7 @@ minimax ticTacToe depth action =
                 case action of
                     Maximize ->
                         let
-                           values = validMoves ticTacToe |> List.map (\move -> 
+                           values = validMoves ticTacToe |> List.map (\move ->
                                minimax (applyMove move ticTacToe) (depth - 1) Minimize
                            )
                            max = List.maximum values |> Maybe.withDefault (-maxValue)
@@ -99,7 +102,7 @@ minimax ticTacToe depth action =
                           max
                     Minimize ->
                         let
-                           values = validMoves ticTacToe |> List.map (\move -> 
+                           values = validMoves ticTacToe |> List.map (\move ->
                                minimax (applyMove move ticTacToe) (depth - 1) Maximize
                            )
                            min = List.minimum values |> Maybe.withDefault (maxValue)
@@ -119,7 +122,7 @@ update msg ({board, currentPlayer, currentBoardCoords} as model) =
     let
         updatedModelAfterPlayerMove = UltimateTicTacToe.update msg model
         aiMove = nextMove updatedModelAfterPlayerMove
-        updatedModelAfterAIMove = 
+        updatedModelAfterAIMove =
             case aiMove of
                 Just move -> UltimateTicTacToe.update (toMsg move) updatedModelAfterPlayerMove
                 Nothing -> updatedModelAfterPlayerMove
