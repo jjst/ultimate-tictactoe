@@ -4,6 +4,9 @@ import UltimateTicTacToe
 import TicTacToe
 import Board
 import Cell
+import Player exposing (..)
+
+import Debug
 
 -- MODEL
 
@@ -14,14 +17,15 @@ type alias Move =
     , cellCoords: Board.Coords
     }
 
-nextMove : UltimateTicTacToe.Model -> Maybe Move
+nextMove : Model -> Maybe Move
 nextMove board =
     let 
         minimaxScore : Move -> Int
-        minimaxScore move = minimax (applyMove move board) 5 Maximize
+        minimaxScore move = minimax (applyMove move board) 1 Maximize
         potentialMoves = validMoves board
+    in
         potentialMoves 
-            |> List.sortBy minimaxScore 
+            |> List.sortBy (\move -> Debug.log "minimax score" (minimaxScore move))
             |> List.reverse 
             |> List.head
 
@@ -30,7 +34,7 @@ toMsg { boardCoords, cellCoords } =
     UltimateTicTacToe.MetaPlaceMark boardCoords (TicTacToe.PlaceMark cellCoords Cell.PlaceMark)
 
 -- List all valid moves given current state of the game
-validMoves : UltimateTicTacToe.Model -> List Move
+validMoves : Model -> List Move
 validMoves { board, currentPlayer, currentBoardCoords } =
     case UltimateTicTacToe.winner board of
         Nothing ->
@@ -63,7 +67,7 @@ validMovesOnBoard ticTacToe =
                 |> List.filterMap identity
         _ -> []
 
-applyMove : Move -> UltimateTicTacToe.Model -> UltimateTicTacToe.Model
+applyMove : Move -> Model -> Model
 applyMove move board =
     UltimateTicTacToe.update (toMsg move) board
 
@@ -72,37 +76,39 @@ maxValue = 100000
 type Action = Maximize | Minimize
 
 -- Assume that AI is always O for now
-minimax : UltimateTicTacToe.Model -> Int -> Action -> Int
-minimax board depth action =
-    case UltimateTicTacToe.winner board of
+minimax : Model -> Int -> Action -> Int
+minimax ticTacToe depth action =
+    case UltimateTicTacToe.winner ticTacToe.board of
         Just winner ->
-            case Left X -> -maxValue
-            case Left O -> maxValue
-            case Right Draw -> 0
+            case winner of
+                Left X -> -maxValue
+                Left O -> maxValue
+                Right Draw -> 0
         Nothing ->
             if depth == 0 then
-                evalPosition board
+                evalPosition ticTacToe
             else
                 case action of
                     Maximize ->
                         let
-                           values = validMoves board |> List.map (\move -> 
-                               minimax (applyMove move board) (depth - 1) Minimize
+                           values = validMoves ticTacToe |> List.map (\move -> 
+                               minimax (applyMove move ticTacToe) (depth - 1) Minimize
                            )
                            max = List.maximum values |> Maybe.withDefault (-maxValue)
                         in
                           max
                     Minimize ->
                         let
-                           values = validMoves board |> List.map (\move -> 
-                               minimax (applyMove move board) (depth - 1) Maximize
+                           values = validMoves ticTacToe |> List.map (\move -> 
+                               minimax (applyMove move ticTacToe) (depth - 1) Maximize
                            )
                            min = List.minimum values |> Maybe.withDefault (maxValue)
                         in
                            min
 
 
-evalPosition : UltimateTicTacToe.Model -> Int
+evalPosition : Model -> Int
+evalPosition m = 0
 
 -- UPDATE
 
@@ -113,7 +119,10 @@ update msg ({board, currentPlayer, currentBoardCoords} as model) =
     let
         updatedModelAfterPlayerMove = UltimateTicTacToe.update msg model
         aiMove = nextMove updatedModelAfterPlayerMove
-        updatedModelAfterAIMove = UltimateTicTacToe.update (toMsg aiMove) model
+        updatedModelAfterAIMove = 
+            case aiMove of
+                Just move -> UltimateTicTacToe.update (toMsg move) updatedModelAfterPlayerMove
+                Nothing -> updatedModelAfterPlayerMove
     in
        updatedModelAfterAIMove
 

@@ -3,6 +3,7 @@ module AITest exposing (..)
 import ElmTest exposing (runSuite)
 import ElmTestBDDStyle exposing (..)
 
+import UltimateTicTacToe exposing (..)
 import UltimateTicTacToeWithAI as AI
 import TicTacToe
 import Player
@@ -64,11 +65,32 @@ tests =
              _ _ _ | _ _ _ | _ _ _
             """ |> orCrash
       in
+          it "has the correct number of valid moves"
+            <| expect
+                 (List.length (AI.validMoves currentBoard))
+               toBe
+                 (7)
+    , let
+          currentBoard = fromString Player.O (Just (I2,I2))
+            """
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            """ |> orCrash
+      in
           it "plays the winning move"
             <| expect
                  (AI.nextMove currentBoard)
                toBe
-                 ({boardCoords = (I2,I2), cellCoords = (I2,I3)})
+                 (Just {boardCoords = (I2,I2), cellCoords = (I2,I3)})
     ]
 
 
