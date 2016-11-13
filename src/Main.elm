@@ -2,7 +2,7 @@ import UltimateTicTacToeWithAI
 import UltimateTicTacToe
 import TicTacToeBase
 import SvgUtils
-import Tutorial
+import Menu
 
 import Task
 import Window
@@ -25,21 +25,20 @@ main =
 
 type alias Model =
     { ticTacToe : UltimateTicTacToe.Model
-    , tutorial : Tutorial.Model
+    , menu : Menu.Model
     , windowSize : Window.Size
     }
 
 init : (Model, Cmd Msg)
 init =
     let
-        (tutorial, tutorialMsg) = Tutorial.init
         model =
             { ticTacToe = UltimateTicTacToe.init
-            , tutorial = tutorial
+            , menu = Menu.init
             , windowSize = { width = 800, height = 600 }
             }
     in
-       model ! [ Cmd.map TutorialMessage tutorialMsg, getWindowSize ]
+       model ! [ getWindowSize ]
 
 
 -- UPDATE
@@ -48,21 +47,28 @@ type Msg
     = TicTacToeMessage UltimateTicTacToe.Msg
     | NewWindowSize Window.Size
     | SizeUpdateFailure String -- any chance of this failing? look up doc
-    | TutorialMessage Tutorial.Msg
+    | MenuMessage Menu.Msg
 
 update : Msg -> Model -> (Model, Cmd Msg)
-update msg ({ticTacToe, tutorial, windowSize} as model) =
-    case msg of
-        TicTacToeMessage msg ->
-            { model | ticTacToe = (UltimateTicTacToeWithAI.update msg ticTacToe) } ! []
-        NewWindowSize size ->
-            { model | windowSize = size } ! []
-        TutorialMessage msg ->
-            let
-                (newTutorial, cmd) = Tutorial.update msg tutorial
-            in
-                { model | tutorial = newTutorial } ! [ Cmd.map TutorialMessage cmd ]
-        SizeUpdateFailure _ -> model ! []
+update msg ({ticTacToe, menu, windowSize} as model) =
+    let newModel =
+      case msg of
+          TicTacToeMessage msg ->
+              let
+                  update = 
+                      case menu of
+                         Menu.OnePlayerVsAI -> UltimateTicTacToeWithAI.update
+                         Menu.TwoPlayers -> UltimateTicTacToe.update
+                         _ -> UltimateTicTacToe.update
+              in
+                  { model | ticTacToe = (update msg ticTacToe) }
+          NewWindowSize size ->
+              { model | windowSize = size }
+          MenuMessage msg ->
+              { model | menu = Menu.update msg menu }
+          SizeUpdateFailure _ -> model
+    in 
+       newModel ! []
 
 
 getWindowSize : Cmd Msg
@@ -73,16 +79,12 @@ getWindowSize = Task.perform SizeUpdateFailure NewWindowSize Window.size
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.batch
-    [ Window.resizes NewWindowSize
-    , Sub.map TutorialMessage (Tutorial.subscriptions model.tutorial)
-    ]
-
+  Sub.batch [ Window.resizes NewWindowSize ]
 
 -- VIEW
 
 view : Model -> Html Msg
-view ({ticTacToe, tutorial, windowSize} as model) =
+view ({ticTacToe, menu, windowSize} as model) =
     let
         baseBoardSize = TicTacToeBase.boardSize |> toFloat
         minSize = ((Basics.min windowSize.width windowSize.height) |> toFloat) - 5
@@ -92,16 +94,16 @@ view ({ticTacToe, tutorial, windowSize} as model) =
             UltimateTicTacToe.svgView ticTacToe
             |> SvgUtils.scale scale
             |> App.map TicTacToeMessage
-        tutorialView =
-            Tutorial.view tutorial
-            |> App.map TutorialMessage
+        menuView =
+            Menu.view menu
+            |> App.map MenuMessage
         mainDivStyle =
           HA.style
             [ ("margin", "auto")
             , ("position", "relative")
             , ("width", size ++ "px")
             ]
-        tutorialStyle =
+        menuStyle =
           HA.style
             [ ("z-index", "1")
             , ("left", "5%")
@@ -114,7 +116,7 @@ view ({ticTacToe, tutorial, windowSize} as model) =
         div [ mainDivStyle ]
           [ css "style.css"
           , svg [ SA.viewBox ("0 0 " ++ size ++ " " ++ size), SA.width (size ++ "px") ] [ svgView ]
-          , div [ tutorialStyle ] [ tutorialView ]
+          , div [ menuStyle ] [ menuView ]
           ]
 
 css : String -> Html a

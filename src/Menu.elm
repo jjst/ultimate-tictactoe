@@ -1,4 +1,4 @@
-module Tutorial exposing (..)
+module Menu exposing (..)
 
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -11,48 +11,35 @@ import Keyboard
 
 -- MODEL
 
-type TutorialVisibility = Visible | Hidden
+type Model = NotChosen | OnePlayerVsAI | TwoPlayers
 
-type alias Model = TutorialVisibility
-
-init : (Model, Cmd Msg)
-init = (Visible, Cmd.none)
+init : Model
+init = NotChosen
 
 -- UPDATE
 
-type Msg = HideTutorial | NoOp
+type Msg = Choose1P | Choose2P
 
-update : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Model -> Model
 update msg model =
-  let
-    newModel =
-      case msg of
-          HideTutorial -> Hidden
-          NoOp -> model
-  in
-    newModel ! []
-
--- SUBSCRIPTIONS
-
-escapeKey : Keyboard.KeyCode
-escapeKey = 27
-
-subscriptions : Model -> Sub Msg
-subscriptions model = Keyboard.downs (\key -> if key == escapeKey then HideTutorial else NoOp)
+  case msg of
+    Choose1P -> OnePlayerVsAI
+    Choose2P -> TwoPlayers
 
 -- VIEW
 
 view : Model -> Html Msg
 view model =
     case model of
-        Hidden -> span [] []
-        Visible ->
-            let
-                hideTutorialButton =
-                    button [ style [ ("float", "right") ], onClick HideTutorial ]
-                           [ text "Enough reading, let me play now!" ]
-            in
-                div [ class "tutorial" ] [ pageContent, hideTutorialButton ]
+        NotChosen ->
+            div [ class "tutorial" ] 
+                [ pageContent
+                , div [ style [ ("float", "right") ] ]
+                      [ button [ onClick Choose1P ] [ text "1 Player vs AI" ]
+                      , button [ onClick Choose2P ] [ text "2 Players" ]
+                      ]
+                ]
+        _ -> span [] []
 
 pageContent : Html msg
 pageContent = Markdown.toHtml [class "content"] tutorialText
@@ -71,7 +58,4 @@ determines the _board_ you must play in next.
 
 If you've never played before, check out <a href="https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/" target="_blank">this page</a>
 for instructions before you get started. It's a short read, promise!
-
-This is a 2-player game, so you will need to fetch you a human companion. A one player version is coming soon for people preferring
-the company of robots.
 """
