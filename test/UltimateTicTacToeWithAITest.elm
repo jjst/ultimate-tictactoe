@@ -96,86 +96,65 @@ tests =
           currentBoard = fromString Player.O (Just (I2,I2))
             """
              _ _ _ | _ _ _ | _ _ _
-             _ _ _ | o o o | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-            -------+-------+-------
-             _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
             -------+-------+-------
              _ _ _ | _ _ _ | _ _ _
-             _ _ _ | o o o | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
             """ |> orCrash
       in
-          it "evalPosition gives 100 bonus per won board"
+          it "evalPosition gives 0 value if nothing played"
             <| expect
                  (AI.evalPosition currentBoard)
                toBe
-                 (200)
-    , let
-          currentBoard = fromString Player.O (Just (I2,I2))
-            """
-             _ _ _ | _ _ _ | _ _ _
-             _ _ _ | o o o | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-            -------+-------+-------
-             _ _ _ | _ _ _ | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-            -------+-------+-------
-             _ _ _ | _ _ _ | _ _ _
-             _ _ _ | x x x | _ _ _
-             _ _ _ | _ _ _ | x x x
-            """ |> orCrash
-      in
-          it "evalPosition gives -100 malus per lost board"
-            <| expect
-                 (AI.evalPosition currentBoard)
-               toBe
-                 (-100)
+                 (0)
     , let
           currentBoard = fromString Player.O (Nothing)
             """
              _ _ _ | _ _ _ | _ _ _
-             _ _ _ | o o o | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-            -------+-------+-------
-             _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
             -------+-------+-------
              _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
-             _ _ _ | _ _ _ | x x x
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
             """ |> orCrash
       in
-          it "evalPosition gives 70 bonus if free to play anywhere"
+          it "evalPosition gives 20 bonus if free to play anywhere"
             <| expect
                  (AI.evalPosition currentBoard)
                toBe
-                 (70)
+                 (20)
     , let
           currentBoard = fromString Player.X (Nothing)
             """
              _ _ _ | _ _ _ | _ _ _
-             _ _ _ | o o o | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-            -------+-------+-------
-             _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
             -------+-------+-------
              _ _ _ | _ _ _ | _ _ _
              _ _ _ | _ _ _ | _ _ _
-             _ _ _ | _ _ _ | x x x
+             _ _ _ | _ _ _ | _ _ _
+            -------+-------+-------
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
+             _ _ _ | _ _ _ | _ _ _
             """ |> orCrash
       in
-          it "evalPosition gives -70 malus if opponent free to play anywhere"
+          it "evalPosition gives -20 malus if opponent free to play anywhere"
             <| expect
                  (AI.evalPosition currentBoard)
                toBe
-                 (-70)
+                 (-20)
     , let
           board = T.fromString Player.X
             """
@@ -184,37 +163,102 @@ tests =
             _ _ _
             """ |> orCrash
       in
-          it "detects a tictactoe with 2 in a row as winnable"
+          it "gives a score of 3 to a tictactoe with 2 in a row"
             <| expect
-                 (AI.isWinnable board Player.O)
+                 (AI.score Player.O board)
                toBe <|
-                 (True)
+                 (3)
     , let
           board = T.fromString Player.X
             """
+            o o o
+            _ _ _
+            _ _ _
+            """ |> orCrash
+      in
+          it "gives a score of 4 to a won tictactoe"
+            <| expect
+                 (AI.score Player.O board)
+               toBe <|
+                 (4)
+    , let
+          board = T.fromString Player.X
+            """
+            o o o
+            _ _ _
+            _ _ _
+            """ |> orCrash
+      in
+          it "gives a score of 0 to a lost tictactoe"
+            <| expect
+                 (AI.score Player.X board)
+               toBe <|
+                 (0)
+    , let
+          board = T.fromString Player.X
+            """
+            o x o
+            x o x
             o o x
-            _ _ _
-            _ _ _
             """ |> orCrash
       in
-          it "detects a blocked tictactoe with 2 in a row as non-winnable"
+          it "gives a score of 0 to a draw tictactoe"
             <| expect
-                 (AI.isWinnable board Player.O)
+                 (AI.score Player.X board)
                toBe <|
-                 (False)
+                 (0)
     , let
           board = T.fromString Player.X
             """
-            o x _
-            _ _ _
-            _ _ x
+            _ x _
+            x o o
+            x o x
             """ |> orCrash
       in
-          it "detects a tictactoe without 2 in a row as non winnable"
+          it "gives a score of 0 to an unwinnable tictactoe"
             <| expect
-                 (AI.isWinnable board Player.X)
+                 (AI.score Player.O board)
                toBe <|
-                 (False)
+                 (0)
+    , let
+          board = T.fromString Player.X
+            """
+            _ x _
+            x o o
+            x o x
+            """ |> orCrash
+      in
+          it "gives a score of 0 to an unwinnable tictactoe"
+            <| expect
+                 (AI.score Player.O board)
+               toBe <|
+                 (0)
+    , let
+          board = T.fromString Player.X
+            """
+            _ x _
+            _ _ _
+            o _ _
+            """ |> orCrash
+      in
+          it "gives a score of 2 to one in a row"
+            <| expect
+                 (AI.score Player.O board)
+               toBe <|
+                 (2)
+    , let
+          board = T.fromString Player.X
+            """
+            _ x _
+            _ _ _
+            _ o x
+            """ |> orCrash
+      in
+          it "gives a score of 1 to none in a row"
+            <| expect
+                 (AI.score Player.O board)
+               toBe <|
+                 (1)
     ]
 
 

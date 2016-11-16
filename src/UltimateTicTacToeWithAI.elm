@@ -116,50 +116,48 @@ minimax ticTacToe depth action =
 evalPosition : Model -> Int
 evalPosition model =
     let
-       wonBoardsDelta = (wonBoards model O - wonBoards model X)
-       winnableBoardsDelta = (winnableBoards model O - winnableBoards model X)
-       -- If the player can choose to play on any grid, that counts as a bonus (or malus if it's our opponent)
-       unrestrictedMovementBonus =
-           case model.currentBoardCoords of
-               Nothing ->
-                   case model.currentPlayer of
-                       O -> 70
-                       X -> -70
-               _ -> 0
+        rows : List (List (TicTacToe.Model))
+        rows = Board.allRows |> List.map (\row ->
+                row |> Tuple3.toList |> List.map (\coords -> Board.get model.board coords)
+            )
+        scoreWholeBoardFor : Player -> Int
+        scoreWholeBoardFor player = rows |> List.map (\row -> List.product (List.map (score player) row)) |> List.sum
+        aiScore = scoreWholeBoardFor O
+        opponentScore = scoreWholeBoardFor X
+        -- If the player can choose to play on any grid, that counts as a bonus (or malus if it's our opponent)
+        unrestrictedMovementBonus =
+            case model.currentBoardCoords of
+                Nothing ->
+                    case model.currentPlayer of
+                        O -> 20
+                        X -> -20
+                _ -> 0
     in
-       wonBoardsDelta * 100 + winnableBoardsDelta * 35 + unrestrictedMovementBonus
+       aiScore - opponentScore + unrestrictedMovementBonus
 
-winnableBoards : Model -> Player -> Int
-winnableBoards model player =
-    model.board
-        |> Board.flatten
-        |> List.filter (\b -> isWinnable b player)
-        |> List.length
-
--- A board is winnable if it has 2 in a row
-isWinnable : TicTacToe.Model -> Player -> Bool
-isWinnable ticTacToe player =
-    let
-        isWinnable : List (Maybe Player) -> Bool
-        isWinnable row =
+-- Give a winnability score to a board for a given player
+score : Player -> TicTacToe.Model -> Int
+score player ticTacToe =
+    case TicTacToe.winner ticTacToe.board of
+        Just (Left p) -> if (p == player) then 6 else 0
+        Just (Right Draw) -> 0
+        Nothing ->
             let
-                markCount = row |> List.filter (\e -> e == Just player) |> List.length
+                rows : List (List (Maybe Player))
+                rows = Board.allRows
+                    |> List.map (\row ->
+                        row |> Tuple3.toList |> List.map (\coords -> (Board.get ticTacToe.board coords).mark))
+                count : Maybe Player -> List (Maybe Player) -> Int
+                count item row = row |> List.filter (\e -> e == item) |> List.length
             in
-                markCount == 2 && List.member Nothing row
-        board = ticTacToe.board
-        rows : List (List (Maybe Player))
-        rows = Board.allRows
-            |> List.map (\row -> row |> Tuple3.toList |> List.map (\coords -> (Board.get board coords).mark))
-    in
-       List.any isWinnable rows
-
-wonBoards : Model -> Player -> Int
-wonBoards model player =
-    let
-        subBoards = Board.flatten model.board
-        wonBoards = subBoards |> List.filter (\b -> TicTacToe.winner b.board == Just (Left player)) |> List.length
-    in wonBoards
-
+                if List.any (\r -> count (Just O) r == 2 && List.member Nothing r) rows then
+                    4
+                else if List.any (\r -> count Nothing r == 2 && List.member (Just O) r) rows then
+                    2
+                else if List.any (\r -> count Nothing r == 3) rows then
+                    1
+                else
+                    0
 
 -- UPDATE
 
