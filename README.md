@@ -23,7 +23,7 @@ $ git clone git@github.com:jjst/elmtimate-tictactoe.git
 Then cd to the project folder and compile with:
 ```bash
 $ cd elmtimate-tictactoe/
-$ elm make src/UltimateTicTacToe.elm --output=tictactoe.html
+$ elm make src/Main.elm --output=tictactoe.html
 ```
 
 Woohoo! If everything goes according to my evil instructions, you should be able to open tictactoe.html and play you some ultimate tic-tac-toe!
