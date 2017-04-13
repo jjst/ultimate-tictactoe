@@ -53,7 +53,6 @@ init =
 type Msg
     = TicTacToeMessage UltimateTicTacToe.Msg
     | NewWindowSize Window.Size
-    | SizeUpdateFailure String -- any chance of this failing? look up doc
     | MenuMessage Menu.Msg
 
 
@@ -82,16 +81,13 @@ update msg ({ ticTacToe, menu, windowSize } as model) =
 
                 MenuMessage msg ->
                     { model | menu = Menu.update msg menu }
-
-                SizeUpdateFailure _ ->
-                    model
     in
         newModel ! []
 
 
 getWindowSize : Cmd Msg
 getWindowSize =
-    Task.perform SizeUpdateFailure NewWindowSize Window.size
+    Task.perform NewWindowSize Window.size
 
 
 
