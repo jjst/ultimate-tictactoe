@@ -3,46 +3,68 @@ module Menu exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Html exposing (..)
-import Html.App as App
 import Markdown
 import Maybe
 import Array
 import Keyboard
 
+
 -- MODEL
 
-type Model = NotChosen | OnePlayerVsAI | TwoPlayers
+
+type Model
+    = NotChosen
+    | OnePlayerVsAI
+    | TwoPlayers
+
 
 init : Model
-init = NotChosen
+init =
+    NotChosen
+
+
 
 -- UPDATE
 
-type Msg = Choose1P | Choose2P
+
+type Msg
+    = Choose1P
+    | Choose2P
+
 
 update : Msg -> Model -> Model
 update msg model =
-  case msg of
-    Choose1P -> OnePlayerVsAI
-    Choose2P -> TwoPlayers
+    case msg of
+        Choose1P ->
+            OnePlayerVsAI
+
+        Choose2P ->
+            TwoPlayers
+
+
 
 -- VIEW
+
 
 view : Model -> Html Msg
 view model =
     case model of
         NotChosen ->
-            div [ class "tutorial" ] 
+            div [ class "tutorial" ]
                 [ pageContent
-                , div [ style [ ("float", "right") ] ]
-                      [ button [ onClick Choose1P ] [ text "1 Player vs AI" ]
-                      , button [ onClick Choose2P ] [ text "2 Players" ]
-                      ]
+                , div [ style [ ( "float", "right" ) ] ]
+                    [ button [ onClick Choose1P ] [ text "1 Player vs AI" ]
+                    , button [ onClick Choose2P ] [ text "2 Players" ]
+                    ]
                 ]
-        _ -> span [] []
+
+        _ ->
+            span [] []
+
 
 pageContent : Html msg
-pageContent = Markdown.toHtml [class "content"] tutorialText
+pageContent =
+    Markdown.toHtml [ class "content" ] tutorialText
 
 
 tutorialText =
