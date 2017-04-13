@@ -2,10 +2,10 @@ language: node_js
 node_js:
   - "4.3"
 install:
-  - npm install -g elm@0.17.0
+  - npm install -g elm@0.18.0 elm-test
   - elm-package install -y
 script:
-  - sh runtests.sh
+  - elm-test
   - elm make src/Main.elm --output=tictactoe.js
 after_success:
   - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
