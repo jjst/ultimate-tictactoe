@@ -9,3 +9,6 @@ script:
   - elm make src/Main.elm --output=tictactoe.js
 after_success:
   - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
+cache:
+  directories:
+    - tests/elm-stuff/build-artifacts
