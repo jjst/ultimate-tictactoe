@@ -49,13 +49,13 @@ tests =
                                     (\( i, j ) cell ->
                                         case i of
                                             I1 ->
-                                                { mark = Just Player.O, currentPlayer = Player.X }
+                                                Just Player.O
 
                                             I2 ->
-                                                { mark = Just Player.X, currentPlayer = Player.X }
+                                                Just Player.X
 
                                             I3 ->
-                                                { mark = Nothing, currentPlayer = Player.X }
+                                                Nothing
                                     )
                                     initialBoard.board
                         }

@@ -18,7 +18,7 @@ import Svg.Attributes exposing (..)
 
 
 type alias TicTacToeBoard =
-    Board Cell.Model
+    Board Cell.Cell
 
 
 
@@ -26,22 +26,17 @@ type alias TicTacToeBoard =
 
 
 type alias Model =
-    TicTacToeBase.Model Cell.Model
+    TicTacToeBase.Model Cell.Cell
 
 
 init : Model
 init =
-    TicTacToeBase.init Cell.init
-
-
-cellOwner : Cell.Model -> Maybe Player
-cellOwner cell =
-    cell.mark
+    TicTacToeBase.init Nothing
 
 
 winner : TicTacToeBoard -> Maybe Winner
 winner =
-    Board.winner cellOwner
+    Board.winner identity
 
 
 fromString : Player -> String -> Result String Model
@@ -51,15 +46,15 @@ fromString player str =
         liftResult list =
             list |> L.foldr (\result listResult -> listResult |> Result.andThen (\list -> Result.map (flip (::) list) result)) (Ok [])
 
-        parseLine : String -> Result String (List Cell.Model)
+        parseLine : String -> Result String (List Cell.Cell)
         parseLine l =
             l
                 |> String.trim
                 |> String.split " "
-                |> L.map (Cell.fromString player)
+                |> L.map Cell.fromString
                 |> liftResult
 
-        parsed : Result String (List (List Cell.Model))
+        parsed : Result String (List (List Cell.Cell))
         parsed =
             str
                 |> String.trim
@@ -84,7 +79,7 @@ fromString player str =
 
 
 type Msg
-    = PlaceMark Board.Coords Cell.Msg
+    = PlaceMark Board.Coords
     | TogglePlayer
 
 
@@ -100,37 +95,34 @@ update msg ({ board, currentPlayer } as model) =
 
             Nothing ->
                 case msg of
-                    PlaceMark ( x, y ) msg ->
+                    PlaceMark ( x, y ) ->
                         { board =
                             Board.indexedMap
                                 (\( i, j ) cell ->
                                     if ( x, y ) == ( i, j ) then
-                                        Cell.update msg cell
+                                        (Just currentPlayer)
                                     else
-                                        { cell | currentPlayer = nextPlayer }
+                                        cell
                                 )
                                 board
                         , currentPlayer = nextPlayer
                         }
 
                     TogglePlayer ->
-                        { board = Board.indexedMap (\( i, j ) cell -> { cell | currentPlayer = nextPlayer }) board
+                        { board = board
                         , currentPlayer = nextPlayer
                         }
-
-
 
 -- VIEW
 
 
 svgView : Model -> Svg Msg
 svgView =
-    TicTacToeBase.svgView cellOwner svgViewCell
+    TicTacToeBase.svgView identity svgViewCell
 
 
-svgViewCell : Board.Coords -> Cell.Model -> Svg Msg
+svgViewCell : Board.Coords -> Cell.Cell -> Svg Msg
 svgViewCell ( i, j ) model =
-    Cell.svgView model
+    Cell.svgView model (PlaceMark ( i, j ))
         |> SvgUtils.scale ((toFloat TicTacToeBase.cellSize) / 100.0)
         |> SvgUtils.translate ((T3.toInt i) * TicTacToeBase.cellSize) ((T3.toInt j) * TicTacToeBase.cellSize)
-        |> Html.map (PlaceMark ( i, j ))

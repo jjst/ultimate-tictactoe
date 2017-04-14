@@ -138,7 +138,7 @@ update msg ({ board, currentPlayer, currentBoardCoords } as model) =
 
             Nothing ->
                 case msg of
-                    MetaPlaceMark boardCoords ((TicTacToe.PlaceMark cellCoords cellMsg) as msg) ->
+                    MetaPlaceMark boardCoords ((TicTacToe.PlaceMark cellCoords) as msg) ->
                         let
                             updatedBoard =
                                 board

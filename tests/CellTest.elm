@@ -10,26 +10,24 @@ import Player
 tests : Test
 tests =
     describe "A Cell"
-        [ it "initialises an empty cell" <|
-            expect Cell.init to equal { mark = Nothing, currentPlayer = Player.X }
-        , it "builds a X from a string" <|
+        [ it "builds a X from a string" <|
             expect
-                (Cell.fromString Player.X "X")
+                (Cell.fromString "X")
                 to equal
-                (Ok { mark = Just Player.X, currentPlayer = Player.X })
+                (Ok (Just Player.X))
         , it "builds a O from a string" <|
             expect
-                (Cell.fromString Player.X "O")
+                (Cell.fromString "O")
                 to equal
-                (Ok { mark = Just Player.O, currentPlayer = Player.X })
+                (Ok (Just Player.O))
         , it "builds an empty cell from a string" <|
             expect
-                (Cell.fromString Player.X "_")
+                (Cell.fromString "_")
                 to equal
-                (Ok { mark = Nothing, currentPlayer = Player.X })
+                (Ok Nothing)
         , it "errors out when passed an invalid string" <|
             expect
-                (Cell.fromString Player.X "%")
+                (Cell.fromString "%")
                 to equal
                 (Err "Invalid character: %")
         ]

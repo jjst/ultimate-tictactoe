@@ -31,7 +31,7 @@ tests =
     describe "An updated UltimateTicTacToeBoard Model"
         [ it "toggles the current player" <|
             expect
-                (update (MetaPlaceMark ( I1, I1 ) (TicTacToe.PlaceMark ( I1, I1 ) C.PlaceMark)) initialBoard).currentPlayer
+                (update (MetaPlaceMark ( I1, I1 ) (TicTacToe.PlaceMark ( I1, I1 ))) initialBoard).currentPlayer
                 to equal
                 Player.O
         , let
@@ -135,7 +135,7 @@ tests =
                     |> orCrash
 
             msg =
-                MetaPlaceMark ( I2, I2 ) (TicTacToe.PlaceMark ( I2, I2 ) C.PlaceMark)
+                MetaPlaceMark ( I2, I2 ) (TicTacToe.PlaceMark ( I2, I2 ))
 
             nextBoardCoords =
                 (update msg currentBoard).currentBoardCoords

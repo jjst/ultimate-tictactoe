@@ -9,69 +9,30 @@ import String
 import Player exposing (..)
 
 
--- MODEL
+type alias Cell = Maybe Player
 
 
-type alias Model =
-    { mark : Maybe Player
-    , currentPlayer : Player
-    }
+fromString : String -> Result String Cell
+fromString s =
+    case (String.toLower s) of
+        "o" ->
+            Ok (Just Player.O)
+
+        "x" ->
+            Ok (Just Player.X)
+
+        "_" ->
+            Ok (Nothing)
+
+        other ->
+            Err <| "Invalid character: " ++ other
 
 
-init : Model
-init =
-    { mark = Nothing, currentPlayer = X }
-
-
-fromString : Player -> String -> Result String Model
-fromString p s =
-    let
-        mark =
-            case (String.toLower s) of
-                "o" ->
-                    Ok (Just Player.O)
-
-                "x" ->
-                    Ok (Just Player.X)
-
-                "_" ->
-                    Ok (Nothing)
-
-                other ->
-                    Err <| "Invalid character: " ++ other
-    in
-        Result.map (\m -> { mark = m, currentPlayer = p }) mark
-
-
-
--- UPDATE
-
-
-type Msg
-    = PlaceMark
-
-
-update : Msg -> Model -> Model
-update msg ({ mark, currentPlayer } as model) =
-    case msg of
-        PlaceMark ->
-            case mark of
-                Just _ ->
-                    model
-
-                Nothing ->
-                    Model (Just currentPlayer) (opponent currentPlayer)
-
-
-
--- VIEW
-
-
-svgView : Model -> Svg Msg
-svgView { mark, currentPlayer } =
+svgView : Cell -> msg -> Svg msg
+svgView cell message =
     let
         markDrawing =
-            case mark of
+            case cell of
                 Nothing ->
                     []
 
@@ -82,8 +43,7 @@ svgView { mark, currentPlayer } =
                     [ drawCircle ]
     in
         g []
-            ([ rect [ x "0", y "0", width "100", height "100", fillOpacity "0.0", onClick PlaceMark ] []
-             ]
+            ([ rect [ x "0", y "0", width "100", height "100", fillOpacity "0.0", onClick message ] [] ]
                 ++ markDrawing
             )
 

@@ -4,7 +4,6 @@ import Tuple3
 import UltimateTicTacToe
 import TicTacToe
 import Board
-import Cell
 import Player exposing (..)
 import Debug
 
@@ -48,8 +47,7 @@ nextMove board =
 
 toMsg : Move -> UltimateTicTacToe.Msg
 toMsg { boardCoords, cellCoords } =
-    UltimateTicTacToe.MetaPlaceMark boardCoords (TicTacToe.PlaceMark cellCoords Cell.PlaceMark)
-
+    UltimateTicTacToe.MetaPlaceMark boardCoords (TicTacToe.PlaceMark cellCoords)
 
 
 -- List all valid moves given current state of the game
@@ -91,7 +89,7 @@ validMovesOnBoard ticTacToe =
             ticTacToe.board
                 |> Board.indexedMap
                     (\coords cell ->
-                        if cell.mark == Nothing then
+                        if cell == Nothing then
                             Just coords
                         else
                             Nothing
@@ -228,7 +226,7 @@ isWinnable ticTacToe player =
         rows : List (List (Maybe Player))
         rows =
             Board.allRows
-                |> List.map (\row -> row |> Tuple3.toList |> List.map (\coords -> (Board.get board coords).mark))
+                |> List.map (\row -> row |> Tuple3.toList |> List.map (\coords -> (Board.get board coords)))
     in
         List.any isWinnable rows
 
