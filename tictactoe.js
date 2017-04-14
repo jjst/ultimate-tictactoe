@@ -10214,28 +10214,6 @@ var _user$project$Cell$svgView = function (_p6) {
 			},
 			markDrawing));
 };
-var _user$project$Cell$view = function (model) {
-	return A2(
-		_elm_lang$svg$Svg$svg,
-		{
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 100 100'),
-			_1: {
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$width('300px'),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$transform('scale(0.3)'),
-					_1: {ctor: '[]'}
-				}
-			}
-		},
-		{
-			ctor: '::',
-			_0: _user$project$Cell$svgView(model),
-			_1: {ctor: '[]'}
-		});
-};
 
 var _user$project$SvgUtils$applyTransform = F2(
 	function (eltTransform, element) {
@@ -10502,59 +10480,6 @@ var _user$project$TicTacToeBase$svgView = F3(
 				},
 				st));
 	});
-var _user$project$TicTacToeBase$view = F3(
-	function (owner, svgViewCell, model) {
-		var size = _elm_lang$core$Basics$toString(_user$project$TicTacToeBase$boardSize);
-		var divStyle = _elm_lang$html$Html_Attributes$style(
-			{
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 'margin', _1: 'auto'},
-				_1: {
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'width',
-						_1: A2(_elm_lang$core$Basics_ops['++'], size, 'px')
-					},
-					_1: {ctor: '[]'}
-				}
-			});
-		return A2(
-			_elm_lang$html$Html$div,
-			{
-				ctor: '::',
-				_0: divStyle,
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$svg$Svg$svg,
-					{
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$viewBox(
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'0 0 ',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									size,
-									A2(_elm_lang$core$Basics_ops['++'], ' ', size)))),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$width(
-								A2(_elm_lang$core$Basics_ops['++'], size, 'px')),
-							_1: {ctor: '[]'}
-						}
-					},
-					{
-						ctor: '::',
-						_0: A3(_user$project$TicTacToeBase$svgView, owner, svgViewCell, model),
-						_1: {ctor: '[]'}
-					}),
-				_1: {ctor: '[]'}
-			});
-	});
 var _user$project$TicTacToeBase$init = function (initialCell) {
 	return {
 		board: _user$project$Tuple3$fill(
@@ -10710,7 +10635,6 @@ var _user$project$TicTacToe$svgViewCell = F2(
 					_user$project$Cell$svgView(model))));
 	});
 var _user$project$TicTacToe$svgView = A2(_user$project$TicTacToeBase$svgView, _user$project$TicTacToe$cellOwner, _user$project$TicTacToe$svgViewCell);
-var _user$project$TicTacToe$view = A2(_user$project$TicTacToeBase$view, _user$project$TicTacToe$cellOwner, _user$project$TicTacToe$svgViewCell);
 
 var _user$project$UltimateTicTacToe$boardOwner = function (boardModel) {
 	var _p0 = _user$project$TicTacToe$winner(boardModel.board);
