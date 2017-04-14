@@ -10107,112 +10107,82 @@ var _user$project$Cell$drawCircle = A2(
 		}
 	},
 	{ctor: '[]'});
-var _user$project$Cell$fromString = F2(
-	function (p, s) {
-		var mark = function () {
-			var _p0 = _elm_lang$core$String$toLower(s);
-			switch (_p0) {
-				case 'o':
-					return _elm_lang$core$Result$Ok(
-						_elm_lang$core$Maybe$Just(_user$project$Player$O));
-				case 'x':
-					return _elm_lang$core$Result$Ok(
-						_elm_lang$core$Maybe$Just(_user$project$Player$X));
-				case '_':
-					return _elm_lang$core$Result$Ok(_elm_lang$core$Maybe$Nothing);
-				default:
-					return _elm_lang$core$Result$Err(
-						A2(_elm_lang$core$Basics_ops['++'], 'Invalid character: ', _p0));
+var _user$project$Cell$svgView = F2(
+	function (cell, message) {
+		var markDrawing = function () {
+			var _p0 = cell;
+			if (_p0.ctor === 'Nothing') {
+				return {ctor: '[]'};
+			} else {
+				if (_p0._0.ctor === 'X') {
+					return {
+						ctor: '::',
+						_0: _user$project$Cell$drawCross,
+						_1: {ctor: '[]'}
+					};
+				} else {
+					return {
+						ctor: '::',
+						_0: _user$project$Cell$drawCircle,
+						_1: {ctor: '[]'}
+					};
+				}
 			}
 		}();
 		return A2(
-			_elm_lang$core$Result$map,
-			function (m) {
-				return {mark: m, currentPlayer: p};
-			},
-			mark);
-	});
-var _user$project$Cell$init = {mark: _elm_lang$core$Maybe$Nothing, currentPlayer: _user$project$Player$X};
-var _user$project$Cell$Model = F2(
-	function (a, b) {
-		return {mark: a, currentPlayer: b};
-	});
-var _user$project$Cell$update = F2(
-	function (msg, _p1) {
-		var _p2 = _p1;
-		var _p5 = _p2.currentPlayer;
-		var _p3 = msg;
-		var _p4 = _p2.mark;
-		if (_p4.ctor === 'Just') {
-			return _p2;
-		} else {
-			return A2(
-				_user$project$Cell$Model,
-				_elm_lang$core$Maybe$Just(_p5),
-				_user$project$Player$opponent(_p5));
-		}
-	});
-var _user$project$Cell$PlaceMark = {ctor: 'PlaceMark'};
-var _user$project$Cell$svgView = function (_p6) {
-	var _p7 = _p6;
-	var markDrawing = function () {
-		var _p8 = _p7.mark;
-		if (_p8.ctor === 'Nothing') {
-			return {ctor: '[]'};
-		} else {
-			if (_p8._0.ctor === 'X') {
-				return {
+			_elm_lang$svg$Svg$g,
+			{ctor: '[]'},
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				{
 					ctor: '::',
-					_0: _user$project$Cell$drawCross,
-					_1: {ctor: '[]'}
-				};
-			} else {
-				return {
-					ctor: '::',
-					_0: _user$project$Cell$drawCircle,
-					_1: {ctor: '[]'}
-				};
-			}
-		}
-	}();
-	return A2(
-		_elm_lang$svg$Svg$g,
-		{ctor: '[]'},
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$svg$Svg$rect,
-					{
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$x('0'),
-						_1: {
+					_0: A2(
+						_elm_lang$svg$Svg$rect,
+						{
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$y('0'),
+							_0: _elm_lang$svg$Svg_Attributes$x('0'),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$width('100'),
+								_0: _elm_lang$svg$Svg_Attributes$y('0'),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$height('100'),
+									_0: _elm_lang$svg$Svg_Attributes$width('100'),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$fillOpacity('0.0'),
+										_0: _elm_lang$svg$Svg_Attributes$height('100'),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$html$Html_Events$onClick(_user$project$Cell$PlaceMark),
-											_1: {ctor: '[]'}
+											_0: _elm_lang$svg$Svg_Attributes$fillOpacity('0.0'),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html_Events$onClick(message),
+												_1: {ctor: '[]'}
+											}
 										}
 									}
 								}
 							}
-						}
-					},
-					{ctor: '[]'}),
-				_1: {ctor: '[]'}
-			},
-			markDrawing));
+						},
+						{ctor: '[]'}),
+					_1: {ctor: '[]'}
+				},
+				markDrawing));
+	});
+var _user$project$Cell$fromString = function (s) {
+	var _p1 = _elm_lang$core$String$toLower(s);
+	switch (_p1) {
+		case 'o':
+			return _elm_lang$core$Result$Ok(
+				_elm_lang$core$Maybe$Just(_user$project$Player$O));
+		case 'x':
+			return _elm_lang$core$Result$Ok(
+				_elm_lang$core$Maybe$Just(_user$project$Player$X));
+		case '_':
+			return _elm_lang$core$Result$Ok(_elm_lang$core$Maybe$Nothing);
+		default:
+			return _elm_lang$core$Result$Err(
+				A2(_elm_lang$core$Basics_ops['++'], 'Invalid character: ', _p1));
+	}
 };
 
 var _user$project$SvgUtils$applyTransform = F2(
@@ -10523,7 +10493,7 @@ var _user$project$TicTacToe$fromString = F2(
 			return liftResult(
 				A2(
 					_elm_lang$core$List$map,
-					_user$project$Cell$fromString(player),
+					_user$project$Cell$fromString,
 					A2(
 						_elm_lang$core$String$split,
 						' ',
@@ -10563,16 +10533,14 @@ var _user$project$TicTacToe$fromString = F2(
 			},
 			boardResult);
 	});
-var _user$project$TicTacToe$cellOwner = function (cell) {
-	return cell.mark;
-};
-var _user$project$TicTacToe$winner = _user$project$Board$winner(_user$project$TicTacToe$cellOwner);
+var _user$project$TicTacToe$winner = _user$project$Board$winner(_elm_lang$core$Basics$identity);
 var _user$project$TicTacToe$update = F2(
 	function (msg, _p2) {
 		var _p3 = _p2;
-		var _p10 = _p3.board;
-		var nextPlayer = _user$project$Player$opponent(_p3.currentPlayer);
-		var _p4 = _user$project$TicTacToe$winner(_p10);
+		var _p9 = _p3.currentPlayer;
+		var _p8 = _p3.board;
+		var nextPlayer = _user$project$Player$opponent(_p9);
+		var _p4 = _user$project$TicTacToe$winner(_p8);
 		if (_p4.ctor === 'Just') {
 			return _p3;
 		} else {
@@ -10586,55 +10554,40 @@ var _user$project$TicTacToe$update = F2(
 								var _p7 = _p6;
 								return _elm_lang$core$Native_Utils.eq(
 									{ctor: '_Tuple2', _0: _p5._0._0, _1: _p5._0._1},
-									{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1}) ? A2(_user$project$Cell$update, _p5._1, cell) : _elm_lang$core$Native_Utils.update(
-									cell,
-									{currentPlayer: nextPlayer});
+									{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1}) ? _elm_lang$core$Maybe$Just(_p9) : cell;
 							}),
-						_p10),
+						_p8),
 					currentPlayer: nextPlayer
 				};
 			} else {
-				return {
-					board: A2(
-						_user$project$Board$indexedMap,
-						F2(
-							function (_p8, cell) {
-								var _p9 = _p8;
-								return _elm_lang$core$Native_Utils.update(
-									cell,
-									{currentPlayer: nextPlayer});
-							}),
-						_p10),
-					currentPlayer: nextPlayer
-				};
+				return {board: _p8, currentPlayer: nextPlayer};
 			}
 		}
 	});
-var _user$project$TicTacToe$init = _user$project$TicTacToeBase$init(_user$project$Cell$init);
+var _user$project$TicTacToe$init = _user$project$TicTacToeBase$init(_elm_lang$core$Maybe$Nothing);
 var _user$project$TicTacToe$TogglePlayer = {ctor: 'TogglePlayer'};
-var _user$project$TicTacToe$PlaceMark = F2(
-	function (a, b) {
-		return {ctor: 'PlaceMark', _0: a, _1: b};
-	});
+var _user$project$TicTacToe$PlaceMark = function (a) {
+	return {ctor: 'PlaceMark', _0: a};
+};
 var _user$project$TicTacToe$svgViewCell = F2(
-	function (_p11, model) {
-		var _p12 = _p11;
-		var _p14 = _p12._1;
-		var _p13 = _p12._0;
-		return A2(
-			_elm_lang$html$Html$map,
-			_user$project$TicTacToe$PlaceMark(
-				{ctor: '_Tuple2', _0: _p13, _1: _p14}),
-			A3(
-				_user$project$SvgUtils$translate,
-				_user$project$Tuple3$toInt(_p13) * _user$project$TicTacToeBase$cellSize,
-				_user$project$Tuple3$toInt(_p14) * _user$project$TicTacToeBase$cellSize,
+	function (_p10, model) {
+		var _p11 = _p10;
+		var _p13 = _p11._1;
+		var _p12 = _p11._0;
+		return A3(
+			_user$project$SvgUtils$translate,
+			_user$project$Tuple3$toInt(_p12) * _user$project$TicTacToeBase$cellSize,
+			_user$project$Tuple3$toInt(_p13) * _user$project$TicTacToeBase$cellSize,
+			A2(
+				_user$project$SvgUtils$scale,
+				_elm_lang$core$Basics$toFloat(_user$project$TicTacToeBase$cellSize) / 100.0,
 				A2(
-					_user$project$SvgUtils$scale,
-					_elm_lang$core$Basics$toFloat(_user$project$TicTacToeBase$cellSize) / 100.0,
-					_user$project$Cell$svgView(model))));
+					_user$project$Cell$svgView,
+					model,
+					_user$project$TicTacToe$PlaceMark(
+						{ctor: '_Tuple2', _0: _p12, _1: _p13}))));
 	});
-var _user$project$TicTacToe$svgView = A2(_user$project$TicTacToeBase$svgView, _user$project$TicTacToe$cellOwner, _user$project$TicTacToe$svgViewCell);
+var _user$project$TicTacToe$svgView = A2(_user$project$TicTacToeBase$svgView, _elm_lang$core$Basics$identity, _user$project$TicTacToe$svgViewCell);
 
 var _user$project$UltimateTicTacToe$boardOwner = function (boardModel) {
 	var _p0 = _user$project$TicTacToe$winner(boardModel.board);
@@ -11043,7 +10996,7 @@ var _user$project$UltimateTicTacToeWithAI$isWinnable = F2(
 				return A2(
 					_elm_lang$core$List$map,
 					function (coords) {
-						return A2(_user$project$Board$get, board, coords).mark;
+						return A2(_user$project$Board$get, board, coords);
 					},
 					_user$project$Tuple3$toList(row));
 			},
@@ -11102,7 +11055,7 @@ var _user$project$UltimateTicTacToeWithAI$validMovesOnBoard = function (ticTacTo
 					_user$project$Board$indexedMap,
 					F2(
 						function (coords, cell) {
-							return _elm_lang$core$Native_Utils.eq(cell.mark, _elm_lang$core$Maybe$Nothing) ? _elm_lang$core$Maybe$Just(coords) : _elm_lang$core$Maybe$Nothing;
+							return _elm_lang$core$Native_Utils.eq(cell, _elm_lang$core$Maybe$Nothing) ? _elm_lang$core$Maybe$Just(coords) : _elm_lang$core$Maybe$Nothing;
 						}),
 					ticTacToe.board)));
 	} else {
@@ -11150,7 +11103,7 @@ var _user$project$UltimateTicTacToeWithAI$toMsg = function (_p9) {
 	return A2(
 		_user$project$UltimateTicTacToe$MetaPlaceMark,
 		_p10.boardCoords,
-		A2(_user$project$TicTacToe$PlaceMark, _p10.cellCoords, _user$project$Cell$PlaceMark));
+		_user$project$TicTacToe$PlaceMark(_p10.cellCoords));
 };
 var _user$project$UltimateTicTacToeWithAI$applyMove = F2(
 	function (move, board) {
