@@ -87,13 +87,6 @@ svgView { mark, currentPlayer } =
                 ++ markDrawing
             )
 
-
-view : Model -> Html Msg
-view model =
-    svg [ viewBox "0 0 100 100", width "300px", transform "scale(0.3)" ]
-        [ (svgView model) ]
-
-
 drawCircle : Svg a
 drawCircle =
     circle [ cx "50", cy "50", r "40", fillOpacity "0.0", SA.style "stroke:red;stroke-width:6" ] []

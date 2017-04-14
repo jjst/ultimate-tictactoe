@@ -83,24 +83,6 @@ type alias SvgViewCell a b =
     Coords -> a -> Svg b
 
 
-view : OwnerFunction a -> SvgViewCell a b -> Model a -> Html b
-view owner svgViewCell model =
-    let
-        size =
-            (toString boardSize)
-
-        divStyle =
-            Html.Attributes.style
-                [ ( "margin", "auto" )
-                , ( "width", size ++ "px" )
-                ]
-    in
-        div [ divStyle ]
-            [ svg [ viewBox ("0 0 " ++ size ++ " " ++ size), width (size ++ "px") ]
-                [ (svgView owner svgViewCell model) ]
-            ]
-
-
 svgView : OwnerFunction a -> SvgViewCell a b -> Model a -> Svg b
 svgView owner svgViewCell model =
     let

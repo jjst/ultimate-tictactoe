@@ -128,11 +128,6 @@ svgView =
     TicTacToeBase.svgView cellOwner svgViewCell
 
 
-view : Model -> Html Msg
-view =
-    TicTacToeBase.view cellOwner svgViewCell
-
-
 svgViewCell : Board.Coords -> Cell.Model -> Svg Msg
 svgViewCell ( i, j ) model =
     Cell.svgView model
