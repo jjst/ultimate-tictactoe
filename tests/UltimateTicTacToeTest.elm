@@ -31,7 +31,7 @@ tests =
     describe "An updated UltimateTicTacToeBoard Model"
         [ it "toggles the current player" <|
             expect
-                (update (MetaPlaceMark ( I1, I1 ) (TicTacToe.PlaceMark ( I1, I1 ))) initialBoard).currentPlayer
+                (performMove { boardCoords = ( I1, I1 ), cellCoords = ( I1, I1 ) } initialBoard).currentPlayer
                 to equal
                 Player.O
         , let
@@ -72,7 +72,7 @@ tests =
             """
 
             subBoard =
-                TicTacToe.fromString Player.X
+                TicTacToe.fromString
                     """
              _ _ _
              x _ _
@@ -135,7 +135,7 @@ tests =
                     |> orCrash
 
             msg =
-                MetaPlaceMark ( I2, I2 ) (TicTacToe.PlaceMark ( I2, I2 ))
+                PerformMove { boardCoords = ( I2, I2 ), cellCoords = ( I2, I2 )}
 
             nextBoardCoords =
                 (update msg currentBoard).currentBoardCoords

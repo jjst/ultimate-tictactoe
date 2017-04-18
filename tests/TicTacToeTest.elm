@@ -27,7 +27,7 @@ tests =
           in
             it "builds the default board from a string full of _'s" <|
                 expect
-                    (fromString Player.X str)
+                    (fromString str)
                     to equal
                     (Ok initialBoard)
         , let
@@ -37,29 +37,25 @@ tests =
             x x x
             _ _ _
             """
+            expectedBoard =
+                Board.indexedMap
+                    (\( i, j ) cell ->
+                        case i of
+                            I1 ->
+                                Just Player.O
+
+                            I2 ->
+                                Just Player.X
+
+                            I3 ->
+                                Nothing
+                    ) initialBoard
           in
             it "fills each cell according to their string symbol" <|
                 expect
-                    (fromString Player.X str)
+                    (fromString str)
                     to equal
-                    (Ok
-                        { initialBoard
-                            | board =
-                                Board.indexedMap
-                                    (\( i, j ) cell ->
-                                        case i of
-                                            I1 ->
-                                                Just Player.O
-
-                                            I2 ->
-                                                Just Player.X
-
-                                            I3 ->
-                                                Nothing
-                                    )
-                                    initialBoard.board
-                        }
-                    )
+                    (Ok expectedBoard)
         , let
             str =
                 """
@@ -71,7 +67,7 @@ tests =
           in
             it "fails to parse if there are to many rows" <|
                 expect
-                    (fromString Player.X str)
+                    (fromString str)
                     to equal
                 <|
                     (Err "Wrong number of rows")
@@ -85,7 +81,7 @@ tests =
           in
             it "fails to parse if there are to many cols" <|
                 expect
-                    (fromString Player.X str)
+                    (fromString str)
                     to equal
                 <|
                     (Err "Wrong number of items in row")
@@ -99,7 +95,7 @@ tests =
           in
             it "fails to parse invalid chars" <|
                 expect
-                    (fromString Player.X str)
+                    (fromString str)
                     to equal
                 <|
                     (Err "Invalid character: j")

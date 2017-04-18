@@ -33,7 +33,7 @@ tests =
             """
 
             board =
-                case (TicTacToe.fromString Player.X str) of
+                case (TicTacToe.fromString str) of
                     Ok b ->
                         b
 
@@ -54,7 +54,7 @@ tests =
             """
 
             board =
-                case (TicTacToe.fromString Player.X str) of
+                case (TicTacToe.fromString str) of
                     Ok b ->
                         b
 
@@ -212,7 +212,7 @@ tests =
                     (-70)
         , let
             board =
-                T.fromString Player.X
+                T.fromString
                     """
             o o _
             _ _ _
@@ -228,7 +228,7 @@ tests =
                     (True)
         , let
             board =
-                T.fromString Player.X
+                T.fromString
                     """
             o o x
             _ _ _
@@ -244,7 +244,7 @@ tests =
                     (False)
         , let
             board =
-                T.fromString Player.X
+                T.fromString
                     """
             o x _
             _ _ _
