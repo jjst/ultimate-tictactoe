@@ -10129,6 +10129,43 @@ var _user$project$Cell$svgView = F2(
 				}
 			}
 		}();
+		var onClickEvent = function () {
+			var _p1 = cell;
+			if (_p1.ctor === 'Nothing') {
+				return {
+					ctor: '::',
+					_0: _elm_lang$html$Html_Events$onClick(message),
+					_1: {ctor: '[]'}
+				};
+			} else {
+				return {ctor: '[]'};
+			}
+		}();
+		var rectAttrs = {
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$x('0'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$y('0'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$width('100'),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$height('100'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$fillOpacity('0.0'),
+							_1: {ctor: '[]'}
+						}
+					}
+				}
+			}
+		};
+		var r = A2(
+			_elm_lang$svg$Svg$rect,
+			A2(_elm_lang$core$Basics_ops['++'], rectAttrs, onClickEvent),
+			{ctor: '[]'});
 		return A2(
 			_elm_lang$svg$Svg$g,
 			{ctor: '[]'},
@@ -10136,41 +10173,14 @@ var _user$project$Cell$svgView = F2(
 				_elm_lang$core$Basics_ops['++'],
 				{
 					ctor: '::',
-					_0: A2(
-						_elm_lang$svg$Svg$rect,
-						{
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$x('0'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$y('0'),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$width('100'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$height('100'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$fillOpacity('0.0'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html_Events$onClick(message),
-												_1: {ctor: '[]'}
-											}
-										}
-									}
-								}
-							}
-						},
-						{ctor: '[]'}),
+					_0: r,
 					_1: {ctor: '[]'}
 				},
 				markDrawing));
 	});
 var _user$project$Cell$fromString = function (s) {
-	var _p1 = _elm_lang$core$String$toLower(s);
-	switch (_p1) {
+	var _p2 = _elm_lang$core$String$toLower(s);
+	switch (_p2) {
 		case 'o':
 			return _elm_lang$core$Result$Ok(
 				_elm_lang$core$Maybe$Just(_user$project$Player$O));
@@ -10181,7 +10191,7 @@ var _user$project$Cell$fromString = function (s) {
 			return _elm_lang$core$Result$Ok(_elm_lang$core$Maybe$Nothing);
 		default:
 			return _elm_lang$core$Result$Err(
-				A2(_elm_lang$core$Basics_ops['++'], 'Invalid character: ', _p1));
+				A2(_elm_lang$core$Basics_ops['++'], 'Invalid character: ', _p2));
 	}
 };
 
@@ -10396,8 +10406,7 @@ var _user$project$TicTacToeBase$grid = function (cellSize) {
 		});
 };
 var _user$project$TicTacToeBase$svgView = F3(
-	function (owner, svgViewCell, model) {
-		var board = model.board;
+	function (owner, svgViewCell, board) {
 		var st = function () {
 			var _p4 = {
 				ctor: '_Tuple2',
@@ -10433,7 +10442,7 @@ var _user$project$TicTacToeBase$svgView = F3(
 			_elm_lang$svg$Svg$g,
 			{ctor: '[]'},
 			_user$project$Board$flatten(
-				A2(_user$project$Board$indexedMap, svgViewCell, model.board)));
+				A2(_user$project$Board$indexedMap, svgViewCell, board)));
 		return A2(
 			_elm_lang$svg$Svg$g,
 			{ctor: '[]'},
@@ -10451,152 +10460,179 @@ var _user$project$TicTacToeBase$svgView = F3(
 				st));
 	});
 var _user$project$TicTacToeBase$init = function (initialCell) {
-	return {
-		board: _user$project$Tuple3$fill(
-			_user$project$Tuple3$fill(initialCell)),
-		currentPlayer: _user$project$Player$X
-	};
+	return _user$project$Tuple3$fill(
+		_user$project$Tuple3$fill(initialCell));
 };
-var _user$project$TicTacToeBase$Model = F2(
-	function (a, b) {
-		return {board: a, currentPlayer: b};
-	});
 
-var _user$project$TicTacToe$fromString = F2(
-	function (player, str) {
-		var liftResult = function (list) {
-			return A3(
-				_elm_lang$core$List$foldr,
-				F2(
-					function (result, listResult) {
-						return A2(
-							_elm_lang$core$Result$andThen,
-							function (list) {
-								return A2(
-									_elm_lang$core$Result$map,
-									A2(
-										_elm_lang$core$Basics$flip,
-										F2(
-											function (x, y) {
-												return {ctor: '::', _0: x, _1: y};
-											}),
-										list),
-									result);
-							},
-							listResult);
-					}),
-				_elm_lang$core$Result$Ok(
-					{ctor: '[]'}),
-				list);
-		};
-		var parseLine = function (l) {
-			return liftResult(
-				A2(
-					_elm_lang$core$List$map,
-					_user$project$Cell$fromString,
-					A2(
-						_elm_lang$core$String$split,
-						' ',
-						_elm_lang$core$String$trim(l))));
-		};
-		var parsed = liftResult(
-			A2(
-				_elm_lang$core$List$map,
-				parseLine,
-				_elm_lang$core$String$lines(
-					_elm_lang$core$String$trim(str))));
-		var boardResult = A2(
-			_elm_lang$core$Result$andThen,
-			function (_p0) {
-				return A2(
-					_elm_lang$core$Result$fromMaybe,
-					'Wrong number of rows',
-					_user$project$Tuple3$fromList(_p0));
-			},
-			A2(
-				_elm_lang$core$Result$andThen,
-				liftResult,
-				A2(
-					_elm_lang$core$Result$map,
-					_elm_lang$core$List$map(
-						function (_p1) {
-							return A2(
-								_elm_lang$core$Result$fromMaybe,
-								'Wrong number of items in row',
-								_user$project$Tuple3$fromList(_p1));
-						}),
-					parsed)));
-		return A2(
-			_elm_lang$core$Result$map,
-			function (b) {
-				return {board: b, currentPlayer: player};
-			},
-			boardResult);
-	});
-var _user$project$TicTacToe$winner = _user$project$Board$winner(_elm_lang$core$Basics$identity);
-var _user$project$TicTacToe$update = F2(
-	function (msg, _p2) {
-		var _p3 = _p2;
-		var _p9 = _p3.currentPlayer;
-		var _p8 = _p3.board;
-		var nextPlayer = _user$project$Player$opponent(_p9);
-		var _p4 = _user$project$TicTacToe$winner(_p8);
-		if (_p4.ctor === 'Just') {
-			return _p3;
-		} else {
-			var _p5 = msg;
-			if (_p5.ctor === 'PlaceMark') {
-				return {
-					board: A2(
-						_user$project$Board$indexedMap,
-						F2(
-							function (_p6, cell) {
-								var _p7 = _p6;
-								return _elm_lang$core$Native_Utils.eq(
-									{ctor: '_Tuple2', _0: _p5._0._0, _1: _p5._0._1},
-									{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1}) ? _elm_lang$core$Maybe$Just(_p9) : cell;
-							}),
-						_p8),
-					currentPlayer: nextPlayer
-				};
-			} else {
-				return {board: _p8, currentPlayer: nextPlayer};
-			}
-		}
-	});
-var _user$project$TicTacToe$init = _user$project$TicTacToeBase$init(_elm_lang$core$Maybe$Nothing);
-var _user$project$TicTacToe$TogglePlayer = {ctor: 'TogglePlayer'};
-var _user$project$TicTacToe$PlaceMark = function (a) {
-	return {ctor: 'PlaceMark', _0: a};
-};
 var _user$project$TicTacToe$svgViewCell = F2(
-	function (_p10, model) {
-		var _p11 = _p10;
-		var _p13 = _p11._1;
-		var _p12 = _p11._0;
+	function (_p0, model) {
+		var _p1 = _p0;
+		var _p3 = _p1._1;
+		var _p2 = _p1._0;
 		return A3(
 			_user$project$SvgUtils$translate,
-			_user$project$Tuple3$toInt(_p12) * _user$project$TicTacToeBase$cellSize,
-			_user$project$Tuple3$toInt(_p13) * _user$project$TicTacToeBase$cellSize,
+			_user$project$Tuple3$toInt(_p2) * _user$project$TicTacToeBase$cellSize,
+			_user$project$Tuple3$toInt(_p3) * _user$project$TicTacToeBase$cellSize,
 			A2(
 				_user$project$SvgUtils$scale,
 				_elm_lang$core$Basics$toFloat(_user$project$TicTacToeBase$cellSize) / 100.0,
 				A2(
 					_user$project$Cell$svgView,
 					model,
-					_user$project$TicTacToe$PlaceMark(
-						{ctor: '_Tuple2', _0: _p12, _1: _p13}))));
+					{ctor: '_Tuple2', _0: _p2, _1: _p3})));
 	});
-var _user$project$TicTacToe$svgView = A2(_user$project$TicTacToeBase$svgView, _elm_lang$core$Basics$identity, _user$project$TicTacToe$svgViewCell);
+var _user$project$TicTacToe$render = A2(_user$project$TicTacToeBase$svgView, _elm_lang$core$Basics$identity, _user$project$TicTacToe$svgViewCell);
+var _user$project$TicTacToe$fromString = function (str) {
+	var liftResult = function (list) {
+		return A3(
+			_elm_lang$core$List$foldr,
+			F2(
+				function (result, listResult) {
+					return A2(
+						_elm_lang$core$Result$andThen,
+						function (list) {
+							return A2(
+								_elm_lang$core$Result$map,
+								A2(
+									_elm_lang$core$Basics$flip,
+									F2(
+										function (x, y) {
+											return {ctor: '::', _0: x, _1: y};
+										}),
+									list),
+								result);
+						},
+						listResult);
+				}),
+			_elm_lang$core$Result$Ok(
+				{ctor: '[]'}),
+			list);
+	};
+	var parseLine = function (l) {
+		return liftResult(
+			A2(
+				_elm_lang$core$List$map,
+				_user$project$Cell$fromString,
+				A2(
+					_elm_lang$core$String$split,
+					' ',
+					_elm_lang$core$String$trim(l))));
+	};
+	var parsed = liftResult(
+		A2(
+			_elm_lang$core$List$map,
+			parseLine,
+			_elm_lang$core$String$lines(
+				_elm_lang$core$String$trim(str))));
+	var boardResult = A2(
+		_elm_lang$core$Result$andThen,
+		function (_p4) {
+			return A2(
+				_elm_lang$core$Result$fromMaybe,
+				'Wrong number of rows',
+				_user$project$Tuple3$fromList(_p4));
+		},
+		A2(
+			_elm_lang$core$Result$andThen,
+			liftResult,
+			A2(
+				_elm_lang$core$Result$map,
+				_elm_lang$core$List$map(
+					function (_p5) {
+						return A2(
+							_elm_lang$core$Result$fromMaybe,
+							'Wrong number of items in row',
+							_user$project$Tuple3$fromList(_p5));
+					}),
+				parsed)));
+	return boardResult;
+};
+var _user$project$TicTacToe$winner = _user$project$Board$winner(_elm_lang$core$Basics$identity);
+var _user$project$TicTacToe$performMoveFor = F3(
+	function (player, _p6, board) {
+		var _p7 = _p6;
+		var _p8 = _user$project$TicTacToe$winner(board);
+		if (_p8.ctor === 'Just') {
+			return board;
+		} else {
+			return A2(
+				_user$project$Board$indexedMap,
+				F2(
+					function (_p9, cell) {
+						var _p10 = _p9;
+						return _elm_lang$core$Native_Utils.eq(
+							{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1},
+							{ctor: '_Tuple2', _0: _p10._0, _1: _p10._1}) ? _elm_lang$core$Maybe$Just(player) : cell;
+					}),
+				board);
+		}
+	});
+var _user$project$TicTacToe$init = _user$project$TicTacToeBase$init(_elm_lang$core$Maybe$Nothing);
 
-var _user$project$UltimateTicTacToe$boardOwner = function (boardModel) {
-	var _p0 = _user$project$TicTacToe$winner(boardModel.board);
-	if (_p0.ctor === 'Nothing') {
+var _user$project$UltimateTicTacToe$fadedOutOpacity = 0.25;
+var _user$project$UltimateTicTacToe$normalOpacity = 1.0;
+var _user$project$UltimateTicTacToe$performMoveFor = F3(
+	function (player, _p0, board) {
+		var _p1 = _p0;
+		return A2(
+			_user$project$Board$indexedMap,
+			F2(
+				function (_p2, subBoard) {
+					var _p3 = _p2;
+					return _elm_lang$core$Native_Utils.eq(
+						_p1.boardCoords,
+						{ctor: '_Tuple2', _0: _p3._0, _1: _p3._1}) ? A3(_user$project$TicTacToe$performMoveFor, player, _p1.cellCoords, subBoard) : subBoard;
+				}),
+			board);
+	});
+var _user$project$UltimateTicTacToe$moveIsInCurrentBoard = F2(
+	function (move, model) {
+		var _p4 = model.currentBoardCoords;
+		if (_p4.ctor === 'Nothing') {
+			return true;
+		} else {
+			return _elm_lang$core$Native_Utils.eq(_p4._0, move.boardCoords);
+		}
+	});
+var _user$project$UltimateTicTacToe$isValidMove = F2(
+	function (move, _p5) {
+		var _p6 = _p5;
+		var ticTacToeBoard = A2(_user$project$Board$get, _p6.board, move.boardCoords);
+		var ticTacToeCell = A2(_user$project$Board$get, ticTacToeBoard, move.cellCoords);
+		return A2(_user$project$UltimateTicTacToe$moveIsInCurrentBoard, move, _p6) && (_elm_lang$core$Native_Utils.eq(
+			_user$project$TicTacToe$winner(ticTacToeBoard),
+			_elm_lang$core$Maybe$Nothing) && _elm_lang$core$Native_Utils.eq(ticTacToeCell, _elm_lang$core$Maybe$Nothing));
+	});
+var _user$project$UltimateTicTacToe$performMove = F2(
+	function (_p8, _p7) {
+		var _p9 = _p8;
+		var _p14 = _p9;
+		var _p13 = _p9.cellCoords;
+		var _p10 = _p7;
+		var _p12 = _p10;
+		var _p11 = _p10.currentPlayer;
+		if (A2(_user$project$UltimateTicTacToe$isValidMove, _p14, _p12)) {
+			var updatedBoard = A3(_user$project$UltimateTicTacToe$performMoveFor, _p11, _p14, _p10.board);
+			var updatedBoardWinner = _user$project$TicTacToe$winner(
+				A2(_user$project$Board$get, updatedBoard, _p13));
+			var nextPlayer = _user$project$Player$opponent(_p11);
+			return {
+				board: updatedBoard,
+				currentPlayer: nextPlayer,
+				currentBoardCoords: _elm_lang$core$Native_Utils.eq(updatedBoardWinner, _elm_lang$core$Maybe$Nothing) ? _elm_lang$core$Maybe$Just(_p13) : _elm_lang$core$Maybe$Nothing
+			};
+		} else {
+			return _p12;
+		}
+	});
+var _user$project$UltimateTicTacToe$boardOwner = function (board) {
+	var _p15 = _user$project$TicTacToe$winner(board);
+	if (_p15.ctor === 'Nothing') {
 		return _elm_lang$core$Maybe$Nothing;
 	} else {
-		var _p1 = _p0._0;
-		if (_p1.ctor === 'Left') {
-			return _elm_lang$core$Maybe$Just(_p1._0);
+		var _p16 = _p15._0;
+		if (_p16.ctor === 'Left') {
+			return _elm_lang$core$Maybe$Just(_p16._0);
 		} else {
 			return _elm_lang$core$Maybe$Nothing;
 		}
@@ -10604,89 +10640,120 @@ var _user$project$UltimateTicTacToe$boardOwner = function (boardModel) {
 };
 var _user$project$UltimateTicTacToe$winner = _user$project$Board$winner(_user$project$UltimateTicTacToe$boardOwner);
 var _user$project$UltimateTicTacToe$update = F2(
-	function (msg, _p2) {
-		var _p3 = _p2;
-		var _p12 = _p3;
-		var _p11 = _p3.board;
-		var nextPlayer = _user$project$Player$opponent(_p3.currentPlayer);
-		var _p4 = _user$project$UltimateTicTacToe$winner(_p11);
-		if (_p4.ctor === 'Just') {
-			return _p12;
+	function (msg, _p17) {
+		var _p18 = _p17;
+		var _p21 = _p18;
+		var _p19 = _user$project$UltimateTicTacToe$winner(_p18.board);
+		if (_p19.ctor === 'Just') {
+			return _p21;
 		} else {
-			var _p5 = msg;
-			if (_p5._1.ctor === 'PlaceMark') {
-				var _p10 = _p5._1._0;
-				var _p9 = _p5._0;
-				var updatedBoard = A2(
-					_user$project$Board$indexedMap,
-					F2(
-						function (_p6, subBoard) {
-							var _p7 = _p6;
-							return _elm_lang$core$Native_Utils.eq(
-								_p9,
-								{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1}) ? A2(_user$project$TicTacToe$update, _p5._1, subBoard) : A2(_user$project$TicTacToe$update, _user$project$TicTacToe$TogglePlayer, subBoard);
-						}),
-					_p11);
-				var updatedBoardWinner = _user$project$TicTacToe$winner(
-					A2(_user$project$Board$get, updatedBoard, _p10).board);
-				var updatedModel = {
-					board: updatedBoard,
-					currentPlayer: nextPlayer,
-					currentBoardCoords: _elm_lang$core$Native_Utils.eq(updatedBoardWinner, _elm_lang$core$Maybe$Nothing) ? _elm_lang$core$Maybe$Just(_p10) : _elm_lang$core$Maybe$Nothing
-				};
-				var _p8 = _p3.currentBoardCoords;
-				if (_p8.ctor === 'Nothing') {
-					return updatedModel;
-				} else {
-					return _elm_lang$core$Native_Utils.eq(_p8._0, _p9) ? updatedModel : _p12;
-				}
+			var _p20 = msg;
+			return A2(_user$project$UltimateTicTacToe$performMove, _p20._0, _p21);
+		}
+	});
+var _user$project$UltimateTicTacToe$shouldFadeOut = F3(
+	function (model, boardCoords, ticTacToeBoard) {
+		var _p22 = _user$project$UltimateTicTacToe$winner(model.board);
+		if (_p22.ctor === 'Just') {
+			return true;
+		} else {
+			var _p23 = model.currentBoardCoords;
+			if (_p23.ctor === 'Just') {
+				return !_elm_lang$core$Native_Utils.eq(boardCoords, _p23._0);
 			} else {
-				return _p12;
+				return !_elm_lang$core$Native_Utils.eq(
+					_user$project$TicTacToe$winner(ticTacToeBoard),
+					_elm_lang$core$Maybe$Nothing);
 			}
 		}
 	});
-var _user$project$UltimateTicTacToe$boardOpacity = F3(
-	function (model, subBoardCoords, subBoardModel) {
-		var normalValue = 1.0;
-		var fadedOutValue = 0.25;
-		var boardWinner = _user$project$TicTacToe$winner(subBoardModel.board);
-		var _p13 = _user$project$UltimateTicTacToe$winner(model.board);
-		if (_p13.ctor === 'Just') {
-			return fadedOutValue;
-		} else {
-			var _p14 = model.currentBoardCoords;
-			if (_p14.ctor === 'Just') {
-				return (!_elm_lang$core$Native_Utils.eq(subBoardCoords, _p14._0)) ? fadedOutValue : normalValue;
-			} else {
-				var _p15 = boardWinner;
-				if (_p15.ctor === 'Just') {
-					return fadedOutValue;
+var _user$project$UltimateTicTacToe$renderTicTacToeBoard = F3(
+	function (model, _p24, ticTacToeBoard) {
+		var _p25 = _p24;
+		var _p27 = _p25;
+		var boardOpacity = A3(_user$project$UltimateTicTacToe$shouldFadeOut, model, _p27, ticTacToeBoard) ? _user$project$UltimateTicTacToe$fadedOutOpacity : _user$project$UltimateTicTacToe$normalOpacity;
+		var boardWinner = _user$project$TicTacToe$winner(ticTacToeBoard);
+		var winningMark = function () {
+			var _p26 = boardWinner;
+			if ((_p26.ctor === 'Just') && (_p26._0.ctor === 'Left')) {
+				if (_p26._0._0.ctor === 'X') {
+					return {
+						ctor: '::',
+						_0: A2(
+							_user$project$SvgUtils$scale,
+							_elm_lang$core$Basics$toFloat(_user$project$TicTacToeBase$boardSize) / 100.0,
+							_user$project$Cell$drawCross),
+						_1: {ctor: '[]'}
+					};
 				} else {
-					return normalValue;
+					return {
+						ctor: '::',
+						_0: A2(
+							_user$project$SvgUtils$scale,
+							_elm_lang$core$Basics$toFloat(_user$project$TicTacToeBase$boardSize) / 100.0,
+							_user$project$Cell$drawCircle),
+						_1: {ctor: '[]'}
+					};
 				}
+			} else {
+				return {ctor: '[]'};
 			}
-		}
+		}();
+		var renderedBoard = _user$project$TicTacToe$render(ticTacToeBoard);
+		var group = A2(
+			_elm_lang$svg$Svg$g,
+			{ctor: '[]'},
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				winningMark,
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$svg$Svg$g,
+						{
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$opacity(
+								_elm_lang$core$Basics$toString(boardOpacity)),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: renderedBoard,
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}));
+		return A2(
+			_elm_lang$svg$Svg$map,
+			function (cellCoords) {
+				return {boardCoords: _p27, cellCoords: cellCoords};
+			},
+			A3(
+				_user$project$SvgUtils$translate,
+				_user$project$Tuple3$toInt(_p25._0) * _user$project$TicTacToeBase$cellSize,
+				_user$project$Tuple3$toInt(_p25._1) * _user$project$TicTacToeBase$cellSize,
+				A2(_user$project$SvgUtils$scale, 1.0 / 3.0, group)));
 	});
 var _user$project$UltimateTicTacToe$transpose = function (ll) {
 	transpose:
 	while (true) {
-		var _p16 = ll;
-		if (_p16.ctor === '[]') {
+		var _p28 = ll;
+		if (_p28.ctor === '[]') {
 			return {ctor: '[]'};
 		} else {
-			if (_p16._0.ctor === '[]') {
-				var _v11 = _p16._1;
-				ll = _v11;
+			if (_p28._0.ctor === '[]') {
+				var _v16 = _p28._1;
+				ll = _v16;
 				continue transpose;
 			} else {
-				var _p17 = _p16._1;
-				var tails = A2(_elm_lang$core$List$filterMap, _elm_lang$core$List$tail, _p17);
-				var heads = A2(_elm_lang$core$List$filterMap, _elm_lang$core$List$head, _p17);
+				var _p29 = _p28._1;
+				var tails = A2(_elm_lang$core$List$filterMap, _elm_lang$core$List$tail, _p29);
+				var heads = A2(_elm_lang$core$List$filterMap, _elm_lang$core$List$head, _p29);
 				return {
 					ctor: '::',
-					_0: {ctor: '::', _0: _p16._0._0, _1: heads},
+					_0: {ctor: '::', _0: _p28._0._0, _1: heads},
 					_1: _user$project$UltimateTicTacToe$transpose(
-						{ctor: '::', _0: _p16._0._1, _1: tails})
+						{ctor: '::', _0: _p28._0._1, _1: tails})
 				};
 			}
 		}
@@ -10696,21 +10763,21 @@ var _user$project$UltimateTicTacToe$fromString = F3(
 	function (player, currentBoardCoords, str) {
 		var subBoardsAsStrings = A2(
 			_elm_lang$core$List$map,
-			function (_p18) {
+			function (_p30) {
 				return A2(
 					_elm_lang$core$List$map,
 					_elm_lang$core$String$join('\n'),
 					_user$project$UltimateTicTacToe$transpose(
 						A2(
 							_elm_lang$core$List$map,
-							function (_p19) {
+							function (_p31) {
 								return A2(
 									_elm_lang$core$String$split,
 									'|',
-									_elm_lang$core$String$trim(_p19));
+									_elm_lang$core$String$trim(_p31));
 							},
 							_elm_lang$core$String$lines(
-								_elm_lang$core$String$trim(_p18)))));
+								_elm_lang$core$String$trim(_p30)))));
 			},
 			A3(
 				_elm_lang$core$Regex$split,
@@ -10745,21 +10812,18 @@ var _user$project$UltimateTicTacToe$fromString = F3(
 		var subBoards = liftResult(
 			A2(
 				_elm_lang$core$List$map,
-				function (_p20) {
+				function (_p32) {
 					return liftResult(
-						A2(
-							_elm_lang$core$List$map,
-							_user$project$TicTacToe$fromString(player),
-							_p20));
+						A2(_elm_lang$core$List$map, _user$project$TicTacToe$fromString, _p32));
 				},
 				subBoardsAsStrings));
 		var boardResult = A2(
 			_elm_lang$core$Result$andThen,
-			function (_p21) {
+			function (_p33) {
 				return A2(
 					_elm_lang$core$Result$fromMaybe,
 					'Wrong number of rows',
-					_user$project$Tuple3$fromList(_p21));
+					_user$project$Tuple3$fromList(_p33));
 			},
 			A2(
 				_elm_lang$core$Result$andThen,
@@ -10767,11 +10831,11 @@ var _user$project$UltimateTicTacToe$fromString = F3(
 				A2(
 					_elm_lang$core$Result$map,
 					_elm_lang$core$List$map(
-						function (_p22) {
+						function (_p34) {
 							return A2(
 								_elm_lang$core$Result$fromMaybe,
 								'Wrong number of items in row',
-								_user$project$Tuple3$fromList(_p22));
+								_user$project$Tuple3$fromList(_p34));
 						}),
 					subBoards)));
 		return A2(
@@ -10791,107 +10855,37 @@ var _user$project$UltimateTicTacToe$Model = F3(
 	function (a, b, c) {
 		return {board: a, currentPlayer: b, currentBoardCoords: c};
 	});
-var _user$project$UltimateTicTacToe$MetaPlaceMark = F2(
+var _user$project$UltimateTicTacToe$Move = F2(
 	function (a, b) {
-		return {ctor: 'MetaPlaceMark', _0: a, _1: b};
+		return {boardCoords: a, cellCoords: b};
 	});
-var _user$project$UltimateTicTacToe$svgViewBoard = F3(
-	function (model, _p24, _p23) {
-		var _p25 = _p24;
-		var _p29 = _p25;
-		var _p26 = _p23;
-		var _p28 = _p26;
-		var o = _elm_lang$core$Basics$toString(
-			A3(_user$project$UltimateTicTacToe$boardOpacity, model, _p29, _p28));
-		var s = _elm_lang$core$Basics$toString(_user$project$TicTacToeBase$boardSize);
-		var boardWinner = _user$project$TicTacToe$winner(_p26.board);
-		var winningMark = function () {
-			var _p27 = boardWinner;
-			if ((_p27.ctor === 'Just') && (_p27._0.ctor === 'Left')) {
-				if (_p27._0._0.ctor === 'X') {
-					return {
-						ctor: '::',
-						_0: A2(
-							_user$project$SvgUtils$scale,
-							_elm_lang$core$Basics$toFloat(_user$project$TicTacToeBase$boardSize) / 100.0,
-							_user$project$Cell$drawCross),
-						_1: {ctor: '[]'}
-					};
-				} else {
-					return {
-						ctor: '::',
-						_0: A2(
-							_user$project$SvgUtils$scale,
-							_elm_lang$core$Basics$toFloat(_user$project$TicTacToeBase$boardSize) / 100.0,
-							_user$project$Cell$drawCircle),
-						_1: {ctor: '[]'}
-					};
-				}
-			} else {
-				return {ctor: '[]'};
-			}
-		}();
-		var ticTacToeView = _user$project$TicTacToe$svgView(_p28);
-		var group = A2(
-			_elm_lang$svg$Svg$g,
-			{ctor: '[]'},
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				winningMark,
-				{
-					ctor: '::',
-					_0: A2(
-						_elm_lang$svg$Svg$g,
-						{
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$opacity(o),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: ticTacToeView,
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}));
-		return A2(
-			_elm_lang$html$Html$map,
-			_user$project$UltimateTicTacToe$MetaPlaceMark(_p29),
-			A3(
-				_user$project$SvgUtils$translate,
-				_user$project$Tuple3$toInt(_p25._0) * _user$project$TicTacToeBase$cellSize,
-				_user$project$Tuple3$toInt(_p25._1) * _user$project$TicTacToeBase$cellSize,
-				A2(_user$project$SvgUtils$scale, 1.0 / 3.0, group)));
-	});
-var _user$project$UltimateTicTacToe$svgView = function (model) {
-	var vb = _user$project$UltimateTicTacToe$svgViewBoard(model);
-	var board = model.board;
-	var cells = A2(
-		_elm_lang$svg$Svg$g,
-		{ctor: '[]'},
-		_user$project$Board$flatten(
-			A2(_user$project$Board$indexedMap, vb, board)));
+var _user$project$UltimateTicTacToe$PerformMove = function (a) {
+	return {ctor: 'PerformMove', _0: a};
+};
+var _user$project$UltimateTicTacToe$svgView = function (_p35) {
+	var _p36 = _p35;
+	var _p41 = _p36.board;
 	var st = function () {
-		var _p30 = {
+		var _p37 = {
 			ctor: '_Tuple2',
-			_0: A2(_user$project$Board$winningRow, _user$project$UltimateTicTacToe$boardOwner, board),
-			_1: _user$project$UltimateTicTacToe$winner(board)
+			_0: A2(_user$project$Board$winningRow, _user$project$UltimateTicTacToe$boardOwner, _p41),
+			_1: _user$project$UltimateTicTacToe$winner(_p41)
 		};
-		if ((((_p30.ctor === '_Tuple2') && (_p30._0.ctor === 'Just')) && (_p30._0._0.ctor === '_Tuple3')) && (_p30._1.ctor === 'Just')) {
-			var _p33 = _p30._0._0._2;
-			var _p32 = _p30._0._0._0;
-			var _p31 = _p30._1._0;
-			if (_p31.ctor === 'Left') {
-				if (_p31._0.ctor === 'O') {
+		if ((((_p37.ctor === '_Tuple2') && (_p37._0.ctor === 'Just')) && (_p37._0._0.ctor === '_Tuple3')) && (_p37._1.ctor === 'Just')) {
+			var _p40 = _p37._0._0._2;
+			var _p39 = _p37._0._0._0;
+			var _p38 = _p37._1._0;
+			if (_p38.ctor === 'Left') {
+				if (_p38._0.ctor === 'O') {
 					return {
 						ctor: '::',
-						_0: A4(_user$project$TicTacToeBase$strikeThrough, 'red', _user$project$TicTacToeBase$cellSize, _p32, _p33),
+						_0: A4(_user$project$TicTacToeBase$strikeThrough, 'red', _user$project$TicTacToeBase$cellSize, _p39, _p40),
 						_1: {ctor: '[]'}
 					};
 				} else {
 					return {
 						ctor: '::',
-						_0: A4(_user$project$TicTacToeBase$strikeThrough, 'blue', _user$project$TicTacToeBase$cellSize, _p32, _p33),
+						_0: A4(_user$project$TicTacToeBase$strikeThrough, 'blue', _user$project$TicTacToeBase$cellSize, _p39, _p40),
 						_1: {ctor: '[]'}
 					};
 				}
@@ -10902,21 +10896,32 @@ var _user$project$UltimateTicTacToe$svgView = function (model) {
 			return {ctor: '[]'};
 		}
 	}();
-	return A2(
+	var cells = A2(
 		_elm_lang$svg$Svg$g,
 		{ctor: '[]'},
+		_user$project$Board$flatten(
+			A2(
+				_user$project$Board$indexedMap,
+				_user$project$UltimateTicTacToe$renderTicTacToeBoard(_p36),
+				_p41)));
+	return A2(
+		_elm_lang$svg$Svg$map,
+		_user$project$UltimateTicTacToe$PerformMove,
 		A2(
-			_elm_lang$core$Basics_ops['++'],
-			{
-				ctor: '::',
-				_0: cells,
-				_1: {
+			_elm_lang$svg$Svg$g,
+			{ctor: '[]'},
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				{
 					ctor: '::',
-					_0: _user$project$TicTacToeBase$grid(_user$project$TicTacToeBase$cellSize),
-					_1: {ctor: '[]'}
-				}
-			},
-			st));
+					_0: cells,
+					_1: {
+						ctor: '::',
+						_0: _user$project$TicTacToeBase$grid(_user$project$TicTacToeBase$cellSize),
+						_1: {ctor: '[]'}
+					}
+				},
+				st)));
 };
 var _user$project$UltimateTicTacToe$view = function (model) {
 	var size = _elm_lang$core$Basics$toString(_user$project$TicTacToeBase$boardSize);
@@ -10980,7 +10985,7 @@ var _user$project$UltimateTicTacToeWithAI$wonBoards = F2(
 				_elm_lang$core$List$filter,
 				function (b) {
 					return _elm_lang$core$Native_Utils.eq(
-						_user$project$TicTacToe$winner(b.board),
+						_user$project$TicTacToe$winner(b),
 						_elm_lang$core$Maybe$Just(
 							_user$project$Player$Left(player)));
 				},
@@ -10988,20 +10993,19 @@ var _user$project$UltimateTicTacToeWithAI$wonBoards = F2(
 		return wonBoards;
 	});
 var _user$project$UltimateTicTacToeWithAI$isWinnable = F2(
-	function (ticTacToe, player) {
-		var board = ticTacToe.board;
+	function (ticTacToeBoard, player) {
 		var rows = A2(
 			_elm_lang$core$List$map,
 			function (row) {
 				return A2(
 					_elm_lang$core$List$map,
 					function (coords) {
-						return A2(_user$project$Board$get, board, coords);
+						return A2(_user$project$Board$get, ticTacToeBoard, coords);
 					},
 					_user$project$Tuple3$toList(row));
 			},
 			_user$project$Board$allRows);
-		var isWinnable = function (row) {
+		var isRowWinnable = function (row) {
 			var markCount = _elm_lang$core$List$length(
 				A2(
 					_elm_lang$core$List$filter,
@@ -11013,7 +11017,7 @@ var _user$project$UltimateTicTacToeWithAI$isWinnable = F2(
 					row));
 			return _elm_lang$core$Native_Utils.eq(markCount, 2) && A2(_elm_lang$core$List$member, _elm_lang$core$Maybe$Nothing, row);
 		};
-		return A2(_elm_lang$core$List$any, isWinnable, rows);
+		return A2(_elm_lang$core$List$any, isRowWinnable, rows);
 	});
 var _user$project$UltimateTicTacToeWithAI$winnableBoards = F2(
 	function (model, player) {
@@ -11044,8 +11048,8 @@ var _user$project$UltimateTicTacToeWithAI$evalPosition = function (model) {
 	return ((wonBoardsDelta * 100) + (winnableBoardsDelta * 35)) + unrestrictedMovementBonus;
 };
 var _user$project$UltimateTicTacToeWithAI$maxValue = 100000;
-var _user$project$UltimateTicTacToeWithAI$validMovesOnBoard = function (ticTacToe) {
-	var _p2 = _user$project$TicTacToe$winner(ticTacToe.board);
+var _user$project$UltimateTicTacToeWithAI$validMovesOnBoard = function (ticTacToeBoard) {
+	var _p2 = _user$project$TicTacToe$winner(ticTacToeBoard);
 	if (_p2.ctor === 'Nothing') {
 		return A2(
 			_elm_lang$core$List$filterMap,
@@ -11057,7 +11061,7 @@ var _user$project$UltimateTicTacToeWithAI$validMovesOnBoard = function (ticTacTo
 						function (coords, cell) {
 							return _elm_lang$core$Native_Utils.eq(cell, _elm_lang$core$Maybe$Nothing) ? _elm_lang$core$Maybe$Just(coords) : _elm_lang$core$Maybe$Nothing;
 						}),
-					ticTacToe.board)));
+					ticTacToeBoard)));
 	} else {
 		return {ctor: '[]'};
 	}
@@ -11098,33 +11102,15 @@ var _user$project$UltimateTicTacToeWithAI$validMoves = function (_p3) {
 		return {ctor: '[]'};
 	}
 };
-var _user$project$UltimateTicTacToeWithAI$toMsg = function (_p9) {
-	var _p10 = _p9;
-	return A2(
-		_user$project$UltimateTicTacToe$MetaPlaceMark,
-		_p10.boardCoords,
-		_user$project$TicTacToe$PlaceMark(_p10.cellCoords));
-};
-var _user$project$UltimateTicTacToeWithAI$applyMove = F2(
-	function (move, board) {
-		return A2(
-			_user$project$UltimateTicTacToe$update,
-			_user$project$UltimateTicTacToeWithAI$toMsg(move),
-			board);
-	});
-var _user$project$UltimateTicTacToeWithAI$Move = F2(
-	function (a, b) {
-		return {boardCoords: a, cellCoords: b};
-	});
 var _user$project$UltimateTicTacToeWithAI$Minimize = {ctor: 'Minimize'};
 var _user$project$UltimateTicTacToeWithAI$Maximize = {ctor: 'Maximize'};
 var _user$project$UltimateTicTacToeWithAI$minimax = F3(
 	function (ticTacToe, depth, action) {
-		var _p11 = _user$project$UltimateTicTacToe$winner(ticTacToe.board);
-		if (_p11.ctor === 'Just') {
-			var _p12 = _p11._0;
-			if (_p12.ctor === 'Left') {
-				if (_p12._0.ctor === 'X') {
+		var _p9 = _user$project$UltimateTicTacToe$winner(ticTacToe.board);
+		if (_p9.ctor === 'Just') {
+			var _p10 = _p9._0;
+			if (_p10.ctor === 'Left') {
+				if (_p10._0.ctor === 'X') {
 					return 0 - _user$project$UltimateTicTacToeWithAI$maxValue;
 				} else {
 					return _user$project$UltimateTicTacToeWithAI$maxValue;
@@ -11136,14 +11122,14 @@ var _user$project$UltimateTicTacToeWithAI$minimax = F3(
 			if (_elm_lang$core$Native_Utils.eq(depth, 0)) {
 				return _user$project$UltimateTicTacToeWithAI$evalPosition(ticTacToe);
 			} else {
-				var _p13 = action;
-				if (_p13.ctor === 'Maximize') {
+				var _p11 = action;
+				if (_p11.ctor === 'Maximize') {
 					var values = A2(
 						_elm_lang$core$List$map,
 						function (move) {
 							return A3(
 								_user$project$UltimateTicTacToeWithAI$minimax,
-								A2(_user$project$UltimateTicTacToeWithAI$applyMove, move, ticTacToe),
+								A2(_user$project$UltimateTicTacToe$performMove, move, ticTacToe),
 								depth - 1,
 								_user$project$UltimateTicTacToeWithAI$Minimize);
 						},
@@ -11159,7 +11145,7 @@ var _user$project$UltimateTicTacToeWithAI$minimax = F3(
 						function (move) {
 							return A3(
 								_user$project$UltimateTicTacToeWithAI$minimax,
-								A2(_user$project$UltimateTicTacToeWithAI$applyMove, move, ticTacToe),
+								A2(_user$project$UltimateTicTacToe$performMove, move, ticTacToe),
 								depth - 1,
 								_user$project$UltimateTicTacToeWithAI$Maximize);
 						},
@@ -11178,7 +11164,7 @@ var _user$project$UltimateTicTacToeWithAI$nextMove = function (board) {
 	var minimaxScore = function (move) {
 		return A3(
 			_user$project$UltimateTicTacToeWithAI$minimax,
-			A2(_user$project$UltimateTicTacToeWithAI$applyMove, move, board),
+			A2(_user$project$UltimateTicTacToe$performMove, move, board),
 			1,
 			_user$project$UltimateTicTacToeWithAI$Minimize);
 	};
@@ -11207,17 +11193,14 @@ var _user$project$UltimateTicTacToeWithAI$nextMove = function (board) {
 	return nextMove;
 };
 var _user$project$UltimateTicTacToeWithAI$update = F2(
-	function (msg, _p14) {
-		var _p15 = _p14;
-		var updatedModelAfterPlayerMove = A2(_user$project$UltimateTicTacToe$update, msg, _p15);
+	function (msg, _p12) {
+		var _p13 = _p12;
+		var updatedModelAfterPlayerMove = A2(_user$project$UltimateTicTacToe$update, msg, _p13);
 		var aiMove = _user$project$UltimateTicTacToeWithAI$nextMove(updatedModelAfterPlayerMove);
 		var updatedModelAfterAIMove = function () {
-			var _p16 = aiMove;
-			if (_p16.ctor === 'Just') {
-				return A2(
-					_user$project$UltimateTicTacToe$update,
-					_user$project$UltimateTicTacToeWithAI$toMsg(_p16._0),
-					updatedModelAfterPlayerMove);
+			var _p14 = aiMove;
+			if (_p14.ctor === 'Just') {
+				return A2(_user$project$UltimateTicTacToe$performMove, _p14._0, updatedModelAfterPlayerMove);
 			} else {
 				return updatedModelAfterPlayerMove;
 			}
