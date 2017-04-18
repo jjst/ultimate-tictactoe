@@ -5,6 +5,7 @@ import UltimateTicTacToe
 import TicTacToeBase
 import SvgUtils
 import Menu
+import GameMode
 import Task
 import Window
 import Html.Attributes as HA
@@ -63,18 +64,18 @@ update msg ({ ticTacToe, menu, windowSize } as model) =
             case msg of
                 TicTacToeMessage msg ->
                     let
-                        update =
+                        updateBoard =
                             case menu of
-                                Menu.OnePlayerVsAI ->
-                                    UltimateTicTacToeWithAI.update
+                                Just GameMode.OnePlayerVsAI ->
+                                    UltimateTicTacToeWithAI.update msg
 
-                                Menu.TwoPlayers ->
-                                    UltimateTicTacToe.update
+                                Just GameMode.TwoPlayers ->
+                                    UltimateTicTacToe.update msg
 
-                                _ ->
-                                    UltimateTicTacToe.update
+                                Nothing ->
+                                    identity
                     in
-                        { model | ticTacToe = (update msg ticTacToe) }
+                        { model | ticTacToe = updateBoard ticTacToe }
 
                 NewWindowSize size ->
                     { model | windowSize = size }

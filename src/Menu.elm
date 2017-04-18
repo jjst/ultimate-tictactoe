@@ -7,20 +7,18 @@ import Markdown
 import Maybe
 import Array
 import Keyboard
+import GameMode exposing (..)
 
 
 -- MODEL
 
 
-type Model
-    = NotChosen
-    | OnePlayerVsAI
-    | TwoPlayers
+type alias Model = Maybe GameMode
 
 
 init : Model
 init =
-    NotChosen
+    Nothing
 
 
 
@@ -36,10 +34,10 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Choose1P ->
-            OnePlayerVsAI
+            Just OnePlayerVsAI
 
         Choose2P ->
-            TwoPlayers
+            Just TwoPlayers
 
 
 
@@ -49,7 +47,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     case model of
-        NotChosen ->
+        Nothing ->
             div [ class "tutorial" ]
                 [ pageContent
                 , div [ style [ ( "float", "right" ) ] ]
