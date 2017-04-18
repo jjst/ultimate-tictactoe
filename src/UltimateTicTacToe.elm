@@ -130,6 +130,23 @@ winner =
 type Msg
     = PerformMove Move
 
+isValidMove : Move -> Model -> Bool
+isValidMove move ({board, currentBoardCoords} as model) =
+    let
+        ticTacToeBoard = get board move.boardCoords
+        ticTacToeCell = get ticTacToeBoard move.cellCoords
+    in
+       moveIsInCurrentBoard move model && TicTacToe.winner ticTacToeBoard == Nothing && ticTacToeCell == Nothing
+
+moveIsInCurrentBoard : Move -> Model -> Bool
+moveIsInCurrentBoard move model =
+    case model.currentBoardCoords of
+        Nothing ->
+            True
+
+        Just c ->
+            c == move.boardCoords
+
 performMoveFor : Player -> Move -> UltimateTicTacToeBoard -> UltimateTicTacToeBoard
 performMoveFor player { boardCoords, cellCoords } board =
     board
@@ -143,15 +160,15 @@ performMoveFor player { boardCoords, cellCoords } board =
 
 performMove : Move -> Model -> Model
 performMove ({ boardCoords, cellCoords } as move) ({board, currentPlayer, currentBoardCoords} as model) =
-    let
-        nextPlayer =
-            opponent currentPlayer
-        updatedBoard =
-            performMoveFor currentPlayer move board
-        updatedBoardWinner =
-            TicTacToe.winner (get updatedBoard cellCoords)
-
-        updatedModel =
+    if isValidMove move model then
+        let
+            nextPlayer =
+                opponent currentPlayer
+            updatedBoard =
+                performMoveFor currentPlayer move board
+            updatedBoardWinner =
+                TicTacToe.winner (get updatedBoard cellCoords)
+        in
             { board = updatedBoard
             , currentPlayer = nextPlayer
             , currentBoardCoords =
@@ -160,16 +177,8 @@ performMove ({ boardCoords, cellCoords } as move) ({board, currentPlayer, curren
                 else
                     Nothing
             }
-    in
-        case currentBoardCoords of
-            Nothing ->
-                updatedModel
-
-            Just c ->
-                if c == boardCoords then
-                    updatedModel
-                else
-                    model
+    else
+        model
 
 
 update : Msg -> Model -> Model
