@@ -2,6 +2,7 @@ module UltimateTicTacToeWithAI exposing (..)
 
 import Tuple3
 import UltimateTicTacToe
+import UltimateTicTacToe exposing (Model, Move, performMove)
 import TicTacToe
 import Board
 import Player exposing (..)
@@ -11,22 +12,12 @@ import Debug
 -- MODEL
 
 
-type alias Model =
-    UltimateTicTacToe.Model
-
-
-type alias Move =
-    { boardCoords : Board.Coords
-    , cellCoords : Board.Coords
-    }
-
-
 nextMove : Model -> Maybe Move
 nextMove board =
     let
         minimaxScore : Move -> Int
         minimaxScore move =
-            minimax (applyMove move board) 1 Minimize
+            minimax (performMove move board) 1 Minimize
 
         potentialMoves =
             validMoves board
@@ -43,11 +34,6 @@ nextMove board =
                 |> Maybe.map Tuple.first
     in
         nextMove
-
-
-toMsg : Move -> UltimateTicTacToe.Msg
-toMsg { boardCoords, cellCoords } =
-    UltimateTicTacToe.MetaPlaceMark boardCoords (TicTacToe.PlaceMark cellCoords)
 
 
 -- List all valid moves given current state of the game
@@ -82,11 +68,11 @@ validMoves { board, currentPlayer, currentBoardCoords } =
             []
 
 
-validMovesOnBoard : TicTacToe.Model -> List Board.Coords
-validMovesOnBoard ticTacToe =
-    case TicTacToe.winner ticTacToe.board of
+validMovesOnBoard : TicTacToe.TicTacToeBoard -> List TicTacToe.Move
+validMovesOnBoard ticTacToeBoard =
+    case TicTacToe.winner ticTacToeBoard of
         Nothing ->
-            ticTacToe.board
+            ticTacToeBoard
                 |> Board.indexedMap
                     (\coords cell ->
                         if cell == Nothing then
@@ -99,11 +85,6 @@ validMovesOnBoard ticTacToe =
 
         _ ->
             []
-
-
-applyMove : Move -> Model -> Model
-applyMove move board =
-    UltimateTicTacToe.update (toMsg move) board
 
 
 maxValue =
@@ -144,7 +125,7 @@ minimax ticTacToe depth action =
                                 validMoves ticTacToe
                                     |> List.map
                                         (\move ->
-                                            minimax (applyMove move ticTacToe) (depth - 1) Minimize
+                                            minimax (performMove move ticTacToe) (depth - 1) Minimize
                                         )
 
                             max =
@@ -158,7 +139,7 @@ minimax ticTacToe depth action =
                                 validMoves ticTacToe
                                     |> List.map
                                         (\move ->
-                                            minimax (applyMove move ticTacToe) (depth - 1) Maximize
+                                            minimax (performMove move ticTacToe) (depth - 1) Maximize
                                         )
 
                             min =
@@ -209,26 +190,23 @@ winnableBoards model player =
 -- A board is winnable if it has 2 in a row
 
 
-isWinnable : TicTacToe.Model -> Player -> Bool
-isWinnable ticTacToe player =
+isWinnable : TicTacToe.TicTacToeBoard -> Player -> Bool
+isWinnable ticTacToeBoard player =
     let
-        isWinnable : List (Maybe Player) -> Bool
-        isWinnable row =
+        isRowWinnable : List (Maybe Player) -> Bool
+        isRowWinnable row =
             let
                 markCount =
                     row |> List.filter (\e -> e == Just player) |> List.length
             in
                 markCount == 2 && List.member Nothing row
 
-        board =
-            ticTacToe.board
-
         rows : List (List (Maybe Player))
         rows =
             Board.allRows
-                |> List.map (\row -> row |> Tuple3.toList |> List.map (\coords -> (Board.get board coords)))
+                |> List.map (\row -> row |> Tuple3.toList |> List.map (\coords -> (Board.get ticTacToeBoard coords)))
     in
-        List.any isWinnable rows
+        List.any isRowWinnable rows
 
 
 wonBoards : Model -> Player -> Int
@@ -238,7 +216,7 @@ wonBoards model player =
             Board.flatten model.board
 
         wonBoards =
-            subBoards |> List.filter (\b -> TicTacToe.winner b.board == Just (Left player)) |> List.length
+            subBoards |> List.filter (\b -> TicTacToe.winner b == Just (Left player)) |> List.length
     in
         wonBoards
 
@@ -263,7 +241,7 @@ update msg ({ board, currentPlayer, currentBoardCoords } as model) =
         updatedModelAfterAIMove =
             case aiMove of
                 Just move ->
-                    UltimateTicTacToe.update (toMsg move) updatedModelAfterPlayerMove
+                    UltimateTicTacToe.performMove move updatedModelAfterPlayerMove
 
                 Nothing ->
                     updatedModelAfterPlayerMove

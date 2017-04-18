@@ -1,6 +1,7 @@
 module UltimateTicTacToe exposing (..)
 
 import TicTacToe
+import TicTacToe exposing (TicTacToeBoard)
 import Player exposing (..)
 import Board exposing (..)
 import SvgUtils
@@ -20,7 +21,7 @@ import Svg.Attributes exposing (..)
 
 
 type alias UltimateTicTacToeBoard =
-    Board TicTacToe.Model
+    Board TicTacToeBoard
 
 
 -- MODEL
@@ -32,6 +33,10 @@ type alias Model =
     , currentBoardCoords : Maybe Board.Coords
     }
 
+type alias Move =
+    { boardCoords : Board.Coords
+    , cellCoords : Board.Coords
+    }
 
 init : Model
 init =
@@ -76,7 +81,7 @@ fromString player currentBoardCoords str =
 
         subBoards =
             subBoardsAsStrings
-                |> List.map (List.map (TicTacToe.fromString player) >> liftResult)
+                |> List.map (List.map TicTacToe.fromString >> liftResult)
                 |> liftResult
 
         boardResult =
@@ -98,9 +103,9 @@ fromString player currentBoardCoords str =
                 )
 
 
-boardOwner : TicTacToe.Model -> Maybe Player
-boardOwner boardModel =
-    case TicTacToe.winner boardModel.board of
+boardOwner : TicTacToeBoard -> Maybe Player
+boardOwner board =
+    case TicTacToe.winner board of
         Nothing ->
             Nothing
 
@@ -123,63 +128,72 @@ winner =
 
 
 type Msg
-    = MetaPlaceMark Coords TicTacToe.Msg
+    = PerformMove Move
 
+performMoveFor : Player -> Move -> UltimateTicTacToeBoard -> UltimateTicTacToeBoard
+performMoveFor player { boardCoords, cellCoords } board =
+    board
+        |> indexedMap
+            (\( i, j ) subBoard ->
+                if boardCoords == ( i, j ) then
+                    TicTacToe.performMoveFor player cellCoords subBoard
+                else
+                    subBoard
+            )
 
-update : Msg -> Model -> Model
-update msg ({ board, currentPlayer, currentBoardCoords } as model) =
+performMove : Move -> Model -> Model
+performMove ({ boardCoords, cellCoords } as move) ({board, currentPlayer, currentBoardCoords} as model) =
     let
         nextPlayer =
             opponent currentPlayer
+        updatedBoard =
+            performMoveFor currentPlayer move board
+        updatedBoardWinner =
+            TicTacToe.winner (get updatedBoard cellCoords)
+
+        updatedModel =
+            { board = updatedBoard
+            , currentPlayer = nextPlayer
+            , currentBoardCoords =
+                if updatedBoardWinner == Nothing then
+                    Just cellCoords
+                else
+                    Nothing
+            }
     in
-        case winner board of
-            Just _ ->
-                model
-
+        case currentBoardCoords of
             Nothing ->
-                case msg of
-                    MetaPlaceMark boardCoords ((TicTacToe.PlaceMark cellCoords) as msg) ->
-                        let
-                            updatedBoard =
-                                board
-                                    |> indexedMap
-                                        (\( i, j ) subBoard ->
-                                            if boardCoords == ( i, j ) then
-                                                TicTacToe.update msg subBoard
-                                            else
-                                                TicTacToe.update TicTacToe.TogglePlayer subBoard
-                                        )
+                updatedModel
 
-                            updatedBoardWinner =
-                                TicTacToe.winner (get updatedBoard cellCoords).board
+            Just c ->
+                if c == boardCoords then
+                    updatedModel
+                else
+                    model
 
-                            updatedModel =
-                                { board = updatedBoard
-                                , currentPlayer = nextPlayer
-                                , currentBoardCoords =
-                                    if updatedBoardWinner == Nothing then
-                                        Just cellCoords
-                                    else
-                                        Nothing
-                                }
-                        in
-                            case currentBoardCoords of
-                                Nothing ->
-                                    updatedModel
 
-                                Just c ->
-                                    if c == boardCoords then
-                                        updatedModel
-                                    else
-                                        model
+update : Msg -> Model -> Model
+update msg ({ board } as model) =
+    case winner board of
+        Just _ ->
+            model
 
-                    _ ->
-                        model
+        Nothing ->
+            case msg of
+                PerformMove move ->
+                    performMove move model
 
 
 
 -- VIEW
 
+type alias Opacity = Float
+
+normalOpacity : Opacity
+normalOpacity = 1.0
+
+fadedOutOpacity : Opacity
+fadedOutOpacity = 0.25
 
 view : Model -> Html Msg
 view model =
@@ -200,16 +214,10 @@ view model =
 
 
 svgView : Model -> Svg Msg
-svgView model =
+svgView ({board} as model) =
     let
-        board =
-            model.board
-
-        vb =
-            svgViewBoard model
-
         cells =
-            g [] (flatten <| (indexedMap vb board))
+            g [] (flatten <| (indexedMap (renderTicTacToeBoard model) board))
 
         st =
             case ( winningRow boardOwner board, winner board ) of
@@ -227,17 +235,16 @@ svgView model =
                 _ ->
                     []
     in
-        g [] ([ cells, (grid cellSize) ] ++ st)
+        g [] ([ cells, (grid cellSize) ] ++ st) |> Svg.map PerformMove
 
 
-svgViewBoard : Model -> Coords -> TicTacToe.Model -> Svg Msg
-svgViewBoard model (( i, j ) as coords) ({ board, currentPlayer } as subBoardModel) =
+renderTicTacToeBoard : Model -> Coords -> TicTacToeBoard -> Svg Move
+renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
     let
-        ticTacToeView =
-            TicTacToe.svgView subBoardModel
+        renderedBoard = TicTacToe.render ticTacToeBoard
 
         boardWinner =
-            TicTacToe.winner board
+            TicTacToe.winner ticTacToeBoard
 
         winningMark =
             case boardWinner of
@@ -250,49 +257,27 @@ svgViewBoard model (( i, j ) as coords) ({ board, currentPlayer } as subBoardMod
                 _ ->
                     []
 
-        s =
-            TicTacToeBase.boardSize |> toString
-
-        o =
-            boardOpacity model coords subBoardModel |> toString
+        boardOpacity =
+            if shouldFadeOut model coords ticTacToeBoard then fadedOutOpacity else normalOpacity
 
         group =
-            g [] (winningMark ++ [ g [ opacity o ] [ ticTacToeView ] ])
+            g [] (winningMark ++ [ g [ opacity (toString boardOpacity) ] [ renderedBoard ] ])
     in
         group
             |> SvgUtils.scale (1.0 / 3.0)
             |> SvgUtils.translate ((T3.toInt i) * TicTacToeBase.cellSize) ((T3.toInt j) * TicTacToeBase.cellSize)
-            |> Html.map (MetaPlaceMark coords)
+            |> Svg.map (\cellCoords -> { boardCoords = coords, cellCoords = cellCoords })
 
 
-boardOpacity : Model -> Coords -> TicTacToe.Model -> Float
-boardOpacity model subBoardCoords subBoardModel =
-    let
-        boardWinner =
-            TicTacToe.winner subBoardModel.board
+shouldFadeOut : Model -> Coords -> TicTacToeBoard -> Bool
+shouldFadeOut model boardCoords ticTacToeBoard =
+    case winner model.board of
+        Just _ ->
+            True
 
-        fadedOutValue =
-            0.25
-
-        normalValue =
-            1.0
-    in
-        case winner model.board of
-            Just _ ->
-                fadedOutValue
-
-            _ ->
-                case model.currentBoardCoords of
-                    Just cds ->
-                        if (subBoardCoords /= cds) then
-                            fadedOutValue
-                        else
-                            normalValue
-
-                    Nothing ->
-                        case boardWinner of
-                            Just _ ->
-                                fadedOutValue
-
-                            Nothing ->
-                                normalValue
+        _ ->
+            case model.currentBoardCoords of
+                Just cds ->
+                    boardCoords /= cds
+                Nothing ->
+                    TicTacToe.winner ticTacToeBoard /= Nothing

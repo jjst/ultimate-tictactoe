@@ -13,22 +13,13 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Svg.Attributes as SA
 
+type alias Color = String
 
 -- MODEL
 
 
-type alias Model a =
-    { board : Board a
-    , currentPlayer : Player
-    }
-
-
-init : a -> Model a
-init initialCell =
-    { board = T3.fill (T3.fill initialCell)
-    , currentPlayer = X
-    }
-
+init : a -> Board a
+init initialCell = T3.fill (T3.fill initialCell)
 
 
 -- VIEW
@@ -83,14 +74,11 @@ type alias SvgViewCell a b =
     Coords -> a -> Svg b
 
 
-svgView : OwnerFunction a -> SvgViewCell a b -> Model a -> Svg b
-svgView owner svgViewCell model =
+svgView : OwnerFunction a -> SvgViewCell a b -> Board a -> Svg b
+svgView owner svgViewCell board =
     let
         cells =
-            g [] (flatten <| (indexedMap svgViewCell model.board))
-
-        board =
-            model.board
+            g [] (flatten <| (indexedMap svgViewCell board))
 
         st =
             case ( winningRow owner board, winner owner board ) of

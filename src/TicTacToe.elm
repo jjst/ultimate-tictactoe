@@ -1,4 +1,4 @@
-module TicTacToe exposing (..)
+module TicTacToe exposing (TicTacToeBoard, Move, init, winner, fromString, performMoveFor, render)
 
 import Cell
 import Player exposing (..)
@@ -20,16 +20,12 @@ import Svg.Attributes exposing (..)
 type alias TicTacToeBoard =
     Board Cell.Cell
 
-
+type alias Move = Board.Coords
 
 -- MODEL
 
 
-type alias Model =
-    TicTacToeBase.Model Cell.Cell
-
-
-init : Model
+init : TicTacToeBoard
 init =
     TicTacToeBase.init Nothing
 
@@ -39,8 +35,8 @@ winner =
     Board.winner identity
 
 
-fromString : Player -> String -> Result String Model
-fromString player str =
+fromString : String -> Result String TicTacToeBoard
+fromString str =
     let
         liftResult : List (Result a b) -> Result a (List b)
         liftResult list =
@@ -71,58 +67,37 @@ fromString player str =
                 |> Result.andThen liftResult
                 |> Result.andThen (T3.fromList >> Result.fromMaybe "Wrong number of rows")
     in
-        boardResult |> Result.map (\b -> { board = b, currentPlayer = player })
+        boardResult
 
 
 
 -- UPDATE
 
 
-type Msg
-    = PlaceMark Board.Coords
-    | TogglePlayer
+performMoveFor : Player -> Move -> TicTacToeBoard -> TicTacToeBoard
+performMoveFor player (x,y) board =
+    case winner board of
+        Just _ ->
+            board
 
+        Nothing ->
+            board |> Board.indexedMap
+                (\( i, j ) cell ->
+                    if ( x, y ) == ( i, j ) then
+                        (Just player)
+                    else
+                        cell
+                )
 
-update : Msg -> Model -> Model
-update msg ({ board, currentPlayer } as model) =
-    let
-        nextPlayer =
-            opponent currentPlayer
-    in
-        case winner board of
-            Just _ ->
-                model
-
-            Nothing ->
-                case msg of
-                    PlaceMark ( x, y ) ->
-                        { board =
-                            Board.indexedMap
-                                (\( i, j ) cell ->
-                                    if ( x, y ) == ( i, j ) then
-                                        (Just currentPlayer)
-                                    else
-                                        cell
-                                )
-                                board
-                        , currentPlayer = nextPlayer
-                        }
-
-                    TogglePlayer ->
-                        { board = board
-                        , currentPlayer = nextPlayer
-                        }
 
 -- VIEW
 
-
-svgView : Model -> Svg Msg
-svgView =
+render : TicTacToeBoard -> Svg Move
+render =
     TicTacToeBase.svgView identity svgViewCell
 
-
-svgViewCell : Board.Coords -> Cell.Cell -> Svg Msg
+svgViewCell : Board.Coords -> Cell.Cell -> Svg Move
 svgViewCell ( i, j ) model =
-    Cell.svgView model (PlaceMark ( i, j ))
+    Cell.svgView model ( i, j )
         |> SvgUtils.scale ((toFloat TicTacToeBase.cellSize) / 100.0)
         |> SvgUtils.translate ((T3.toInt i) * TicTacToeBase.cellSize) ((T3.toInt j) * TicTacToeBase.cellSize)

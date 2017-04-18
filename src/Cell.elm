@@ -31,6 +31,14 @@ fromString s =
 svgView : Cell -> msg -> Svg msg
 svgView cell message =
     let
+        rectAttrs = [ x "0", y "0", width "100", height "100", fillOpacity "0.0" ]
+        onClickEvent =
+            case cell of
+                Nothing ->
+                    [ onClick message ]
+                Just _ ->
+                    []
+        r = rect (rectAttrs ++ onClickEvent) []
         markDrawing =
             case cell of
                 Nothing ->
@@ -42,10 +50,7 @@ svgView cell message =
                 Just O ->
                     [ drawCircle ]
     in
-        g []
-            ([ rect [ x "0", y "0", width "100", height "100", fillOpacity "0.0", onClick message ] [] ]
-                ++ markDrawing
-            )
+        g [] ([ r ] ++ markDrawing)
 
 drawCircle : Svg a
 drawCircle =
