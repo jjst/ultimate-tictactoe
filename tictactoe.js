@@ -10195,6 +10195,9 @@ var _user$project$Cell$fromString = function (s) {
 	}
 };
 
+var _user$project$GameMode$TwoPlayers = {ctor: 'TwoPlayers'};
+var _user$project$GameMode$OnePlayerVsAI = {ctor: 'OnePlayerVsAI'};
+
 var _user$project$SvgUtils$applyTransform = F2(
 	function (eltTransform, element) {
 		return A2(
@@ -11217,24 +11220,21 @@ var _user$project$Menu$pageContent = A2(
 		_1: {ctor: '[]'}
 	},
 	_user$project$Menu$tutorialText);
-var _user$project$Menu$TwoPlayers = {ctor: 'TwoPlayers'};
-var _user$project$Menu$OnePlayerVsAI = {ctor: 'OnePlayerVsAI'};
 var _user$project$Menu$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
 		if (_p0.ctor === 'Choose1P') {
-			return _user$project$Menu$OnePlayerVsAI;
+			return _elm_lang$core$Maybe$Just(_user$project$GameMode$OnePlayerVsAI);
 		} else {
-			return _user$project$Menu$TwoPlayers;
+			return _elm_lang$core$Maybe$Just(_user$project$GameMode$TwoPlayers);
 		}
 	});
-var _user$project$Menu$NotChosen = {ctor: 'NotChosen'};
-var _user$project$Menu$init = _user$project$Menu$NotChosen;
+var _user$project$Menu$init = _elm_lang$core$Maybe$Nothing;
 var _user$project$Menu$Choose2P = {ctor: 'Choose2P'};
 var _user$project$Menu$Choose1P = {ctor: 'Choose1P'};
 var _user$project$Menu$view = function (model) {
 	var _p1 = model;
-	if (_p1.ctor === 'NotChosen') {
+	if (_p1.ctor === 'Nothing') {
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -11319,37 +11319,39 @@ var _user$project$Main$css = function (path) {
 var _user$project$Main$update = F2(
 	function (msg, _p0) {
 		var _p1 = _p0;
-		var _p5 = _p1;
-		var _p4 = _p1.menu;
+		var _p6 = _p1;
+		var _p5 = _p1.menu;
 		var newModel = function () {
 			var _p2 = msg;
 			switch (_p2.ctor) {
 				case 'TicTacToeMessage':
-					var update = function () {
-						var _p3 = _p4;
-						switch (_p3.ctor) {
-							case 'OnePlayerVsAI':
-								return _user$project$UltimateTicTacToeWithAI$update;
-							case 'TwoPlayers':
-								return _user$project$UltimateTicTacToe$update;
-							default:
-								return _user$project$UltimateTicTacToe$update;
+					var _p4 = _p2._0;
+					var updateBoard = function () {
+						var _p3 = _p5;
+						if (_p3.ctor === 'Just') {
+							if (_p3._0.ctor === 'OnePlayerVsAI') {
+								return _user$project$UltimateTicTacToeWithAI$update(_p4);
+							} else {
+								return _user$project$UltimateTicTacToe$update(_p4);
+							}
+						} else {
+							return _elm_lang$core$Basics$identity;
 						}
 					}();
 					return _elm_lang$core$Native_Utils.update(
-						_p5,
+						_p6,
 						{
-							ticTacToe: A2(update, _p2._0, _p1.ticTacToe)
+							ticTacToe: updateBoard(_p1.ticTacToe)
 						});
 				case 'NewWindowSize':
 					return _elm_lang$core$Native_Utils.update(
-						_p5,
+						_p6,
 						{windowSize: _p2._0});
 				default:
 					return _elm_lang$core$Native_Utils.update(
-						_p5,
+						_p6,
 						{
-							menu: A2(_user$project$Menu$update, _p2._0, _p4)
+							menu: A2(_user$project$Menu$update, _p2._0, _p5)
 						});
 			}
 		}();
@@ -11395,9 +11397,9 @@ var _user$project$Main$subscriptions = function (model) {
 var _user$project$Main$TicTacToeMessage = function (a) {
 	return {ctor: 'TicTacToeMessage', _0: a};
 };
-var _user$project$Main$view = function (_p6) {
-	var _p7 = _p6;
-	var _p8 = _p7.windowSize;
+var _user$project$Main$view = function (_p7) {
+	var _p8 = _p7;
+	var _p9 = _p8.windowSize;
 	var menuStyle = _elm_lang$html$Html_Attributes$style(
 		{
 			ctor: '::',
@@ -11427,9 +11429,9 @@ var _user$project$Main$view = function (_p6) {
 	var menuView = A2(
 		_elm_lang$html$Html$map,
 		_user$project$Main$MenuMessage,
-		_user$project$Menu$view(_p7.menu));
+		_user$project$Menu$view(_p8.menu));
 	var minSize = _elm_lang$core$Basics$toFloat(
-		A2(_elm_lang$core$Basics$min, _p8.width, _p8.height)) - 5;
+		A2(_elm_lang$core$Basics$min, _p9.width, _p9.height)) - 5;
 	var size = _elm_lang$core$Basics$toString(minSize);
 	var mainDivStyle = _elm_lang$html$Html_Attributes$style(
 		{
@@ -11457,7 +11459,7 @@ var _user$project$Main$view = function (_p6) {
 		A2(
 			_user$project$SvgUtils$scale,
 			scale,
-			_user$project$UltimateTicTacToe$svgView(_p7.ticTacToe)));
+			_user$project$UltimateTicTacToe$svgView(_p8.ticTacToe)));
 	return A2(
 		_elm_lang$html$Html$div,
 		{
