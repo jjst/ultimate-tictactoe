@@ -13,13 +13,19 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Svg.Attributes as SA
 
-type alias Color = String
+
+type alias Color =
+    String
+
+
 
 -- MODEL
 
 
 init : a -> Board a
-init initialCell = T3.fill (T3.fill initialCell)
+init initialCell =
+    T3.fill (T3.fill initialCell)
+
 
 
 -- VIEW

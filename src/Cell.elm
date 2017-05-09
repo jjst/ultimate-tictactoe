@@ -9,7 +9,8 @@ import String
 import Player exposing (..)
 
 
-type alias Cell = Maybe Player
+type alias Cell =
+    Maybe Player
 
 
 fromString : String -> Result String Cell
@@ -31,14 +32,20 @@ fromString s =
 svgView : Cell -> msg -> Svg msg
 svgView cell message =
     let
-        rectAttrs = [ x "0", y "0", width "100", height "100", fillOpacity "0.0" ]
+        rectAttrs =
+            [ x "0", y "0", width "100", height "100", fillOpacity "0.0" ]
+
         onClickEvent =
             case cell of
                 Nothing ->
                     [ onClick message ]
+
                 Just _ ->
                     []
-        r = rect (rectAttrs ++ onClickEvent) []
+
+        r =
+            rect (rectAttrs ++ onClickEvent) []
+
         markDrawing =
             case cell of
                 Nothing ->
@@ -51,6 +58,7 @@ svgView cell message =
                     [ drawCircle ]
     in
         g [] ([ r ] ++ markDrawing)
+
 
 drawCircle : Svg a
 drawCircle =

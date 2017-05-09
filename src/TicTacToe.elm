@@ -20,7 +20,11 @@ import Svg.Attributes exposing (..)
 type alias TicTacToeBoard =
     Board Cell.Cell
 
-type alias Move = Board.Coords
+
+type alias Move =
+    Board.Coords
+
+
 
 -- MODEL
 
@@ -75,26 +79,30 @@ fromString str =
 
 
 performMoveFor : Player -> Move -> TicTacToeBoard -> TicTacToeBoard
-performMoveFor player (x,y) board =
+performMoveFor player ( x, y ) board =
     case winner board of
         Just _ ->
             board
 
         Nothing ->
-            board |> Board.indexedMap
-                (\( i, j ) cell ->
-                    if ( x, y ) == ( i, j ) then
-                        (Just player)
-                    else
-                        cell
-                )
+            board
+                |> Board.indexedMap
+                    (\( i, j ) cell ->
+                        if ( x, y ) == ( i, j ) then
+                            (Just player)
+                        else
+                            cell
+                    )
+
 
 
 -- VIEW
 
+
 render : TicTacToeBoard -> Svg Move
 render =
     TicTacToeBase.svgView identity svgViewCell
+
 
 svgViewCell : Board.Coords -> Cell.Cell -> Svg Move
 svgViewCell ( i, j ) model =

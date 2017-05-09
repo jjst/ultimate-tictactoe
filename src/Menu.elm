@@ -13,7 +13,8 @@ import GameMode exposing (..)
 -- MODEL
 
 
-type alias Model = Maybe GameMode
+type alias Model =
+    Maybe GameMode
 
 
 init : Model

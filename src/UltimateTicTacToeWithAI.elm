@@ -36,6 +36,7 @@ nextMove board =
         nextMove
 
 
+
 -- List all valid moves given current state of the game
 
 

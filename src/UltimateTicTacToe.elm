@@ -24,6 +24,7 @@ type alias UltimateTicTacToeBoard =
     Board TicTacToeBoard
 
 
+
 -- MODEL
 
 
@@ -33,10 +34,12 @@ type alias Model =
     , currentBoardCoords : Maybe Board.Coords
     }
 
+
 type alias Move =
     { boardCoords : Board.Coords
     , cellCoords : Board.Coords
     }
+
 
 init : Model
 init =
@@ -130,13 +133,18 @@ winner =
 type Msg
     = PerformMove Move
 
+
 isValidMove : Move -> Model -> Bool
-isValidMove move ({board, currentBoardCoords} as model) =
+isValidMove move ({ board, currentBoardCoords } as model) =
     let
-        ticTacToeBoard = get board move.boardCoords
-        ticTacToeCell = get ticTacToeBoard move.cellCoords
+        ticTacToeBoard =
+            get board move.boardCoords
+
+        ticTacToeCell =
+            get ticTacToeBoard move.cellCoords
     in
-       moveIsInCurrentBoard move model && TicTacToe.winner ticTacToeBoard == Nothing && ticTacToeCell == Nothing
+        moveIsInCurrentBoard move model && TicTacToe.winner ticTacToeBoard == Nothing && ticTacToeCell == Nothing
+
 
 moveIsInCurrentBoard : Move -> Model -> Bool
 moveIsInCurrentBoard move model =
@@ -146,6 +154,7 @@ moveIsInCurrentBoard move model =
 
         Just c ->
             c == move.boardCoords
+
 
 performMoveFor : Player -> Move -> UltimateTicTacToeBoard -> UltimateTicTacToeBoard
 performMoveFor player { boardCoords, cellCoords } board =
@@ -158,14 +167,17 @@ performMoveFor player { boardCoords, cellCoords } board =
                     subBoard
             )
 
+
 performMove : Move -> Model -> Model
-performMove ({ boardCoords, cellCoords } as move) ({board, currentPlayer, currentBoardCoords} as model) =
+performMove ({ boardCoords, cellCoords } as move) ({ board, currentPlayer, currentBoardCoords } as model) =
     if isValidMove move model then
         let
             nextPlayer =
                 opponent currentPlayer
+
             updatedBoard =
                 performMoveFor currentPlayer move board
+
             updatedBoardWinner =
                 TicTacToe.winner (get updatedBoard cellCoords)
         in
@@ -196,13 +208,20 @@ update msg ({ board } as model) =
 
 -- VIEW
 
-type alias Opacity = Float
+
+type alias Opacity =
+    Float
+
 
 normalOpacity : Opacity
-normalOpacity = 1.0
+normalOpacity =
+    1.0
+
 
 fadedOutOpacity : Opacity
-fadedOutOpacity = 0.25
+fadedOutOpacity =
+    0.25
+
 
 view : Model -> Html Msg
 view model =
@@ -223,7 +242,7 @@ view model =
 
 
 svgView : Model -> Svg Msg
-svgView ({board} as model) =
+svgView ({ board } as model) =
     let
         cells =
             g [] (flatten <| (indexedMap (renderTicTacToeBoard model) board))
@@ -250,7 +269,8 @@ svgView ({board} as model) =
 renderTicTacToeBoard : Model -> Coords -> TicTacToeBoard -> Svg Move
 renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
     let
-        renderedBoard = TicTacToe.render ticTacToeBoard
+        renderedBoard =
+            TicTacToe.render ticTacToeBoard
 
         boardWinner =
             TicTacToe.winner ticTacToeBoard
@@ -267,7 +287,10 @@ renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
                     []
 
         boardOpacity =
-            if shouldFadeOut model coords ticTacToeBoard then fadedOutOpacity else normalOpacity
+            if shouldFadeOut model coords ticTacToeBoard then
+                fadedOutOpacity
+            else
+                normalOpacity
 
         group =
             g [] (winningMark ++ [ g [ opacity (toString boardOpacity) ] [ renderedBoard ] ])
@@ -288,5 +311,6 @@ shouldFadeOut model boardCoords ticTacToeBoard =
             case model.currentBoardCoords of
                 Just cds ->
                     boardCoords /= cds
+
                 Nothing ->
                     TicTacToe.winner ticTacToeBoard /= Nothing
