@@ -78,5 +78,5 @@ win the game. But there's a twist! You don't get to pick which board to play in:
 determines the _board_ you must play in next.
 
 If you've never played before, check out <a href="https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/" target="_blank">this page</a>
-for instructions before you get started. It's a short read, promise!
+for instructions before you get started.
 """
