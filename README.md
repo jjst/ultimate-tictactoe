@@ -12,7 +12,7 @@ An implementation of [Ultimate Tic-tac-toe](https://mathwithbaddrawings.com/2013
 
 If you haven't already done so, install [Elm](http://elm-lang.org/):
 ```bash
-$ npm install -g elm
+$ npm install -g elm@0.18.0
 ```
 
 Then clone the repo:
@@ -32,4 +32,9 @@ Note: for actual development, you probably want to use `elm reactor` instead of 
 
 ## Testing
 
-To run the unit tests suite, run `runtests.sh`.
+To run the unit tests suite, install and run `elm-test`:
+
+```bash
+$ npm install -g elm-test
+$ elm-test
+```
