@@ -4,8 +4,7 @@
     "repository": "https://github.com/jjst/elmtimate-tictactoe.git",
     "license": "BSD3",
     "source-directories": [
-        "src",
-        "test"
+        "src"
     ],
     "exposed-modules": [],
     "dependencies": {
