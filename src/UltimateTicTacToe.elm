@@ -5,7 +5,6 @@ import TicTacToe exposing (TicTacToeBoard)
 import Player exposing (..)
 import Board exposing (..)
 import SvgUtils
-import TicTacToeBase
 import TicTacToeBase exposing (strikeThrough, cellSize, boardSize, grid)
 import Cell
 import Regex
@@ -227,7 +226,7 @@ view : Model -> Html Msg
 view model =
     let
         size =
-            (toString TicTacToeBase.boardSize)
+            (toString boardSize)
 
         divStyle =
             Html.Attributes.style
@@ -278,10 +277,10 @@ renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
         winningMark =
             case boardWinner of
                 Just (Left Player.X) ->
-                    [ Cell.drawCross |> SvgUtils.scale ((toFloat TicTacToeBase.boardSize) / 100.0) ]
+                    [ Cell.drawCross |> SvgUtils.scale ((toFloat boardSize) / 100.0) ]
 
                 Just (Left Player.O) ->
-                    [ Cell.drawCircle |> SvgUtils.scale ((toFloat TicTacToeBase.boardSize) / 100.0) ]
+                    [ Cell.drawCircle |> SvgUtils.scale ((toFloat boardSize) / 100.0) ]
 
                 _ ->
                     []
@@ -297,7 +296,7 @@ renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
     in
         group
             |> SvgUtils.scale (1.0 / 3.0)
-            |> SvgUtils.translate ((T3.toInt i) * TicTacToeBase.cellSize) ((T3.toInt j) * TicTacToeBase.cellSize)
+            |> SvgUtils.translate ((T3.toInt i) * cellSize) ((T3.toInt j) * cellSize)
             |> Svg.map (\cellCoords -> { boardCoords = coords, cellCoords = cellCoords })
 
 
