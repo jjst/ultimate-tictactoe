@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Navigation
 import UltimateTicTacToeWithAI
 import UltimateTicTacToe
 import TicTacToeBase
@@ -16,7 +17,7 @@ import Svg.Attributes as SA
 
 
 main =
-    Html.program
+    Navigation.program NewLocation
         { init = init
         , update = update
         , view = view
@@ -35,8 +36,8 @@ type alias Model =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Navigation.Location -> ( Model, Cmd Msg )
+init location =
     let
         model =
             { ticTacToe = UltimateTicTacToe.init
@@ -55,6 +56,7 @@ type Msg
     = TicTacToeMessage UltimateTicTacToe.Msg
     | NewWindowSize Window.Size
     | MenuMessage Menu.Msg
+    | NewLocation Navigation.Location
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -82,6 +84,8 @@ update msg ({ ticTacToe, menu, windowSize } as model) =
 
                 MenuMessage msg ->
                     { model | menu = Menu.update msg menu }
+                NewLocation location ->
+                    model
     in
         newModel ! []
 
