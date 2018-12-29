@@ -1,4 +1,4 @@
-module UltimateTicTacToeWithAI exposing (..)
+module AI exposing (nextMove)
 
 import Tuple3
 import UltimateTicTacToe
@@ -17,7 +17,7 @@ nextMove board =
     let
         minimaxScore : Move -> Int
         minimaxScore move =
-            minimax (performMove move board) 1 Minimize
+            minimax (performMove move board) 2 Minimize
 
         potentialMoves =
             validMoves board
@@ -223,36 +223,3 @@ wonBoards model player =
 
 
 
--- UPDATE
-
-
-type alias Msg =
-    UltimateTicTacToe.Msg
-
-
-update : Msg -> Model -> Model
-update msg ({ board, currentPlayer, currentBoardCoords } as model) =
-    let
-        updatedModelAfterPlayerMove =
-            UltimateTicTacToe.update msg model
-
-        aiMove =
-            nextMove updatedModelAfterPlayerMove
-
-        updatedModelAfterAIMove =
-            case aiMove of
-                Just move ->
-                    UltimateTicTacToe.performMove move updatedModelAfterPlayerMove
-
-                Nothing ->
-                    updatedModelAfterPlayerMove
-    in
-        updatedModelAfterAIMove
-
-
-
--- VIEW
-
-
-view =
-    UltimateTicTacToe.view

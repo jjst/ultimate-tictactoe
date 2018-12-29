@@ -169,7 +169,7 @@ performMoveFor player { boardCoords, cellCoords } board =
 
 performMove : Move -> Model -> Model
 performMove ({ boardCoords, cellCoords } as move) ({ board, currentPlayer, currentBoardCoords } as model) =
-    if isValidMove move model then
+    if isValidMove move model && (winner board == Nothing) then
         let
             nextPlayer =
                 opponent currentPlayer
@@ -194,14 +194,9 @@ performMove ({ boardCoords, cellCoords } as move) ({ board, currentPlayer, curre
 
 update : Msg -> Model -> Model
 update msg ({ board } as model) =
-    case winner board of
-        Just _ ->
-            model
-
-        Nothing ->
-            case msg of
-                PerformMove move ->
-                    performMove move model
+    case msg of
+        PerformMove move ->
+            performMove move model
 
 
 

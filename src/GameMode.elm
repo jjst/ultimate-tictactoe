@@ -1,6 +1,7 @@
 module GameMode exposing (..)
 
 
-type GameMode
+type Mode
     = OnePlayerVsAI
-    | TwoPlayers
+    | TwoPlayersLocal
+    | TwoPlayersRemote
