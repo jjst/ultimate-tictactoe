@@ -4,6 +4,7 @@ module Main exposing (..)
 import Navigation
 import UrlParser as Url exposing ((</>), (<?>), s, string, top)
 import Task
+import Process
 import Window
 import Html.Attributes as HA
 import Html
@@ -17,6 +18,8 @@ import TicTacToeBase
 import SvgUtils
 import AI
 import GameMode
+
+import Tuple3 as T3
 
 main =
     Navigation.program NewLocation
@@ -74,9 +77,12 @@ route =
 
 -- UPDATE
 
+type PlayerType 
+    = CurrentPlayer
+    | OtherPlayer
 
 type Msg
-    = GameMessage UltimateTicTacToe.Msg
+    = GameMessage PlayerType UltimateTicTacToe.Msg
     | NewWindowSize Window.Size
     | ChooseGameMode GameMode.Mode
     | NewLocation Navigation.Location
@@ -84,34 +90,23 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ gameBoard, gameSettings, windowSize } as model) =
-    let
-        newModel =
-            case msg of
-                GameMessage msg -> 
-                    { model | gameBoard = updateBoard gameSettings msg gameBoard }
-                NewWindowSize size ->
-                    { model | windowSize = size }
-                ChooseGameMode gameMode ->
-                    { model | gameSettings = Just gameMode }
-                NewLocation location ->
-                    model -- TODO
-    in
-        newModel ! []
-
-updateBoard : GameSettings -> UltimateTicTacToe.Msg -> GameBoard -> GameBoard
-updateBoard settings msg model =
-    let
-        updatedBoard = UltimateTicTacToe.update msg model
-    in
-        case settings of
-            Just GameMode.OnePlayerVsAI ->
-                AI.nextMove updatedBoard 
-                  |> Maybe.map (\move -> UltimateTicTacToe.update (UltimateTicTacToe.PerformMove move) updatedBoard)
-                  |> Maybe.withDefault updatedBoard
-
-            _ ->
-                updatedBoard
-
+    case (Debug.log "" msg) of
+        GameMessage playerType msg -> 
+            let
+                newBoard = UltimateTicTacToe.update msg gameBoard
+                cmd =
+                    if playerType == CurrentPlayer && gameSettings == Just GameMode.OnePlayerVsAI then
+                        getAIMove newBoard
+                    else
+                        Cmd.none
+            in
+                { model | gameBoard = newBoard } ! [ cmd ]
+        NewWindowSize size ->
+            { model | windowSize = size } ! []
+        ChooseGameMode gameMode ->
+            { model | gameSettings = Just gameMode } ! []
+        NewLocation location ->
+            model ! [] -- TODO
 
 
 getWindowSize : Cmd Msg
@@ -119,6 +114,13 @@ getWindowSize =
     Task.perform NewWindowSize Window.size
 
 
+getAIMove : GameBoard -> Cmd Msg
+getAIMove currentBoard =
+    case AI.nextMove currentBoard of
+        Just move -> 
+            Process.sleep 400.0 |> Task.perform (\_ -> GameMessage OtherPlayer (UltimateTicTacToe.PerformMove move)) 
+        Nothing ->
+            Cmd.none
 
 -- SUBSCRIPTIONS
 
@@ -200,7 +202,7 @@ viewGameBoard minSize board =
         svgView =
             UltimateTicTacToe.svgView board
                 |> SvgUtils.scale scale
-                |> Html.map GameMessage
+                |> Html.map (GameMessage CurrentPlayer)
     in
         svg [ SA.viewBox ("0 0 " ++ size ++ " " ++ size), SA.width (size ++ "px") ] [ svgView ]
 

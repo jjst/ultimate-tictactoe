@@ -17,7 +17,7 @@ nextMove board =
     let
         minimaxScore : Move -> Int
         minimaxScore move =
-            minimax (performMove move board) 2 Minimize
+            minimax (performMove move board) 1 Minimize
 
         potentialMoves =
             validMoves board
