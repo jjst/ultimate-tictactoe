@@ -13,11 +13,12 @@ import Html.Events exposing (onClick)
 import Svg exposing (svg)
 import Svg.Attributes as SA
 
-import UltimateTicTacToe
+import UltimateTicTacToe exposing (GameState, Move)
 import TicTacToeBase
 import SvgUtils
 import AI
 import GameMode
+import Player exposing (Player)
 
 import Tuple3 as T3
 
@@ -35,10 +36,8 @@ main =
 
 type alias GameSettings = Maybe GameMode.Mode
 
-type alias GameBoard = UltimateTicTacToe.Model
-
 type alias Model =
-    { gameBoard : GameBoard
+    { gameState : GameState
     , gameSettings : GameSettings
     , windowSize : Window.Size
     }
@@ -47,10 +46,8 @@ type alias Model =
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
     let
-        l = location |> Debug.log "location"
-        r = Url.parsePath route location |> Debug.log "parsed path"
         model =
-            { gameBoard = UltimateTicTacToe.init
+            { gameState = UltimateTicTacToe.init
             , gameSettings = Nothing
             , windowSize = { width = 0, height = 0 }
             }
@@ -82,30 +79,33 @@ type PlayerType
     | OtherPlayer
 
 type Msg
-    = GameMessage PlayerType UltimateTicTacToe.Msg
+    = PerformMove Player Move
     | NewWindowSize Window.Size
     | ChooseGameMode GameMode.Mode
     | NewLocation Navigation.Location
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ gameBoard, gameSettings, windowSize } as model) =
+update msg ({ gameState, gameSettings, windowSize } as model) =
     case (Debug.log "" msg) of
-        GameMessage playerType msg -> 
+        PerformMove player move -> 
             let
-                newBoard = UltimateTicTacToe.update msg gameBoard
+                newState = UltimateTicTacToe.performMove player move gameState
                 cmd =
-                    if playerType == CurrentPlayer && gameSettings == Just GameMode.OnePlayerVsAI then
-                        getAIMove newBoard
+                    if player == Player.X && gameSettings == Just GameMode.OnePlayerVsAI then
+                        getAIMove newState
                     else
                         Cmd.none
             in
-                { model | gameBoard = newBoard } ! [ cmd ]
+                { model | gameState = newState } ! [ cmd ]
         NewWindowSize size ->
             { model | windowSize = size } ! []
         ChooseGameMode gameMode ->
             { model | gameSettings = Just gameMode } ! []
         NewLocation location ->
+            model ! [] -- TODO
+        NoOp -> 
             model ! [] -- TODO
 
 
@@ -114,11 +114,11 @@ getWindowSize =
     Task.perform NewWindowSize Window.size
 
 
-getAIMove : GameBoard -> Cmd Msg
+getAIMove : GameState -> Cmd Msg
 getAIMove currentBoard =
     case AI.nextMove currentBoard of
         Just move -> 
-            Process.sleep 400.0 |> Task.perform (\_ -> GameMessage OtherPlayer (UltimateTicTacToe.PerformMove move)) 
+            Process.sleep 400.0 |> Task.perform (\_ -> PerformMove Player.O move)
         Nothing ->
             Cmd.none
 
@@ -135,7 +135,7 @@ subscriptions model =
 
 
 view : Model -> Html Msg
-view ({ gameBoard, gameSettings, windowSize } as model) =
+view ({ gameState, gameSettings, windowSize } as model) =
     let
         minSize =
             ((Basics.min windowSize.width windowSize.height) |> toFloat) - 5
@@ -150,7 +150,7 @@ view ({ gameBoard, gameSettings, windowSize } as model) =
                 , ( "width", size ++ "px" )
                 ]
 
-        gameBoardView = viewGameBoard minSize gameBoard
+        gameBoardView = viewGameState minSize gameSettings gameState
 
         elementsToDisplay =
             case gameSettings of
@@ -186,9 +186,8 @@ viewMenu =
     in
         div [ menuStyle ] [ menuView ]
 
-
-viewGameBoard : Float -> GameBoard -> Html Msg
-viewGameBoard minSize board =
+viewGameState : Float -> GameSettings -> GameState -> Html Msg
+viewGameState minSize gameSettings gameState =
     let
         baseBoardSize =
             TicTacToeBase.boardSize |> toFloat
@@ -199,10 +198,16 @@ viewGameBoard minSize board =
         size =
             (toString minSize)
 
+        msgType =
+            case gameSettings of
+                Just GameMode.OnePlayerVsAI -> PerformMove Player.X
+                _ -> PerformMove gameState.currentPlayer
+
         svgView =
-            UltimateTicTacToe.svgView board
+            UltimateTicTacToe.svgView gameState
                 |> SvgUtils.scale scale
-                |> Html.map (GameMessage CurrentPlayer)
+                |> Svg.map msgType
+
     in
         svg [ SA.viewBox ("0 0 " ++ size ++ " " ++ size), SA.width (size ++ "px") ] [ svgView ]
 

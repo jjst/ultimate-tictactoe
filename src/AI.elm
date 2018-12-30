@@ -1,8 +1,7 @@
 module AI exposing (nextMove)
 
 import Tuple3
-import UltimateTicTacToe
-import UltimateTicTacToe exposing (Model, Move, performMove)
+import UltimateTicTacToe exposing (GameState, Move, performMove)
 import TicTacToe
 import Board
 import Player exposing (..)
@@ -12,15 +11,15 @@ import Debug
 -- MODEL
 
 
-nextMove : Model -> Maybe Move
-nextMove board =
+nextMove : GameState -> Maybe Move
+nextMove gameState =
     let
         minimaxScore : Move -> Int
         minimaxScore move =
-            minimax (performMove move board) 1 Minimize
+            minimax (performMove gameState.currentPlayer move gameState) 1 Minimize
 
         potentialMoves =
-            validMoves board
+            validMoves gameState
 
         scoredMoves =
             potentialMoves |> List.map (\m -> ( m, minimaxScore m )) |> Debug.log "available moves"
@@ -40,7 +39,7 @@ nextMove board =
 -- List all valid moves given current state of the game
 
 
-validMoves : Model -> List Move
+validMoves : GameState -> List Move
 validMoves { board, currentPlayer, currentBoardCoords } =
     case UltimateTicTacToe.winner board of
         Nothing ->
@@ -101,7 +100,7 @@ type Action
 -- Assume that AI is always O for now
 
 
-minimax : Model -> Int -> Action -> Int
+minimax : GameState -> Int -> Action -> Int
 minimax ticTacToe depth action =
     case UltimateTicTacToe.winner ticTacToe.board of
         Just winner ->
@@ -126,7 +125,7 @@ minimax ticTacToe depth action =
                                 validMoves ticTacToe
                                     |> List.map
                                         (\move ->
-                                            minimax (performMove move ticTacToe) (depth - 1) Minimize
+                                            minimax (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Minimize
                                         )
 
                             max =
@@ -140,7 +139,7 @@ minimax ticTacToe depth action =
                                 validMoves ticTacToe
                                     |> List.map
                                         (\move ->
-                                            minimax (performMove move ticTacToe) (depth - 1) Maximize
+                                            minimax (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Maximize
                                         )
 
                             min =
@@ -153,7 +152,7 @@ minimax ticTacToe depth action =
 -- Heuristic to evaluate the current board
 
 
-evalPosition : Model -> Int
+evalPosition : GameState -> Int
 evalPosition model =
     let
         wonBoardsDelta =
@@ -179,7 +178,7 @@ evalPosition model =
         wonBoardsDelta * 100 + winnableBoardsDelta * 35 + unrestrictedMovementBonus
 
 
-winnableBoards : Model -> Player -> Int
+winnableBoards : GameState -> Player -> Int
 winnableBoards model player =
     model.board
         |> Board.flatten
@@ -210,7 +209,7 @@ isWinnable ticTacToeBoard player =
         List.any isRowWinnable rows
 
 
-wonBoards : Model -> Player -> Int
+wonBoards : GameState -> Player -> Int
 wonBoards model player =
     let
         subBoards =
