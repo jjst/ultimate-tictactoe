@@ -27,7 +27,7 @@ type alias UltimateTicTacToeBoard =
 -- MODEL
 
 
-type alias Model =
+type alias GameState =
     { board : UltimateTicTacToeBoard
     , currentPlayer : Player
     , currentBoardCoords : Maybe Board.Coords
@@ -40,7 +40,7 @@ type alias Move =
     }
 
 
-init : Model
+init : GameState
 init =
     { board = T3.fill (T3.fill TicTacToe.init)
     , currentPlayer = X
@@ -68,7 +68,7 @@ transpose ll =
                 (x :: heads) :: transpose (xs :: tails)
 
 
-fromString : Player -> Maybe Board.Coords -> String -> Result String Model
+fromString : Player -> Maybe Board.Coords -> String -> Result String GameState
 fromString player currentBoardCoords str =
     let
         liftResult : List (Result a b) -> Result a (List b)
@@ -129,11 +129,7 @@ winner =
 -- UPDATE
 
 
-type Msg
-    = PerformMove Move
-
-
-isValidMove : Move -> Model -> Bool
+isValidMove : Move -> GameState -> Bool
 isValidMove move ({ board, currentBoardCoords } as model) =
     let
         ticTacToeBoard =
@@ -145,7 +141,7 @@ isValidMove move ({ board, currentBoardCoords } as model) =
         moveIsInCurrentBoard move model && TicTacToe.winner ticTacToeBoard == Nothing && ticTacToeCell == Nothing
 
 
-moveIsInCurrentBoard : Move -> Model -> Bool
+moveIsInCurrentBoard : Move -> GameState -> Bool
 moveIsInCurrentBoard move model =
     case model.currentBoardCoords of
         Nothing ->
@@ -167,9 +163,9 @@ performMoveFor player { boardCoords, cellCoords } board =
             )
 
 
-performMove : Move -> Model -> Model
-performMove ({ boardCoords, cellCoords } as move) ({ board, currentPlayer, currentBoardCoords } as model) =
-    if isValidMove move model then
+performMove : Player -> Move -> GameState -> GameState
+performMove player ({ boardCoords, cellCoords } as move) ({ board, currentPlayer, currentBoardCoords } as model) =
+    if player == currentPlayer && isValidMove move model && (winner board == Nothing) then
         let
             nextPlayer =
                 opponent currentPlayer
@@ -192,18 +188,6 @@ performMove ({ boardCoords, cellCoords } as move) ({ board, currentPlayer, curre
         model
 
 
-update : Msg -> Model -> Model
-update msg ({ board } as model) =
-    case winner board of
-        Just _ ->
-            model
-
-        Nothing ->
-            case msg of
-                PerformMove move ->
-                    performMove move model
-
-
 
 -- VIEW
 
@@ -222,25 +206,7 @@ fadedOutOpacity =
     0.25
 
 
-view : Model -> Html Msg
-view model =
-    let
-        size =
-            (toString boardSize)
-
-        divStyle =
-            Html.Attributes.style
-                [ ( "margin", "auto" )
-                , ( "width", size ++ "px" )
-                ]
-    in
-        div [ divStyle ]
-            [ svg [ viewBox ("0 0 " ++ size ++ " " ++ size), width (size ++ "px") ]
-                [ (svgView model) ]
-            ]
-
-
-svgView : Model -> Svg Msg
+svgView : GameState -> Svg Move
 svgView ({ board } as model) =
     let
         cells =
@@ -262,10 +228,10 @@ svgView ({ board } as model) =
                 _ ->
                     []
     in
-        g [] ([ cells, (grid cellSize) ] ++ st) |> Svg.map PerformMove
+        g [] ([ cells, (grid cellSize) ] ++ st)
 
 
-renderTicTacToeBoard : Model -> Coords -> TicTacToeBoard -> Svg Move
+renderTicTacToeBoard : GameState -> Coords -> TicTacToeBoard -> Svg Move
 renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
     let
         renderedBoard =
@@ -300,7 +266,7 @@ renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
             |> Svg.map (\cellCoords -> { boardCoords = coords, cellCoords = cellCoords })
 
 
-shouldFadeOut : Model -> Coords -> TicTacToeBoard -> Bool
+shouldFadeOut : GameState -> Coords -> TicTacToeBoard -> Bool
 shouldFadeOut model boardCoords ticTacToeBoard =
     case winner model.board of
         Just _ ->
