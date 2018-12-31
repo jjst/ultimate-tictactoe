@@ -2,10 +2,11 @@ module Tests exposing (..)
 
 import Test exposing (..)
 import Expect exposing (..)
+
 import CellTest
 import Tuple3Test
 import UltimateTicTacToeTest
-import UltimateTicTacToeWithAITest
+import AITest
 import TicTacToeTest
 
 all : Test
@@ -14,6 +15,6 @@ all =
         [ CellTest.tests
         , Tuple3Test.tests
         , UltimateTicTacToeTest.tests
-        , UltimateTicTacToeWithAITest.tests
+        , AITest.tests
         , TicTacToeTest.tests
         ]

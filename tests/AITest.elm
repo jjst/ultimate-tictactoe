@@ -1,11 +1,12 @@
-module UltimateTicTacToeWithAITest exposing (..)
+module AITest exposing (..)
 
 import Test exposing (..)
 import Expect exposing (..)
 import ElmTestBDDStyle exposing (..)
+
 import UltimateTicTacToe exposing (..)
 import TicTacToe as T
-import UltimateTicTacToeWithAI as AI
+import AI
 import TicTacToe
 import Player
 import Tuple3 exposing (..)

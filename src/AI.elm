@@ -1,4 +1,4 @@
-module AI exposing (nextMove)
+module AI exposing (..)
 
 import Tuple3
 import UltimateTicTacToe exposing (GameState, Move, performMove)

@@ -31,7 +31,7 @@ tests =
     describe "An updated UltimateTicTacToeBoard Model"
         [ it "toggles the current player" <|
             expect
-                (performMove { boardCoords = ( I1, I1 ), cellCoords = ( I1, I1 ) } initialBoard).currentPlayer
+                (performMove Player.X { boardCoords = ( I1, I1 ), cellCoords = ( I1, I1 ) } initialBoard).currentPlayer
                 to equal
                 Player.O
         , let
@@ -134,11 +134,10 @@ tests =
             """
                     |> orCrash
 
-            msg =
-                PerformMove { boardCoords = ( I2, I2 ), cellCoords = ( I2, I2 )}
+            move = { boardCoords = ( I2, I2 ), cellCoords = ( I2, I2 ) }
 
             nextBoardCoords =
-                (update msg currentBoard).currentBoardCoords
+                (performMove Player.O move currentBoard).currentBoardCoords
           in
             it "should send the opposite player to another board if the current one has been won" <|
                 expect
