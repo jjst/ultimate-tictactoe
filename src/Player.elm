@@ -1,4 +1,4 @@
-module Player exposing (..)
+module Player exposing (Draw(..), Either(..), Player(..), Winner, opponent)
 
 
 type Player

@@ -1,22 +1,21 @@
-module UltimateTicTacToe exposing (..)
+module UltimateTicTacToe exposing (GameState, Move, Opacity, UltimateTicTacToeBoard, boardOwner, fadedOutOpacity, fromString, init, isValidMove, moveIsInCurrentBoard, normalOpacity, performMove, performMoveFor, renderTicTacToeBoard, shouldFadeOut, svgView, transpose, winner)
 
-import TicTacToe
-import TicTacToe exposing (TicTacToeBoard)
-import Player exposing (..)
 import Board exposing (..)
-import SvgUtils
-import TicTacToeBase exposing (strikeThrough, cellSize, boardSize, grid)
 import Cell
+import Html exposing (Html, button, div, text)
+import Html.Attributes
+import Html.Events exposing (onClick)
+import List as L
+import Player exposing (..)
 import Regex
 import String
-import List as L
-import Tuple3 as T3
-import Html
-import Html.Attributes
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import SvgUtils
+import TicTacToe exposing (TicTacToeBoard)
+import TicTacToeBase exposing (grid, strikeThrough)
+import Sizes
+import Tuple3 as T3
 
 
 type alias UltimateTicTacToeBoard =
@@ -65,7 +64,7 @@ transpose ll =
                 tails =
                     List.filterMap List.tail xss
             in
-                (x :: heads) :: transpose (xs :: tails)
+            (x :: heads) :: transpose (xs :: tails)
 
 
 fromString : Player -> Maybe Board.Coords -> String -> Result String GameState
@@ -73,13 +72,18 @@ fromString player currentBoardCoords str =
     let
         liftResult : List (Result a b) -> Result a (List b)
         liftResult list =
-            list |> L.foldr (\result listResult -> listResult |> Result.andThen (\list -> Result.map (flip (::) list) result)) (Ok [])
+            list |> L.foldr (\result listResult -> listResult |> Result.andThen (\items -> Result.map (\a -> (::) a items) result)) (Ok [])
+
+        horizontalSeparator : Regex.Regex
+        horizontalSeparator =
+          Maybe.withDefault Regex.never <|
+            Regex.fromString "-.+"
 
         subBoardsAsStrings : List (List String)
         subBoardsAsStrings =
             str
-                |> Regex.split Regex.All (Regex.regex "-.+")
-                |> List.map (String.trim >> String.lines >> List.map (String.trim >> String.split ("|")) >> transpose >> List.map (String.join "\n"))
+                |> Regex.split horizontalSeparator
+                |> List.map (String.trim >> String.lines >> List.map (String.trim >> String.split "|") >> transpose >> List.map (String.join "\n"))
 
         subBoards =
             subBoardsAsStrings
@@ -95,14 +99,14 @@ fromString player currentBoardCoords str =
                 |> Result.andThen liftResult
                 |> Result.andThen (T3.fromList >> Result.fromMaybe "Wrong number of rows")
     in
-        boardResult
-            |> Result.map
-                (\b ->
-                    { board = b
-                    , currentBoardCoords = currentBoardCoords
-                    , currentPlayer = player
-                    }
-                )
+    boardResult
+        |> Result.map
+            (\b ->
+                { board = b
+                , currentBoardCoords = currentBoardCoords
+                , currentPlayer = player
+                }
+            )
 
 
 boardOwner : TicTacToeBoard -> Maybe Player
@@ -111,8 +115,8 @@ boardOwner board =
         Nothing ->
             Nothing
 
-        Just winner ->
-            case winner of
+        Just theWinner ->
+            case theWinner of
                 Left player ->
                     Just player
 
@@ -133,12 +137,12 @@ isValidMove : Move -> GameState -> Bool
 isValidMove move ({ board, currentBoardCoords } as model) =
     let
         ticTacToeBoard =
-            get board move.boardCoords
+            get move.boardCoords board
 
         ticTacToeCell =
-            get ticTacToeBoard move.cellCoords
+            get move.cellCoords ticTacToeBoard
     in
-        moveIsInCurrentBoard move model && TicTacToe.winner ticTacToeBoard == Nothing && ticTacToeCell == Nothing
+    moveIsInCurrentBoard move model && TicTacToe.winner ticTacToeBoard == Nothing && ticTacToeCell == Nothing
 
 
 moveIsInCurrentBoard : Move -> GameState -> Bool
@@ -158,6 +162,7 @@ performMoveFor player { boardCoords, cellCoords } board =
             (\( i, j ) subBoard ->
                 if boardCoords == ( i, j ) then
                     TicTacToe.performMoveFor player cellCoords subBoard
+
                 else
                     subBoard
             )
@@ -174,16 +179,18 @@ performMove player ({ boardCoords, cellCoords } as move) ({ board, currentPlayer
                 performMoveFor currentPlayer move board
 
             updatedBoardWinner =
-                TicTacToe.winner (get updatedBoard cellCoords)
+                TicTacToe.winner (get cellCoords updatedBoard)
         in
-            { board = updatedBoard
-            , currentPlayer = nextPlayer
-            , currentBoardCoords =
-                if updatedBoardWinner == Nothing then
-                    Just cellCoords
-                else
-                    Nothing
-            }
+        { board = updatedBoard
+        , currentPlayer = nextPlayer
+        , currentBoardCoords =
+            if updatedBoardWinner == Nothing then
+                Just cellCoords
+
+            else
+                Nothing
+        }
+
     else
         model
 
@@ -210,17 +217,17 @@ svgView : GameState -> Svg Move
 svgView ({ board } as model) =
     let
         cells =
-            g [] (flatten <| (indexedMap (renderTicTacToeBoard model) board))
+            g [] (flatten <| indexedMap (renderTicTacToeBoard model) board)
 
         st =
             case ( winningRow boardOwner board, winner board ) of
-                ( Just ( first, middle, last ), Just winner ) ->
-                    case winner of
+                ( Just ( first, middle, last ), Just theWinner ) ->
+                    case theWinner of
                         Left Player.O ->
-                            [ strikeThrough "red" cellSize first last ]
+                            [ strikeThrough "red" Sizes.cellSize first last ]
 
                         Left Player.X ->
-                            [ strikeThrough "blue" cellSize first last ]
+                            [ strikeThrough "blue" Sizes.cellSize first last ]
 
                         _ ->
                             []
@@ -228,7 +235,7 @@ svgView ({ board } as model) =
                 _ ->
                     []
     in
-        g [] ([ cells, (grid cellSize) ] ++ st)
+    g [] ([ cells, grid Sizes.cellSize ] ++ st)
 
 
 renderTicTacToeBoard : GameState -> Coords -> TicTacToeBoard -> Svg Move
@@ -243,10 +250,10 @@ renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
         winningMark =
             case boardWinner of
                 Just (Left Player.X) ->
-                    [ Cell.drawCross |> SvgUtils.scale ((toFloat boardSize) / 100.0) ]
+                    [ Cell.drawCross |> SvgUtils.scale (toFloat Sizes.boardSize / 100.0) ]
 
                 Just (Left Player.O) ->
-                    [ Cell.drawCircle |> SvgUtils.scale ((toFloat boardSize) / 100.0) ]
+                    [ Cell.drawCircle |> SvgUtils.scale (toFloat Sizes.boardSize / 100.0) ]
 
                 _ ->
                     []
@@ -254,16 +261,17 @@ renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
         boardOpacity =
             if shouldFadeOut model coords ticTacToeBoard then
                 fadedOutOpacity
+
             else
                 normalOpacity
 
         group =
-            g [] (winningMark ++ [ g [ opacity (toString boardOpacity) ] [ renderedBoard ] ])
+            g [] (winningMark ++ [ g [ opacity (String.fromFloat boardOpacity) ] [ renderedBoard ] ])
     in
-        group
-            |> SvgUtils.scale (1.0 / 3.0)
-            |> SvgUtils.translate ((T3.toInt i) * cellSize) ((T3.toInt j) * cellSize)
-            |> Svg.map (\cellCoords -> { boardCoords = coords, cellCoords = cellCoords })
+    group
+        |> SvgUtils.scale (1.0 / 3.0)
+        |> SvgUtils.translate (toFloat (T3.toInt i * Sizes.cellSize)) (toFloat (T3.toInt j * Sizes.cellSize))
+        |> Svg.map (\cellCoords -> { boardCoords = coords, cellCoords = cellCoords })
 
 
 shouldFadeOut : GameState -> Coords -> TicTacToeBoard -> Bool

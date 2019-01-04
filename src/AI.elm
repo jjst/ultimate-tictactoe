@@ -1,11 +1,12 @@
 module AI exposing (..)
 
+import Board
+import Debug
+import Player exposing (..)
+import TicTacToe
 import Tuple3
 import UltimateTicTacToe exposing (GameState, Move, performMove)
-import TicTacToe
-import Board
-import Player exposing (..)
-import Debug
+
 
 
 -- MODEL
@@ -24,15 +25,13 @@ nextMove gameState =
         scoredMoves =
             potentialMoves |> List.map (\m -> ( m, minimaxScore m )) |> Debug.log "available moves"
 
-        nextMove =
-            scoredMoves
-                |> List.sortBy Tuple.second
-                |> List.reverse
-                |> List.head
-                |> Debug.log "next move"
-                |> Maybe.map Tuple.first
     in
-        nextMove
+    scoredMoves
+        |> List.sortBy Tuple.second
+        |> List.reverse
+        |> List.head
+        |> Debug.log "next move"
+        |> Maybe.map Tuple.first
 
 
 
@@ -56,11 +55,11 @@ validMoves { board, currentPlayer, currentBoardCoords } =
                                 |> Board.flatten
                                 |> List.concat
                     in
-                        moves
+                    moves
 
                 Just coords ->
-                    coords
-                        |> Board.get board
+                    board
+                        |> Board.get coords
                         |> validMovesOnBoard
                         |> List.map (\c -> { boardCoords = coords, cellCoords = c })
 
@@ -77,6 +76,7 @@ validMovesOnBoard ticTacToeBoard =
                     (\coords cell ->
                         if cell == Nothing then
                             Just coords
+
                         else
                             Nothing
                     )
@@ -117,6 +117,7 @@ minimax ticTacToe depth action =
         Nothing ->
             if depth == 0 then
                 evalPosition ticTacToe
+
             else
                 case action of
                     Maximize ->
@@ -129,9 +130,9 @@ minimax ticTacToe depth action =
                                         )
 
                             max =
-                                List.maximum values |> Maybe.withDefault (-maxValue)
+                                List.maximum values |> Maybe.withDefault -maxValue
                         in
-                            max
+                        max
 
                     Minimize ->
                         let
@@ -143,9 +144,9 @@ minimax ticTacToe depth action =
                                         )
 
                             min =
-                                List.minimum values |> Maybe.withDefault (maxValue)
+                                List.minimum values |> Maybe.withDefault maxValue
                         in
-                            min
+                        min
 
 
 
@@ -156,10 +157,10 @@ evalPosition : GameState -> Int
 evalPosition model =
     let
         wonBoardsDelta =
-            (wonBoards model O - wonBoards model X)
+            wonBoards model O - wonBoards model X
 
         winnableBoardsDelta =
-            (winnableBoards model O - winnableBoards model X)
+            winnableBoards model O - winnableBoards model X
 
         -- If the player can choose to play on any grid, that counts as a bonus (or malus if it's our opponent)
         unrestrictedMovementBonus =
@@ -175,7 +176,7 @@ evalPosition model =
                 _ ->
                     0
     in
-        wonBoardsDelta * 100 + winnableBoardsDelta * 35 + unrestrictedMovementBonus
+    wonBoardsDelta * 100 + winnableBoardsDelta * 35 + unrestrictedMovementBonus
 
 
 winnableBoards : GameState -> Player -> Int
@@ -199,14 +200,14 @@ isWinnable ticTacToeBoard player =
                 markCount =
                     row |> List.filter (\e -> e == Just player) |> List.length
             in
-                markCount == 2 && List.member Nothing row
+            markCount == 2 && List.member Nothing row
 
         rows : List (List (Maybe Player))
         rows =
             Board.allRows
-                |> List.map (\row -> row |> Tuple3.toList |> List.map (\coords -> (Board.get ticTacToeBoard coords)))
+                |> List.map (\row -> row |> Tuple3.toList |> List.map (\coords -> Board.get coords ticTacToeBoard))
     in
-        List.any isRowWinnable rows
+    List.any isRowWinnable rows
 
 
 wonBoards : GameState -> Player -> Int
@@ -215,10 +216,7 @@ wonBoards model player =
         subBoards =
             Board.flatten model.board
 
-        wonBoards =
+        wonBoardsCount =
             subBoards |> List.filter (\b -> TicTacToe.winner b == Just (Left player)) |> List.length
     in
-        wonBoards
-
-
-
+    wonBoardsCount

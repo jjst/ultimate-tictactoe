@@ -1,4 +1,4 @@
-module GameMode exposing (..)
+module GameMode exposing (Mode(..))
 
 
 type Mode

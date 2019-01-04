@@ -1,4 +1,4 @@
-module Tuple3 exposing (..)
+module Tuple3 exposing (Index(..), Tuple3, fill, first, fromList, get, indexedMap, last, map, range, second, third, toFloat, toInt, toList)
 
 import Basics as B
 
@@ -18,17 +18,17 @@ range =
     ( I1, I2, I3 )
 
 
-get : Tuple3 a -> Index -> a
-get ( first, second, third ) idx =
+get : Index -> Tuple3 a -> a
+get idx ( fst, snd, thrd ) =
     case idx of
         I1 ->
-            first
+            fst
 
         I2 ->
-            second
+            snd
 
         I3 ->
-            third
+            thrd
 
 
 toFloat : Index -> Float
@@ -47,12 +47,6 @@ toInt index =
 
         I3 ->
             2
-
-
-(!!) : Tuple3 a -> Index -> a
-(!!) tuple idx =
-    get tuple idx
-infixl 9 !!
 
 
 first : Tuple3 a -> a

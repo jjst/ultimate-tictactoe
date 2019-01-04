@@ -1,12 +1,11 @@
-module Cell exposing (..)
+module Cell exposing (Cell, drawCircle, drawCross, fromString, svgView)
 
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
-import Svg exposing (..)
-import Svg.Attributes as SA
-import Svg.Attributes exposing (..)
-import String
 import Player exposing (..)
+import String
+import Svg exposing (..)
+import Svg.Attributes as SA exposing (..)
 
 
 type alias Cell =
@@ -15,7 +14,7 @@ type alias Cell =
 
 fromString : String -> Result String Cell
 fromString s =
-    case (String.toLower s) of
+    case String.toLower s of
         "o" ->
             Ok (Just Player.O)
 
@@ -23,7 +22,7 @@ fromString s =
             Ok (Just Player.X)
 
         "_" ->
-            Ok (Nothing)
+            Ok Nothing
 
         other ->
             Err <| "Invalid character: " ++ other
@@ -57,7 +56,7 @@ svgView cell message =
                 Just O ->
                     [ drawCircle ]
     in
-        g [] ([ r ] ++ markDrawing)
+    g [] ([ r ] ++ markDrawing)
 
 
 drawCircle : Svg a

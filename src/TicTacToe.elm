@@ -1,20 +1,19 @@
-module TicTacToe exposing (TicTacToeBoard, Move, init, winner, fromString, performMoveFor, render)
+module TicTacToe exposing (Move, TicTacToeBoard, fromString, init, performMoveFor, render, winner)
 
-import Cell
-import Player exposing (..)
+import Sizes
 import Board exposing (Board)
-import Board
-import SvgUtils
-import TicTacToeBase
-import String
-import List as L
-import Tuple3 as T3
-import Html.Attributes
-import Html
+import Cell
 import Html exposing (Html, button, div, text)
+import Html.Attributes
 import Html.Events exposing (onClick)
+import List as L
+import Player exposing (..)
+import String
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import SvgUtils
+import TicTacToeBase
+import Tuple3 as T3
 
 
 type alias TicTacToeBoard =
@@ -44,7 +43,7 @@ fromString str =
     let
         liftResult : List (Result a b) -> Result a (List b)
         liftResult list =
-            list |> L.foldr (\result listResult -> listResult |> Result.andThen (\list -> Result.map (flip (::) list) result)) (Ok [])
+            list |> L.foldr (\result listResult -> listResult |> Result.andThen (\items -> Result.map (\a -> (::) a items) result)) (Ok [])
 
         parseLine : String -> Result String (List Cell.Cell)
         parseLine l =
@@ -71,7 +70,7 @@ fromString str =
                 |> Result.andThen liftResult
                 |> Result.andThen (T3.fromList >> Result.fromMaybe "Wrong number of rows")
     in
-        boardResult
+    boardResult
 
 
 
@@ -89,7 +88,8 @@ performMoveFor player ( x, y ) board =
                 |> Board.indexedMap
                     (\( i, j ) cell ->
                         if ( x, y ) == ( i, j ) then
-                            (Just player)
+                            Just player
+
                         else
                             cell
                     )
@@ -107,5 +107,5 @@ render =
 svgViewCell : Board.Coords -> Cell.Cell -> Svg Move
 svgViewCell ( i, j ) model =
     Cell.svgView model ( i, j )
-        |> SvgUtils.scale ((toFloat TicTacToeBase.cellSize) / 100.0)
-        |> SvgUtils.translate ((T3.toInt i) * TicTacToeBase.cellSize) ((T3.toInt j) * TicTacToeBase.cellSize)
+        |> SvgUtils.scale (toFloat Sizes.cellSize / 100.0)
+        |> SvgUtils.translate (toFloat (T3.toInt i * Sizes.cellSize)) (toFloat (T3.toInt j * Sizes.cellSize))

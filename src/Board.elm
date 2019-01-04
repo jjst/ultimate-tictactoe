@@ -1,10 +1,9 @@
-module Board exposing (Board, Coords, Row, OwnerFunction, flatten, indexedMap, allRows, winningRow, get, winner)
+module Board exposing (Board, Coords, OwnerFunction, Row, allRows, flatten, get, indexedMap, winner, winningRow)
 
-import Player exposing (..)
-import Tuple3 exposing (..)
-import Tuple3 as T3
 import List as L
-import Maybe exposing (withDefault, andThen)
+import Maybe exposing (andThen, withDefault)
+import Player exposing (..)
+import Tuple3 as T3 exposing (..)
 
 
 type alias Board a =
@@ -41,7 +40,7 @@ allRows =
             , ( ( I1, I3 ), ( I2, I2 ), ( I3, I1 ) )
             ]
     in
-        horizontals ++ verticals ++ diagonals
+    horizontals ++ verticals ++ diagonals
 
 
 flatten : Tuple3 (Tuple3 a) -> List a
@@ -52,9 +51,9 @@ flatten board =
         |> L.concat
 
 
-get : Board a -> Coords -> a
-get board ( x, y ) =
-    (board !! x) !! y
+get : Coords -> Board a -> a
+get ( x, y ) board =
+    board |> T3.get x |> T3.get y
 
 
 type alias OwnerFunction a =
@@ -73,10 +72,10 @@ isWinningRow owner board row =
     let
         owners =
             row
-                |> T3.map (\coords -> owner (get board coords))
+                |> T3.map (\coords -> owner (get coords board))
                 |> toList
     in
-        L.all (\m -> m == Just X) owners || L.all (\m -> m == Just O) owners
+    L.all (\m -> m == Just X) owners || L.all (\m -> m == Just O) owners
 
 
 
@@ -88,7 +87,7 @@ winner : OwnerFunction a -> Board a -> Maybe Winner
 winner owner board =
     case winningRow owner board of
         Just ( first, _, _ ) ->
-            Maybe.map Left (owner (get board first))
+            Maybe.map Left (owner (get first board))
 
         _ ->
             let
@@ -98,7 +97,8 @@ winner owner board =
                         |> flatten
                         |> L.any (\cell -> owner cell == Nothing)
             in
-                if hasEmptyCells then
-                    Nothing
-                else
-                    Just (Right Draw)
+            if hasEmptyCells then
+                Nothing
+
+            else
+                Just (Right Draw)
