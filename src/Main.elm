@@ -1,124 +1,256 @@
-import UltimateTicTacToeWithAI
-import UltimateTicTacToe
-import TicTacToeBase
-import SvgUtils
-import Menu
+module Main exposing (GameId, GameSettings, Model, Msg(..), PlayerType(..), Route(..), css, getAIMove, init, main, subscriptions, update, view, viewGameState, viewMenu)
 
-import Task
-import Window
+import Browser
+import Browser.Dom
+import Browser.Events
+import Browser.Navigation as Nav
+import Html exposing (Html, button, div, node, text)
 import Html.Attributes as HA
-import Html exposing (Html, div, node)
-import Html.App as App
+import Html.Events exposing (onClick)
+import Process
 import Svg exposing (svg)
 import Svg.Attributes as SA
+import SvgUtils
+import Task
+import Url exposing (Url)
 
+import Sizes
+import AI
+import GameMode
+import TicTacToeBase
+import Tuple3 as T3
+import UltimateTicTacToe exposing (GameState, Move)
+import Player exposing (Player)
 
 main =
-    App.program
+    Browser.application
         { init = init
-        , update = update
         , view = view
+        , update = update
         , subscriptions = subscriptions
+        , onUrlChange = ChangedUrl
+        , onUrlRequest = ClickedLink
         }
+
+
 
 -- MODEL
 
+
+type alias GameSettings =
+    Maybe GameMode.Mode
+
+
 type alias Model =
-    { ticTacToe : UltimateTicTacToe.Model
-    , menu : Menu.Model
-    , windowSize : Window.Size
+    { gameState : GameState
+    , gameSettings : GameSettings
+    , windowSize : WindowSize
     }
 
-init : (Model, Cmd Msg)
-init =
+
+init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init _ url key =
     let
         model =
-            { ticTacToe = UltimateTicTacToe.init
-            , menu = Menu.init
-            , windowSize = { width = 800, height = 600 }
+            { gameState = UltimateTicTacToe.init
+            , gameSettings = Nothing
+            , windowSize = { width = 0, height = 0 }
             }
     in
-       model ! [ getWindowSize ]
+    ( model
+    , getInitialWindowSize
+    )
+
+
+
+-- URL PARSING
+
+
+type alias GameId =
+    String
+
+
+type Route
+    = Home
+    | TwoPlayersRemote GameId
+
 
 
 -- UPDATE
 
+type alias WindowSize = { width : Int, height : Int }
+
+type PlayerType
+    = CurrentPlayer
+    | OtherPlayer
+
+
 type Msg
-    = TicTacToeMessage UltimateTicTacToe.Msg
-    | NewWindowSize Window.Size
-    | SizeUpdateFailure String -- any chance of this failing? look up doc
-    | MenuMessage Menu.Msg
-
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg ({ticTacToe, menu, windowSize} as model) =
-    let newModel =
-      case msg of
-          TicTacToeMessage msg ->
-              let
-                  update = 
-                      case menu of
-                         Menu.OnePlayerVsAI -> UltimateTicTacToeWithAI.update
-                         Menu.TwoPlayers -> UltimateTicTacToe.update
-                         _ -> UltimateTicTacToe.update
-              in
-                  { model | ticTacToe = (update msg ticTacToe) }
-          NewWindowSize size ->
-              { model | windowSize = size }
-          MenuMessage msg ->
-              { model | menu = Menu.update msg menu }
-          SizeUpdateFailure _ -> model
-    in 
-       newModel ! []
+    = PerformedMove Player Move
+    | NewWindowSize WindowSize
+    | ChoseGameMode GameMode.Mode
+    | ClickedLink Browser.UrlRequest
+    | ChangedUrl Url
+    | Ignored
 
 
-getWindowSize : Cmd Msg
-getWindowSize = Task.perform SizeUpdateFailure NewWindowSize Window.size
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg ({ gameState, gameSettings, windowSize } as model) =
+    case Debug.log "" msg of
+        PerformedMove player move ->
+            let
+                newState =
+                    UltimateTicTacToe.performMove player move gameState
+
+                cmd =
+                    if player == Player.X && gameSettings == Just GameMode.OnePlayerVsAI then
+                        getAIMove newState
+
+                    else
+                        Cmd.none
+            in
+            ( { model | gameState = newState }
+            , cmd
+            )
+
+        NewWindowSize size ->
+            ( { model | windowSize = size }
+            , Cmd.none
+            )
+
+        ChoseGameMode gameMode ->
+            ( { model | gameSettings = Just gameMode }
+            , Cmd.none
+            )
+
+        _ ->
+            ( model
+            , Cmd.none
+            )
+
+
+-- TODO
+
+
+getInitialWindowSize : Cmd Msg
+getInitialWindowSize =
+    Task.perform (\viewport -> NewWindowSize { width = round viewport.viewport.width, height = round viewport.viewport.height }) Browser.Dom.getViewport
+
+getAIMove : GameState -> Cmd Msg
+getAIMove currentBoard =
+    case AI.nextMove currentBoard of
+        Just move ->
+            Process.sleep 400.0 |> Task.perform (\_ -> PerformedMove Player.O move)
+
+        Nothing ->
+            Cmd.none
+
 
 
 -- SUBSCRIPTIONS
 
+onWindowResize : Sub Msg
+onWindowResize =
+    Browser.Events.onResize (\w h -> NewWindowSize { width = w, height = h })
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.batch [ Window.resizes NewWindowSize ]
+    Sub.batch [ onWindowResize ]
+
+
 
 -- VIEW
 
-view : Model -> Html Msg
-view ({ticTacToe, menu, windowSize} as model) =
+
+view : Model -> Browser.Document Msg
+view ({ gameState, gameSettings, windowSize } as model) =
     let
-        baseBoardSize = TicTacToeBase.boardSize |> toFloat
-        minSize = ((Basics.min windowSize.width windowSize.height) |> toFloat) - 5
-        scale = minSize / baseBoardSize
-        size = (toString minSize)
-        svgView =
-            UltimateTicTacToe.svgView ticTacToe
-            |> SvgUtils.scale scale
-            |> App.map TicTacToeMessage
-        menuView =
-            Menu.view menu
-            |> App.map MenuMessage
-        mainDivStyle =
-          HA.style
-            [ ("margin", "auto")
-            , ("position", "relative")
-            , ("width", size ++ "px")
-            ]
-        menuStyle =
-          HA.style
-            [ ("z-index", "1")
-            , ("left", "5%")
-            , ("top", "5%")
-            , ("position", "absolute")
-            , ("width", "90%")
-            , ("font-family", "'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif")
-            ]
+        minSize =
+            (Basics.min windowSize.width windowSize.height |> toFloat) - 5
+
+        size =
+            String.fromFloat minSize
+
+        mainDivStyles =
+                [ HA.style "margin" "auto"
+                , HA.style "position" "relative"
+                , HA.style "width" (size ++ "px")
+                ]
+
+        gameBoardView =
+            viewGameState minSize gameSettings gameState
+
+        elementsToDisplay =
+            case gameSettings of
+                Just _ ->
+                    [ gameBoardView ]
+
+                Nothing ->
+                    [ viewMenu, gameBoardView ]
+        html = 
+            div mainDivStyles ([ css "style.css" ] ++ elementsToDisplay)
     in
-        div [ mainDivStyle ]
-          [ css "style.css"
-          , svg [ SA.viewBox ("0 0 " ++ size ++ " " ++ size), SA.width (size ++ "px") ] [ svgView ]
-          , div [ menuStyle ] [ menuView ]
-          ]
+       { title = "Ultimate Tic-Tac-Toe"
+       , body = [ html ]
+       }
+
+viewMenu : Html Msg
+viewMenu =
+    let
+        title =
+            div [ HA.class "menutitle" ] [ text "Ultimate tic-tac-toe" ]
+
+        options =
+            div []
+                [ button [ onClick (ChoseGameMode GameMode.OnePlayerVsAI) ] [ text "1 Player vs AI" ]
+                , button [ onClick (ChoseGameMode GameMode.TwoPlayersLocal) ] [ text "2 Players (local)" ]
+                , button [ onClick (ChoseGameMode GameMode.TwoPlayersRemote) ] [ text "2 Players (remote)" ]
+                ]
+
+        menuView =
+            div [ HA.class "tutorial" ]
+                [ title, options ]
+
+        menuStyles =
+                [ HA.style "z-index" "1"
+                , HA.style "left" "5%"
+                , HA.style "top" "5%"
+                , HA.style "position" "absolute"
+                , HA.style "width" "90%"
+                , HA.style "font-family" "'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif"
+                ]
+    in
+    div menuStyles [ menuView ]
+
+
+viewGameState : Float -> GameSettings -> GameState -> Html Msg
+viewGameState minSize gameSettings gameState =
+    let
+        baseBoardSize =
+            Sizes.boardSize |> toFloat
+
+        scale =
+            minSize / baseBoardSize
+
+        size =
+            String.fromFloat minSize
+
+        msgType =
+            case gameSettings of
+                Just GameMode.OnePlayerVsAI ->
+                    PerformedMove Player.X
+
+                _ ->
+                    PerformedMove gameState.currentPlayer
+
+        svgView =
+            UltimateTicTacToe.svgView gameState
+                |> SvgUtils.scale scale
+                |> Svg.map msgType
+    in
+    svg [ SA.viewBox ("0 0 " ++ size ++ " " ++ size), SA.width (size ++ "px") ] [ svgView ]
+
 
 css : String -> Html a
 css path =
-  node "link" [ HA.rel "stylesheet", HA.href path ] []
+    node "link" [ HA.rel "stylesheet", HA.href path ] []

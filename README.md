@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/jjst/elmtimate-tictactoe.svg?branch=master)](https://travis-ci.org/jjst/elmtimate-tictactoe)
+<a href='http://www.recurse.com' title='Made with love at the Recurse Center'><img src='https://cloud.githubusercontent.com/assets/2883345/11325206/336ea5f4-9150-11e5-9e90-d86ad31993d8.png' height='20px'/></a>
 
 [Play it online here!](https://jjst.github.io/elmtimate-tictactoe/)
 
@@ -11,7 +12,7 @@ An implementation of [Ultimate Tic-tac-toe](https://mathwithbaddrawings.com/2013
 
 If you haven't already done so, install [Elm](http://elm-lang.org/):
 ```bash
-$ npm install -g elm
+$ npm install -g elm@0.18.0
 ```
 
 Then clone the repo:
@@ -22,7 +23,7 @@ $ git clone git@github.com:jjst/elmtimate-tictactoe.git
 Then cd to the project folder and compile with:
 ```bash
 $ cd elmtimate-tictactoe/
-$ elm make src/UltimateTicTacToe.elm --output=tictactoe.html
+$ elm make src/Main.elm --output=tictactoe.html
 ```
 
 Woohoo! If everything goes according to my evil instructions, you should be able to open tictactoe.html and play you some ultimate tic-tac-toe!
@@ -31,4 +32,9 @@ Note: for actual development, you probably want to use `elm reactor` instead of 
 
 ## Testing
 
-To run the unit tests suite, run `runtests.sh`.
+To run the unit tests suite, install and run `elm-test`:
+
+```bash
+$ npm install -g elm-test
+$ elm-test
+```

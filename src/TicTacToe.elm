@@ -1,106 +1,111 @@
-module TicTacToe exposing (..)
+module TicTacToe exposing (Move, TicTacToeBoard, fromString, init, performMoveFor, render, winner)
 
-import Cell
-import Player exposing (..)
+import Sizes
 import Board exposing (Board)
-import Board
-import SvgUtils
-import TicTacToeBase
-
-import String
-import List as L
-import Tuple3 as T3
-import Html.Attributes
+import Cell
 import Html exposing (Html, button, div, text)
-import Html.App as App
+import Html.Attributes
 import Html.Events exposing (onClick)
+import List as L
+import Player exposing (..)
+import String
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import SvgUtils
+import TicTacToeBase
+import Tuple3 as T3
 
 
-type alias TicTacToeBoard = Board Cell.Model
+type alias TicTacToeBoard =
+    Board Cell.Cell
+
+
+type alias Move =
+    Board.Coords
+
+
 
 -- MODEL
 
-type alias Model = TicTacToeBase.Model Cell.Model
 
-init : Model
-init = TicTacToeBase.init Cell.init
+init : TicTacToeBoard
+init =
+    TicTacToeBase.init Nothing
 
-cellOwner : Cell.Model -> Maybe Player
-cellOwner cell = cell.mark
 
 winner : TicTacToeBoard -> Maybe Winner
-winner = Board.winner cellOwner
+winner =
+    Board.winner identity
 
-fromString : Player -> String -> Result String Model
-fromString player str =
+
+fromString : String -> Result String TicTacToeBoard
+fromString str =
     let
         liftResult : List (Result a b) -> Result a (List b)
         liftResult list =
-            list |> L.foldr (\result listResult -> listResult `Result.andThen` (\list -> Result.map (flip (::) list) result)) (Ok [])
-        parseLine : String -> Result String (List Cell.Model)
-        parseLine l = l
-          |> String.trim
-          |> String.split " "
-          |> L.map (Cell.fromString player)
-          |> liftResult
-        parsed : Result String (List (List (Cell.Model)))
-        parsed = str
-          |> String.trim
-          |> String.lines
-          |> L.map parseLine
-          |> liftResult
+            list |> L.foldr (\result listResult -> listResult |> Result.andThen (\items -> Result.map (\a -> (::) a items) result)) (Ok [])
+
+        parseLine : String -> Result String (List Cell.Cell)
+        parseLine l =
+            l
+                |> String.trim
+                |> String.split " "
+                |> L.map Cell.fromString
+                |> liftResult
+
+        parsed : Result String (List (List Cell.Cell))
+        parsed =
+            str
+                |> String.trim
+                |> String.lines
+                |> L.map parseLine
+                |> liftResult
+
         boardResult =
-           Result.map (
-               L.map (
-                   T3.fromList >> Result.fromMaybe "Wrong number of items in row"
-               )
-           ) parsed
-           `Result.andThen` liftResult
-           `Result.andThen` (
-               T3.fromList >> Result.fromMaybe "Wrong number of rows"
-           )
-    in boardResult |> Result.map (\b -> { board = b, currentPlayer = player })
+            Result.map
+                (L.map
+                    (T3.fromList >> Result.fromMaybe "Wrong number of items in row")
+                )
+                parsed
+                |> Result.andThen liftResult
+                |> Result.andThen (T3.fromList >> Result.fromMaybe "Wrong number of rows")
+    in
+    boardResult
+
+
 
 -- UPDATE
 
-type Msg
-    = PlaceMark Board.Coords Cell.Msg
-    | TogglePlayer
 
-update : Msg -> Model -> Model
-update msg ({board, currentPlayer} as model) =
-    let
-        nextPlayer = opponent currentPlayer
-    in
-       case winner board of
-           Just _ -> model
-           Nothing ->
-            case msg of
-                PlaceMark (x, y) msg ->
-                    { board = Board.indexedMap (\(i,j) cell ->
-                        if (x,y) == (i,j) then Cell.update msg cell else { cell | currentPlayer = nextPlayer }) board
-                    , currentPlayer = nextPlayer
-                    }
-                TogglePlayer ->
-                    { board = Board.indexedMap (\(i,j) cell -> { cell | currentPlayer = nextPlayer }) board
-                    , currentPlayer = nextPlayer
-                    }
+performMoveFor : Player -> Move -> TicTacToeBoard -> TicTacToeBoard
+performMoveFor player ( x, y ) board =
+    case winner board of
+        Just _ ->
+            board
+
+        Nothing ->
+            board
+                |> Board.indexedMap
+                    (\( i, j ) cell ->
+                        if ( x, y ) == ( i, j ) then
+                            Just player
+
+                        else
+                            cell
+                    )
+
 
 
 -- VIEW
 
-svgView : Model -> Svg Msg
-svgView = TicTacToeBase.svgView cellOwner svgViewCell
 
-view : Model -> Html Msg
-view = TicTacToeBase.view cellOwner svgViewCell
+render : TicTacToeBoard -> Svg Move
+render =
+    TicTacToeBase.svgView identity svgViewCell
 
 
-svgViewCell : Board.Coords -> Cell.Model -> Svg Msg
-svgViewCell (i,j) model =
-    Cell.svgView model
-      |> SvgUtils.scale ((toFloat TicTacToeBase.cellSize)/100.0)
-      |> SvgUtils.translate ((T3.toInt i)*TicTacToeBase.cellSize) ((T3.toInt j)*TicTacToeBase.cellSize)
-      |> App.map (PlaceMark (i,j))
+svgViewCell : Board.Coords -> Cell.Cell -> Svg Move
+svgViewCell ( i, j ) model =
+    Cell.svgView model ( i, j )
+        |> SvgUtils.scale (toFloat Sizes.cellSize / 100.0)
+        |> SvgUtils.translate (toFloat (T3.toInt i * Sizes.cellSize)) (toFloat (T3.toInt j * Sizes.cellSize))
