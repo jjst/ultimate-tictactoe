@@ -11,7 +11,7 @@ cache:
 os:
   - linux
 
-env: ELM_VERSION=0.18.0
+env: ELM_VERSION=0.19.0
 
 before_install:
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
@@ -19,9 +19,7 @@ before_install:
 install:
   - node --version
   - npm --version
-  - npm install -g elm@$ELM_VERSION elm-test@0.18.2
-  - git clone https://github.com/NoRedInk/elm-ops-tooling
-  - elm-ops-tooling/with_retry.rb elm package install --yes
+  - npm install -g elm@$ELM_VERSION elm-test
   # Faster compile on Travis.
   - |
     if [ ! -d sysconfcpus/bin ];
@@ -33,11 +31,8 @@ install:
       cd ..;
     fi
 
-before_script:
-  - cd tests && $TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make --yes Tests.elm && cd ..
-
 script:
-  - $TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-test
+  - $TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 1 elm-test
   - elm make src/Main.elm --output=tictactoe.js
 after_success:
   - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
