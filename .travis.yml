@@ -33,6 +33,6 @@ install:
 
 script:
   - $TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 1 elm-test
-  - elm make src/Main.elm --output=tictactoe.js
+  - elm make src/Main.elm --output=main.js
 after_success:
   - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
