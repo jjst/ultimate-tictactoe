@@ -1,3 +1,15 @@
+.menutitle {
+    color: #111111;
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
 button {
     background-color: #CBE86B;
     border: none;
