@@ -175,11 +175,11 @@ tests =
                 _ _ _
                 """ |> orCrash
           in
-              it "gives a score of 3 to a tictactoe with 2 in a row"
+              it "gives a score of 4 to a tictactoe with 2 in a row"
                 <| expect
                      (AI.score Player.O board)
                    to equal
-                     (3)
+                     4
         , let
               board = T.fromString
                 """
@@ -188,11 +188,11 @@ tests =
                 _ _ _
                 """ |> orCrash
           in
-              it "gives a score of 4 to a won tictactoe"
+              it "gives a score of 6 to a won tictactoe"
                 <| expect
                      (AI.score Player.O board)
                    to equal
-                     (4)
+                     6
         , let
               board = T.fromString
                 """
