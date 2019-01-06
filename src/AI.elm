@@ -23,8 +23,8 @@ nextMove gameState =
         potentialMoves =
             validMoves gameState
 
-        scoredMoves = potentialMoves 
-            |> List.map (\m -> ( m, minimaxScore m )) 
+        scoredMoves = potentialMoves
+            |> List.map (\m -> ( m, minimaxScore m ))
             |> List.sortBy Tuple.second
             |> List.reverse
             |> Debug.log "available moves"
@@ -118,8 +118,10 @@ minimax ticTacToe depth action =
 
         Nothing ->
             if depth == 0 then
-                evalPosition ticTacToe
-
+                let
+                    scores = evalPosition ticTacToe
+                in
+                scores.o - scores.x
             else
                 case action of
                     Maximize ->
@@ -150,10 +152,13 @@ minimax ticTacToe depth action =
                         in
                         min
 
-
+type alias Scores =
+    { o : Int
+    , x : Int
+    }
 
 -- Heuristic to evaluate the current board
-evalPosition : GameState -> Int
+evalPosition : GameState -> Scores
 evalPosition gameState =
     let
         rows : List (List (TicTacToe.TicTacToeBoard))
@@ -161,19 +166,24 @@ evalPosition gameState =
                 row |> Tuple3.toList |> List.map (\coords -> Board.get coords gameState.board)
             )
         scoreWholeBoardFor : Player -> Int
-        scoreWholeBoardFor player = rows |> List.map (\row -> List.product (List.map (score player) row)) |> List.sum
-        aiScore = scoreWholeBoardFor O
-        opponentScore = scoreWholeBoardFor X
+        scoreWholeBoardFor player = rows |> List.map (scoreRow player) |> List.sum
+        scores = { o = scoreWholeBoardFor O, x = scoreWholeBoardFor X }
         -- If the player can choose to play on any grid, that counts as a bonus (or malus if it's our opponent)
-        unrestrictedMovementBonus =
+        scoresWithBonus =
             case gameState.currentBoardCoords of
                 Nothing ->
                     case gameState.currentPlayer of
-                        O -> 20
-                        X -> -20
-                _ -> 0
+                        O -> { scores | o = scores.o + 20 }
+                        X -> { scores | x = scores.x + 20 }
+                _ -> scores
     in
-       aiScore - opponentScore + unrestrictedMovementBonus
+       scoresWithBonus
+
+-- Give a winnability score to a row of boards for a given player
+scoreRow : Player -> List (TicTacToe.TicTacToeBoard) -> Int
+scoreRow player row =
+    row |> List.map (score player) |> List.product
+
 
 -- Give a winnability score to a board for a given player
 score : Player -> TicTacToe.TicTacToeBoard -> Int
@@ -190,9 +200,9 @@ score player ticTacToe =
                 count : Maybe Player -> List (Maybe Player) -> Int
                 count item row = row |> List.filter (\e -> e == item) |> List.length
             in
-                if List.any (\r -> count (Just O) r == 2 && List.member Nothing r) rows then
+                if List.any (\r -> count (Just player) r == 2 && List.member Nothing r) rows then
                     4
-                else if List.any (\r -> count Nothing r == 2 && List.member (Just O) r) rows then
+                else if List.any (\r -> count Nothing r == 2 && List.member (Just player) r) rows then
                     2
                 else if List.any (\r -> count Nothing r == 3) rows then
                     1

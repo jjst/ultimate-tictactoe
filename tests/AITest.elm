@@ -124,7 +124,7 @@ tests =
                 <| expect
                      (AI.evalPosition currentBoard)
                    to equal
-                     (0)
+                     { o = 8, x = 8 }
         , let
               currentBoard = fromString Player.O (Nothing)
                 """
@@ -145,7 +145,7 @@ tests =
                 <| expect
                      (AI.evalPosition currentBoard)
                    to equal
-                     (20)
+                     { o = 28, x = 8 }
         , let
               currentBoard = fromString Player.X (Nothing)
                 """
@@ -162,11 +162,66 @@ tests =
                  _ _ _ | _ _ _ | _ _ _
                 """ |> orCrash
           in
-              it "evalPosition gives -20 malus if opponent free to play anywhere"
+              it "evalPosition gives 20 bonus to opponent if free to play anywhere"
                 <| expect
                      (AI.evalPosition currentBoard)
                    to equal
-                     (-20)
+                     { o = 8, x = 28 }
+        , let
+              currentBoard = fromString Player.X (Just (I2,I2))
+                """
+                 _ _ _ | _ _ _ | _ _ _
+                 _ _ _ | _ _ _ | _ _ _
+                 _ _ _ | _ _ _ | x _ _
+                -------+-------+-------
+                 _ _ _ | _ _ _ | _ _ _
+                 _ _ _ | _ _ _ | _ _ _
+                 _ _ _ | _ _ _ | _ _ _
+                -------+-------+-------
+                 _ _ _ | _ _ _ | _ _ _
+                 _ _ _ | _ _ _ | _ _ _
+                 _ _ _ | _ _ _ | _ _ _
+                """ |> orCrash
+          in
+              it "evalPosition multiplies expected row values to determine score"
+                <| expect
+                     ((AI.evalPosition currentBoard) |> Debug.log "here")
+                   to equal
+                     { o = 8, x = 11 } -- 5 rows score 1, 3 rows score 2
+        , let
+              board = T.fromString
+                """
+                o o _
+                _ _ _
+                _ _ _
+                """ |> orCrash
+              row = [board, board, board]
+          in
+              it "computes the product of the scores of each board to evaluate a row"
+                <| expect
+                     (AI.scoreRow Player.O row)
+                   to equal
+                     64
+        , let
+              board1 = T.fromString
+                """
+                o _ _
+                _ _ _
+                _ _ _
+                """ |> orCrash
+              board2 = T.fromString
+                """
+                _ _ _
+                _ _ _
+                _ _ _
+                """ |> orCrash
+              row = [board1, board2, board2]
+          in
+              it "computes the product of the scores of each board to evaluate a row 2"
+                <| expect
+                     (AI.scoreRow Player.O row)
+                   to equal
+                     2
         , let
               board = T.fromString
                 """
@@ -258,4 +313,30 @@ tests =
                      (AI.score Player.O board)
                    to equal
                      (1)
+        , let
+              board = T.fromString
+                """
+                _ _ _
+                _ _ _
+                _ _ _
+                """ |> orCrash
+          in
+              it "gives a score of 1 to an empty board"
+                <| expect
+                     (AI.score Player.O board)
+                   to equal
+                     (1)
+        , let
+              board = T.fromString
+                """
+                _ _ _
+                _ _ _
+                x _ _
+                """ |> orCrash
+          in
+              it "gives a score of 2 to this board"
+                <| expect
+                     (AI.score Player.X board)
+                   to equal
+                     (2)
         ]
