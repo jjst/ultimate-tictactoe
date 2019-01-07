@@ -32,8 +32,8 @@ div#menu-container {
     overflow: hidden;
     opacity: 0.95;
     position: absolute;
-    top: 10%;
-    height: 80%;
+    top: 20%;
+    height: 60%;
     left: 10%;
     width: 80%;
 }
