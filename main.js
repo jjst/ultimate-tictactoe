@@ -6286,7 +6286,8 @@ var author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{
-							gameSettings: elm$core$Maybe$Just(gameMode)
+							gameSettings: elm$core$Maybe$Just(gameMode),
+							gameState: author$project$UltimateTicTacToe$init
 						}),
 					elm$core$Platform$Cmd$none);
 			default:
@@ -6324,6 +6325,15 @@ var author$project$Main$css = function (path) {
 			]),
 		_List_Nil);
 };
+var author$project$Main$prependMaybe = F2(
+	function (list, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return A2(elm$core$List$cons, value, list);
+		} else {
+			return list;
+		}
+	});
 var author$project$Sizes$cellSize = 300;
 var author$project$Sizes$boardSize = author$project$Sizes$cellSize * 3;
 var elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
@@ -6817,8 +6827,26 @@ var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
 var elm$html$Html$Attributes$id = elm$html$Html$Attributes$stringProperty('id');
-var author$project$Main$viewMenu = function () {
-	var title = A2(
+var author$project$Main$viewMenu = function (maybeWinner) {
+	var title = function () {
+		if (maybeWinner.$ === 'Nothing') {
+			return 'Ultimate Tic-Tac-Toe';
+		} else {
+			if (maybeWinner.a.$ === 'Right') {
+				var _n1 = maybeWinner.a.a;
+				return 'It\'s a draw! Replay:';
+			} else {
+				if (maybeWinner.a.a.$ === 'X') {
+					var _n2 = maybeWinner.a.a;
+					return 'X wins! Replay:';
+				} else {
+					var _n3 = maybeWinner.a.a;
+					return 'O wins! Replay:';
+				}
+			}
+		}
+	}();
+	var titleDiv = A2(
 		elm$html$Html$div,
 		_List_fromArray(
 			[
@@ -6826,7 +6854,7 @@ var author$project$Main$viewMenu = function () {
 			]),
 		_List_fromArray(
 			[
-				elm$html$Html$text('Ultimate tic-tac-toe')
+				elm$html$Html$text(title)
 			]));
 	var options = A2(
 		elm$html$Html$div,
@@ -6877,17 +6905,19 @@ var author$project$Main$viewMenu = function () {
 				elm$html$Html$Attributes$id('menu')
 			]),
 		_List_fromArray(
-			[title, options]));
+			[titleDiv, options]));
+	var containerClass = _Utils_eq(maybeWinner, elm$core$Maybe$Nothing) ? 'fade-in' : 'fade-in delay';
 	var menuContainer = A2(
 		elm$html$Html$div,
 		_List_fromArray(
 			[
-				elm$html$Html$Attributes$id('menu-container')
+				elm$html$Html$Attributes$id('menu-container'),
+				elm$html$Html$Attributes$class(containerClass)
 			]),
 		_List_fromArray(
 			[menu]));
 	return menuContainer;
-}();
+};
 var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
 var author$project$Main$view = function (model) {
@@ -6896,6 +6926,25 @@ var author$project$Main$view = function (model) {
 	var windowSize = model.windowSize;
 	var minSize = A2(elm$core$Basics$min, windowSize.width, windowSize.height) - 5;
 	var size = elm$core$String$fromFloat(minSize);
+	var maybeMenu = function () {
+		var _n0 = _Utils_Tuple2(
+			gameSettings,
+			author$project$UltimateTicTacToe$winner(gameState.board));
+		if (_n0.a.$ === 'Nothing') {
+			var _n1 = _n0.a;
+			return elm$core$Maybe$Just(
+				author$project$Main$viewMenu(elm$core$Maybe$Nothing));
+		} else {
+			if (_n0.b.$ === 'Just') {
+				var winner = _n0.b.a;
+				return elm$core$Maybe$Just(
+					author$project$Main$viewMenu(
+						elm$core$Maybe$Just(winner)));
+			} else {
+				return elm$core$Maybe$Nothing;
+			}
+		}
+	}();
 	var mainDivStyles = _List_fromArray(
 		[
 			A2(elm$html$Html$Attributes$style, 'margin', 'auto'),
@@ -6904,15 +6953,11 @@ var author$project$Main$view = function (model) {
 			A2(elm$html$Html$Attributes$style, 'height', size + 'px')
 		]);
 	var gameBoardView = A3(author$project$Main$viewGameState, minSize, gameSettings, gameState);
-	var elementsToDisplay = function () {
-		if (gameSettings.$ === 'Just') {
-			return _List_fromArray(
-				[gameBoardView]);
-		} else {
-			return _List_fromArray(
-				[author$project$Main$viewMenu, gameBoardView]);
-		}
-	}();
+	var elementsToDisplay = A2(
+		author$project$Main$prependMaybe,
+		_List_fromArray(
+			[gameBoardView]),
+		maybeMenu);
 	var html = A2(
 		elm$html$Html$div,
 		mainDivStyles,
