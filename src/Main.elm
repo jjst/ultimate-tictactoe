@@ -175,6 +175,7 @@ view ({ gameState, gameSettings, windowSize } as model) =
                 [ HA.style "margin" "auto"
                 , HA.style "position" "relative"
                 , HA.style "width" (size ++ "px")
+                , HA.style "height" (size ++ "px")
                 ]
 
         gameBoardView =
@@ -201,26 +202,17 @@ viewMenu =
             div [ HA.class "menutitle" ] [ text "Ultimate tic-tac-toe" ]
 
         options =
-            div []
+            div [ HA.class "buttons" ]
                 [ button [ onClick (ChoseGameMode GameMode.OnePlayerVsAI) ] [ text "1 Player vs AI" ]
                 , button [ onClick (ChoseGameMode GameMode.TwoPlayersLocal) ] [ text "2 Players (local)" ]
                 , button [ onClick (ChoseGameMode GameMode.TwoPlayersRemote) ] [ text "2 Players (remote)" ]
                 ]
 
-        menuView =
-            div [ HA.class "tutorial" ]
-                [ title, options ]
+        menu = div [ HA.id "menu" ] [ title, options ]
 
-        menuStyles =
-                [ HA.style "z-index" "1"
-                , HA.style "left" "5%"
-                , HA.style "top" "5%"
-                , HA.style "position" "absolute"
-                , HA.style "width" "90%"
-                , HA.style "font-family" "'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif"
-                ]
+        menuContainer = div [ HA.id "menu-container" ] [ menu ]
     in
-    div menuStyles [ menuView ]
+    menuContainer
 
 
 viewGameState : Float -> GameSettings -> GameState -> Html Msg
