@@ -15,23 +15,36 @@ button {
     border: none;
     color: #1C140D;
     padding: 15px 32px;
-    margin: 20px;
+    margin-bottom: 30px;
     text-transform: uppercase;
     text-align: center;
     text-decoration: none;
     font-weight: bold;
     cursor: pointer;
-    display: inline-block;
+    display: block;
     font-size: 16px;
+    width: 100%;
 }
 
-div.tutorial {
-  border-radius: 25px;
-  border: 2px solid #1C140D;
-  background: #F2E9E1;
-  padding: 20px;
-  overflow: hidden;
-  opacity: 0.95;
+div#menu-container {
+    border: 2px solid #1C140D;
+    background: #F2E9E1;
+    overflow: hidden;
+    opacity: 0.95;
+    position: absolute;
+    top: 10%;
+    height: 80%;
+    left: 10%;
+    width: 80%;
+}
+
+div#menu {
+  position: relative;
+  padding: 50px;
+}
+
+div#buttons {
+  position: relative;
 }
 
 h1 {

@@ -6816,8 +6816,7 @@ var elm$html$Html$div = _VirtualDom_node('div');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
+var elm$html$Html$Attributes$id = elm$html$Html$Attributes$stringProperty('id');
 var author$project$Main$viewMenu = function () {
 	var title = A2(
 		elm$html$Html$div,
@@ -6831,7 +6830,10 @@ var author$project$Main$viewMenu = function () {
 			]));
 	var options = A2(
 		elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('buttons')
+			]),
 		_List_fromArray(
 			[
 				A2(
@@ -6868,29 +6870,26 @@ var author$project$Main$viewMenu = function () {
 						elm$html$Html$text('2 Players (remote)')
 					]))
 			]));
-	var menuView = A2(
+	var menu = A2(
 		elm$html$Html$div,
 		_List_fromArray(
 			[
-				elm$html$Html$Attributes$class('tutorial')
+				elm$html$Html$Attributes$id('menu')
 			]),
 		_List_fromArray(
 			[title, options]));
-	var menuStyles = _List_fromArray(
-		[
-			A2(elm$html$Html$Attributes$style, 'z-index', '1'),
-			A2(elm$html$Html$Attributes$style, 'left', '5%'),
-			A2(elm$html$Html$Attributes$style, 'top', '5%'),
-			A2(elm$html$Html$Attributes$style, 'position', 'absolute'),
-			A2(elm$html$Html$Attributes$style, 'width', '90%'),
-			A2(elm$html$Html$Attributes$style, 'font-family', '\'Source Sans Pro\', \'Trebuchet MS\', \'Lucida Grande\', \'Bitstream Vera Sans\', \'Helvetica Neue\', sans-serif')
-		]);
-	return A2(
+	var menuContainer = A2(
 		elm$html$Html$div,
-		menuStyles,
 		_List_fromArray(
-			[menuView]));
+			[
+				elm$html$Html$Attributes$id('menu-container')
+			]),
+		_List_fromArray(
+			[menu]));
+	return menuContainer;
 }();
+var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
 var author$project$Main$view = function (model) {
 	var gameState = model.gameState;
 	var gameSettings = model.gameSettings;
@@ -6901,7 +6900,8 @@ var author$project$Main$view = function (model) {
 		[
 			A2(elm$html$Html$Attributes$style, 'margin', 'auto'),
 			A2(elm$html$Html$Attributes$style, 'position', 'relative'),
-			A2(elm$html$Html$Attributes$style, 'width', size + 'px')
+			A2(elm$html$Html$Attributes$style, 'width', size + 'px'),
+			A2(elm$html$Html$Attributes$style, 'height', size + 'px')
 		]);
 	var gameBoardView = A3(author$project$Main$viewGameState, minSize, gameSettings, gameState);
 	var elementsToDisplay = function () {
