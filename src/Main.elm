@@ -20,7 +20,7 @@ import GameMode
 import TicTacToeBase
 import Tuple3 as T3
 import UltimateTicTacToe exposing (GameState, Move)
-import Player exposing (Player)
+import Player exposing (..)
 
 main =
     Browser.application
@@ -119,7 +119,7 @@ update msg ({ gameState, gameSettings, windowSize } as model) =
             )
 
         ChoseGameMode gameMode ->
-            ( { model | gameSettings = Just gameMode }
+            ( { model | gameSettings = Just gameMode, gameState = UltimateTicTacToe.init }
             , Cmd.none
             )
 
@@ -161,6 +161,13 @@ subscriptions model =
 
 -- VIEW
 
+prependMaybe : List a -> Maybe a -> List a
+prependMaybe list maybe =
+   case maybe of
+           Just value ->
+             value :: list
+           Nothing ->
+             list
 
 view : Model -> Browser.Document Msg
 view ({ gameState, gameSettings, windowSize } as model) =
@@ -181,25 +188,40 @@ view ({ gameState, gameSettings, windowSize } as model) =
         gameBoardView =
             viewGameState minSize gameSettings gameState
 
-        elementsToDisplay =
-            case gameSettings of
-                Just _ ->
-                    [ gameBoardView ]
+        maybeMenu =
+            case (gameSettings, UltimateTicTacToe.winner gameState.board) of
+                (Nothing, _) ->
+                    Just (viewMenu Nothing)
+                (_, Just winner) ->
+                    Just (viewMenu (Just winner))
+                (_, _) ->
+                    Nothing
 
-                Nothing ->
-                    [ viewMenu, gameBoardView ]
-        html = 
+        elementsToDisplay =  prependMaybe [ gameBoardView ] maybeMenu
+
+        html =
             div mainDivStyles ([ css "style.css" ] ++ elementsToDisplay)
     in
        { title = "Ultimate Tic-Tac-Toe"
        , body = [ html ]
        }
 
-viewMenu : Html Msg
-viewMenu =
+viewMenu : Maybe Winner -> Html Msg
+viewMenu maybeWinner =
     let
         title =
-            div [ HA.class "menutitle" ] [ text "Ultimate tic-tac-toe" ]
+            case maybeWinner of
+                (Nothing) ->
+                    "Ultimate Tic-Tac-Toe"
+                Just (Right Draw) ->
+                    "It's a draw! Replay:"
+                Just (Left X) ->
+                    "X wins! Replay:"
+                Just (Left O) ->
+                    "O wins! Replay:"
+
+        titleDiv =
+            div [ HA.class "menutitle" ] [ text title ]
 
         options =
             div [ HA.class "buttons" ]
@@ -208,9 +230,11 @@ viewMenu =
                 , button [ onClick (ChoseGameMode GameMode.TwoPlayersRemote) ] [ text "2 Players (remote)" ]
                 ]
 
-        menu = div [ HA.id "menu" ] [ title, options ]
+        menu = div [ HA.id "menu" ] [ titleDiv, options ]
 
-        menuContainer = div [ HA.id "menu-container" ] [ menu ]
+        containerClass = if maybeWinner == Nothing then "fade-in" else "fade-in delay"
+
+        menuContainer = div [ HA.id "menu-container", HA.class containerClass ] [ menu ]
     in
     menuContainer
 
