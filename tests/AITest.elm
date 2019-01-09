@@ -185,7 +185,7 @@ tests =
           in
               it "evalPosition multiplies expected row values to determine score"
                 <| expect
-                     ((AI.evalPosition currentBoard) |> Debug.log "here")
+                     (AI.evalPosition currentBoard)
                    to equal
                      { o = 8, x = 11 } -- 5 rows score 1, 3 rows score 2
         , let
