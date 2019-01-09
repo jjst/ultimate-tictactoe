@@ -96,7 +96,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ gameState, gameSettings, windowSize } as model) =
-    case Debug.log "" msg of
+    case msg of
         PerformedMove player move ->
             let
                 newState =
