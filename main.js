@@ -6259,11 +6259,10 @@ var author$project$Main$update = F2(
 		var gameState = model.gameState;
 		var gameSettings = model.gameSettings;
 		var windowSize = model.windowSize;
-		var _n0 = A2(elm$core$Debug$log, '', msg);
-		switch (_n0.$) {
+		switch (msg.$) {
 			case 'PerformedMove':
-				var player = _n0.a;
-				var move = _n0.b;
+				var player = msg.a;
+				var move = msg.b;
 				var newState = A3(author$project$UltimateTicTacToe$performMove, player, move, gameState);
 				var cmd = (_Utils_eq(player, author$project$Player$X) && _Utils_eq(
 					gameSettings,
@@ -6274,14 +6273,14 @@ var author$project$Main$update = F2(
 						{gameState: newState}),
 					cmd);
 			case 'NewWindowSize':
-				var size = _n0.a;
+				var size = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{windowSize: size}),
 					elm$core$Platform$Cmd$none);
 			case 'ChoseGameMode':
-				var gameMode = _n0.a;
+				var gameMode = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6655,7 +6654,7 @@ var author$project$TicTacToeBase$svgView = F3(
 				st));
 	});
 var author$project$TicTacToe$render = A2(author$project$TicTacToeBase$svgView, elm$core$Basics$identity, author$project$TicTacToe$svgViewCell);
-var author$project$UltimateTicTacToe$fadedOutOpacity = 0.25;
+var author$project$UltimateTicTacToe$fadedOutOpacity = 0.15;
 var author$project$UltimateTicTacToe$normalOpacity = 1.0;
 var elm$core$Basics$neq = _Utils_notEqual;
 var author$project$UltimateTicTacToe$shouldFadeOut = F3(
