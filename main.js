@@ -6249,7 +6249,7 @@ var author$project$Main$getAIMove = function (currentBoard) {
 			function (_n1) {
 				return A2(author$project$Main$PerformedMove, author$project$Player$O, move);
 			},
-			elm$core$Process$sleep(400.0));
+			elm$core$Process$sleep(1000.0));
 	} else {
 		return elm$core$Platform$Cmd$none;
 	}
