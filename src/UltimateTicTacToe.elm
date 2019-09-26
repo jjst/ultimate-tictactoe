@@ -210,7 +210,7 @@ normalOpacity =
 
 fadedOutOpacity : Opacity
 fadedOutOpacity =
-    0.25
+    0.15
 
 
 svgView : GameState -> Svg Move
