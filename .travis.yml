@@ -1,6 +1,8 @@
 sudo: false
 
-language: node_js
+language: elm
+elm:
+  - 0.19.0
 node_js:
   - 10
 
@@ -12,15 +14,12 @@ cache:
 os:
   - linux
 
-env: ELM_VERSION=0.19.0
-
 before_install:
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 
 install:
   - node --version
   - npm --version
-  - npm install -g elm@$ELM_VERSION elm-test
   # Faster compile on Travis.
   - |
     if [ ! -d sysconfcpus/bin ];
