@@ -2,6 +2,7 @@ module GameMode exposing (Mode(..))
 
 
 type Mode
-    = OnePlayerVsAI
+    = Tutorial 
+    | OnePlayerVsAI
     | TwoPlayersLocal
     | TwoPlayersRemote

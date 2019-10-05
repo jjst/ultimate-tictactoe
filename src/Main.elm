@@ -1,4 +1,4 @@
-module Main exposing (GameId, GameSettings, Model, Msg(..), PlayerType(..), Route(..), css, getAIMove, init, main, subscriptions, update, view, viewGameState, viewMenu)
+module Main exposing (..)
 
 import Browser
 import Browser.Dom
@@ -37,13 +37,15 @@ main =
 -- MODEL
 
 
-type alias GameSettings =
-    Maybe GameMode.Mode
+type alias TutorialStep = Int
 
+type State 
+   = GameInProgress GameState GameMode.Mode
+   | TutorialInProgress TutorialStep
+   | InMenu
 
 type alias Model =
-    { gameState : GameState
-    , gameSettings : GameSettings
+    { state : State
     , windowSize : WindowSize
     }
 
@@ -52,8 +54,7 @@ init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     let
         model =
-            { gameState = UltimateTicTacToe.init
-            , gameSettings = Nothing
+            { state = InMenu
             , windowSize = { width = 0, height = 0 }
             }
     in
@@ -84,42 +85,45 @@ type PlayerType
     = CurrentPlayer
     | OtherPlayer
 
+type MenuOption 
+   = NewGame GameMode.Mode
+   | RunTutorial
 
 type Msg
     = PerformedMove Player Move
     | NewWindowSize WindowSize
-    | ChoseGameMode GameMode.Mode
+    | ChoseMenuOption MenuOption
     | ClickedLink Browser.UrlRequest
     | ChangedUrl Url
     | Ignored
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ gameState, gameSettings, windowSize } as model) =
-    case msg of
-        PerformedMove player move ->
+update msg ({ state, windowSize } as model) =
+    case (state, msg) of
+        (GameInProgress gameState gameMode, PerformedMove player move) ->
             let
                 newState =
                     UltimateTicTacToe.performMove player move gameState
 
                 cmd =
-                    if player == Player.X && gameSettings == Just GameMode.OnePlayerVsAI then
+                    if player == Player.X && gameMode == GameMode.OnePlayerVsAI then
                         getAIMove newState
 
                     else
                         Cmd.none
             in
-            ( { model | gameState = newState }
+            ( { model | state = GameInProgress newState gameMode }
             , cmd
             )
 
-        NewWindowSize size ->
+        (_, NewWindowSize size) ->
             ( { model | windowSize = size }
             , Cmd.none
             )
 
-        ChoseGameMode gameMode ->
-            ( { model | gameSettings = Just gameMode, gameState = UltimateTicTacToe.init }
+        (_, ChoseMenuOption (NewGame gameMode)) ->
+            ( { model | state = GameInProgress UltimateTicTacToe.init gameMode }
             , Cmd.none
             )
 
@@ -134,7 +138,9 @@ update msg ({ gameState, gameSettings, windowSize } as model) =
 
 getInitialWindowSize : Cmd Msg
 getInitialWindowSize =
-    Task.perform (\viewport -> NewWindowSize { width = round viewport.viewport.width, height = round viewport.viewport.height }) Browser.Dom.getViewport
+    Task.perform (\viewport -> 
+        NewWindowSize { width = round viewport.viewport.width, height = round viewport.viewport.height }
+    ) Browser.Dom.getViewport
 
 getAIMove : GameState -> Cmd Msg
 getAIMove currentBoard =
@@ -145,6 +151,11 @@ getAIMove currentBoard =
         Nothing ->
             Cmd.none
 
+winner : State -> Maybe Winner
+winner state = case state of
+    GameInProgress gameState _ ->
+        UltimateTicTacToe.winner gameState.board
+    _ -> Nothing
 
 
 -- SUBSCRIPTIONS
@@ -170,7 +181,7 @@ prependMaybe list maybe =
              list
 
 view : Model -> Browser.Document Msg
-view ({ gameState, gameSettings, windowSize } as model) =
+view ({ state, windowSize } as model) =
     let
         minSize =
             (Basics.min windowSize.width windowSize.height |> toFloat) - 5
@@ -186,16 +197,10 @@ view ({ gameState, gameSettings, windowSize } as model) =
                 ]
 
         gameBoardView =
-            viewGameState minSize gameSettings gameState
+            viewGameState minSize state
 
         maybeMenu =
-            case (gameSettings, UltimateTicTacToe.winner gameState.board) of
-                (Nothing, _) ->
-                    Just (viewMenu Nothing)
-                (_, Just winner) ->
-                    Just (viewMenu (Just winner))
-                (_, _) ->
-                    Nothing
+            maybeViewMenu state
 
         elementsToDisplay =  prependMaybe [ gameBoardView ] maybeMenu
 
@@ -205,6 +210,19 @@ view ({ gameState, gameSettings, windowSize } as model) =
        { title = "Ultimate Tic-Tac-Toe"
        , body = [ html ]
        }
+       
+
+maybeViewMenu : State -> Maybe (Html Msg)
+maybeViewMenu state =
+    case (state, winner state) of
+        (InMenu, _) -> 
+            Just (viewMenu Nothing)
+        (GameInProgress _ _, Just w) ->
+            Just (viewMenu (Just w))
+        (_, _) ->
+            Nothing
+
+
 
 viewMenu : Maybe Winner -> Html Msg
 viewMenu maybeWinner =
@@ -225,9 +243,10 @@ viewMenu maybeWinner =
 
         options =
             div [ HA.class "buttons" ]
-                [ button [ onClick (ChoseGameMode GameMode.OnePlayerVsAI) ] [ text "1 Player vs AI" ]
-                , button [ onClick (ChoseGameMode GameMode.TwoPlayersLocal) ] [ text "2 Players (local)" ]
-                , button [ onClick (ChoseGameMode GameMode.TwoPlayersRemote) ] [ text "2 Players (remote)" ]
+                [ button [ onClick (ChoseMenuOption RunTutorial) ] [ text "Tutorial" ]
+                , button [ onClick (ChoseMenuOption (NewGame GameMode.OnePlayerVsAI)) ] [ text "1 Player vs AI" ]
+                , button [ onClick (ChoseMenuOption (NewGame GameMode.TwoPlayersLocal)) ] [ text "2 Players (local)" ]
+                , button [ onClick (ChoseMenuOption (NewGame GameMode.TwoPlayersRemote)) ] [ text "2 Players (remote)" ]
                 ]
 
         menu = div [ HA.id "menu" ] [ titleDiv, options ]
@@ -239,8 +258,8 @@ viewMenu maybeWinner =
     menuContainer
 
 
-viewGameState : Float -> GameSettings -> GameState -> Html Msg
-viewGameState minSize gameSettings gameState =
+viewGameState : Float -> State -> Html Msg
+viewGameState minSize state =
     let
         baseBoardSize =
             Sizes.boardSize |> toFloat
@@ -251,13 +270,21 @@ viewGameState minSize gameSettings gameState =
         size =
             String.fromFloat minSize
 
-        msgType =
-            case gameSettings of
-                Just GameMode.OnePlayerVsAI ->
-                    PerformedMove Player.X
+        gameState =
+            case state of
+                InMenu -> UltimateTicTacToe.init
+                TutorialInProgress step -> UltimateTicTacToe.init
+                GameInProgress st _ -> st
 
-                _ ->
+        msgType =
+            case state of
+                GameInProgress _ GameMode.OnePlayerVsAI ->
+                    PerformedMove Player.X
+                GameInProgress _ _ ->
                     PerformedMove gameState.currentPlayer
+                _ -> 
+                    \m -> Ignored
+                    -- Noop
 
         svgView =
             UltimateTicTacToe.svgView gameState
