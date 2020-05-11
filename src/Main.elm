@@ -96,7 +96,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ gameState, gameSettings, windowSize } as model) =
-    case Debug.log "" msg of
+    case msg of
         PerformedMove player move ->
             let
                 newState =
@@ -140,7 +140,7 @@ getAIMove : GameState -> Cmd Msg
 getAIMove currentBoard =
     case AI.nextMove currentBoard of
         Just move ->
-            Process.sleep 400.0 |> Task.perform (\_ -> PerformedMove Player.O move)
+            Process.sleep 1000.0 |> Task.perform (\_ -> PerformedMove Player.O move)
 
         Nothing ->
             Cmd.none
