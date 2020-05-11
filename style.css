@@ -11,7 +11,7 @@
 }
 
 button {
-    background-color: #CBE86B;
+    background-color: #CED0CE;
     border: none;
     color: #1C140D;
     padding: 15px 32px;
@@ -28,7 +28,7 @@ button {
 
 div#menu-container {
     border: 2px solid #1C140D;
-    background: #F2E9E1;
+    background: #E6E8E6;
     overflow: hidden;
     position: absolute;
     top: 20%;
