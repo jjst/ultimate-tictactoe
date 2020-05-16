@@ -22,6 +22,7 @@ import Tuple3 as T3
 import UltimateTicTacToe exposing (GameState, Move)
 import Player exposing (..)
 
+main : Program Config Model Msg
 main =
     Browser.application
         { init = init
@@ -41,18 +42,24 @@ type alias GameSettings =
     Maybe GameMode.Mode
 
 
+type alias Config =
+   { remotePlayServerUrl: String }
+
+
 type alias Model =
-    { gameState : GameState
+    { config: Config
+    , gameState : GameState
     , gameSettings : GameSettings
     , windowSize : WindowSize
     }
 
 
-init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
+init : Config -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init conf url key =
     let
         model =
-            { gameState = UltimateTicTacToe.init
+            { config = conf
+            , gameState = UltimateTicTacToe.init
             , gameSettings = Nothing
             , windowSize = { width = 0, height = 0 }
             }
