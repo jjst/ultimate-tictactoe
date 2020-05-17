@@ -1,5 +1,6 @@
-module Main exposing (GameId, GameSettings, Model, Msg(..), PlayerType(..), Route(..), css, getAIMove, init, main, subscriptions, update, view, viewGameState)
+module Main exposing (GameSettings, Model, Msg(..), PlayerType(..), Route(..), css, getAIMove, init, main, subscriptions, update, view, viewGameState)
 
+import Random
 import Browser
 import Browser.Dom
 import Browser.Events
@@ -19,6 +20,7 @@ import AI
 import GameMode
 import TicTacToeBase
 import Tuple3 as T3
+import GameId
 import UltimateTicTacToe exposing (GameState, Move)
 import Player exposing (..)
 
@@ -42,7 +44,7 @@ type GameSettings
    = NotYetSelected
    | LocalVsAI
    | Local2Players
-   | Remote2Players GameId PlayState
+   | Remote2Players GameId.GameId PlayState
 
 
 type alias Config =
@@ -73,9 +75,6 @@ init conf url key =
     , getInitialWindowSize
     )
 
-type alias GameId =
-    String
-
 
 type PlayState
    = WaitingForPlayers
@@ -87,7 +86,7 @@ type PlayState
 
 type Route
     = Home
-    | JoinRemoteGame GameId
+    | JoinRemoteGame GameId.GameId
 
 -- UPDATE
 
@@ -101,6 +100,7 @@ type PlayerType
 type Msg
     = PerformedMove Player Move
     | NewWindowSize WindowSize
+    | GeneratedRemoteGameId GameId.GameId
     | ChoseGameMode GameMode.Mode
     | CancelledRemote
     | ClickedLink Browser.UrlRequest
@@ -137,9 +137,14 @@ update msg ({ gameState, gameSettings, windowSize } as model) =
             , Cmd.none
             )
 
-        ChoseGameMode GameMode.TwoPlayersRemote ->
-            ( { model | gameSettings = (Remote2Players "test" WaitingForPlayers), gameState = UltimateTicTacToe.init }
+        GeneratedRemoteGameId gameId ->
+            ( { model | gameSettings = (Remote2Players gameId WaitingForPlayers), gameState = UltimateTicTacToe.init }
             , Cmd.none
+            )
+
+        ChoseGameMode GameMode.TwoPlayersRemote ->
+            ( model
+            , Random.generate GeneratedRemoteGameId GameId.random
             )
 
         ChoseGameMode GameMode.OnePlayerVsAI ->
