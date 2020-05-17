@@ -1,10 +1,10 @@
-module Main exposing (GameId, GameSettings, Model, Msg(..), PlayerType(..), Route(..), css, getAIMove, init, main, subscriptions, update, view, viewGameState, viewMenu)
+module Main exposing (GameId, GameSettings, Model, Msg(..), PlayerType(..), Route(..), css, getAIMove, init, main, subscriptions, update, view, viewGameState)
 
 import Browser
 import Browser.Dom
 import Browser.Events
 import Browser.Navigation as Nav
-import Html exposing (Html, button, div, node, text)
+import Html exposing (Html, button, div, p, node, text, input)
 import Html.Attributes as HA
 import Html.Events exposing (onClick)
 import Process
@@ -38,16 +38,21 @@ main =
 -- MODEL
 
 
-type alias GameSettings =
-    Maybe GameMode.Mode
+type GameSettings
+   = NotYetSelected
+   | LocalVsAI
+   | Local2Players
+   | Remote2Players GameId PlayState
 
 
 type alias Config =
-   { remotePlayServerUrl: String }
+   { baseUrl : String
+   , remotePlayServerUrl : String
+   }
 
 
 type alias Model =
-    { config: Config
+    { config : Config
     , gameState : GameState
     , gameSettings : GameSettings
     , windowSize : WindowSize
@@ -60,7 +65,7 @@ init conf url key =
         model =
             { config = conf
             , gameState = UltimateTicTacToe.init
-            , gameSettings = Nothing
+            , gameSettings = NotYetSelected
             , windowSize = { width = 0, height = 0 }
             }
     in
@@ -68,20 +73,21 @@ init conf url key =
     , getInitialWindowSize
     )
 
-
-
--- URL PARSING
-
-
 type alias GameId =
     String
 
 
+type PlayState
+   = WaitingForPlayers
+   | InProgress
+
+-- URL PARSING
+
+
+
 type Route
     = Home
-    | TwoPlayersRemote GameId
-
-
+    | JoinRemoteGame GameId
 
 -- UPDATE
 
@@ -96,6 +102,7 @@ type Msg
     = PerformedMove Player Move
     | NewWindowSize WindowSize
     | ChoseGameMode GameMode.Mode
+    | CancelledRemote
     | ClickedLink Browser.UrlRequest
     | ChangedUrl Url
     | Ignored
@@ -110,7 +117,7 @@ update msg ({ gameState, gameSettings, windowSize } as model) =
                     UltimateTicTacToe.performMove player move gameState
 
                 cmd =
-                    if player == Player.X && gameSettings == Just GameMode.OnePlayerVsAI then
+                    if player == Player.X && gameSettings == LocalVsAI then
                         getAIMove newState
 
                     else
@@ -125,8 +132,23 @@ update msg ({ gameState, gameSettings, windowSize } as model) =
             , Cmd.none
             )
 
-        ChoseGameMode gameMode ->
-            ( { model | gameSettings = Just gameMode, gameState = UltimateTicTacToe.init }
+        CancelledRemote ->
+            ( { model | gameSettings = NotYetSelected, gameState = UltimateTicTacToe.init }
+            , Cmd.none
+            )
+
+        ChoseGameMode GameMode.TwoPlayersRemote ->
+            ( { model | gameSettings = (Remote2Players "test" WaitingForPlayers), gameState = UltimateTicTacToe.init }
+            , Cmd.none
+            )
+
+        ChoseGameMode GameMode.OnePlayerVsAI ->
+            ( { model | gameSettings = LocalVsAI, gameState = UltimateTicTacToe.init }
+            , Cmd.none
+            )
+
+        ChoseGameMode GameMode.TwoPlayersLocal ->
+            ( { model | gameSettings = Local2Players, gameState = UltimateTicTacToe.init }
             , Cmd.none
             )
 
@@ -177,7 +199,7 @@ prependMaybe list maybe =
              list
 
 view : Model -> Browser.Document Msg
-view ({ gameState, gameSettings, windowSize } as model) =
+view ({ config, gameState, gameSettings, windowSize } as model) =
     let
         minSize =
             (Basics.min windowSize.width windowSize.height |> toFloat) - 5
@@ -197,10 +219,15 @@ view ({ gameState, gameSettings, windowSize } as model) =
 
         maybeMenu =
             case (gameSettings, UltimateTicTacToe.winner gameState.board) of
-                (Nothing, _) ->
-                    Just (viewMenu Nothing)
+                (NotYetSelected, _) ->
+                    Just (viewMainMenu Nothing)
+                (Remote2Players gameId WaitingForPlayers, _) ->
+                    let
+                        gameUrl = config.baseUrl ++ "/game/" ++ gameId
+                    in
+                    Just (viewWaitingForPlayerMenu gameUrl)
                 (_, Just winner) ->
-                    Just (viewMenu (Just winner))
+                    Just (viewMainMenu (Just winner))
                 (_, _) ->
                     Nothing
 
@@ -213,8 +240,34 @@ view ({ gameState, gameSettings, windowSize } as model) =
        , body = [ html ]
        }
 
-viewMenu : Maybe Winner -> Html Msg
-viewMenu maybeWinner =
+viewWaitingForPlayerMenu : String -> Html Msg
+viewWaitingForPlayerMenu gameUrl =
+    let
+        title = "Waiting for players..."
+
+        titleDiv =
+            div [ HA.class "menutitle" ] [ text title ]
+
+        mainDiv =
+            div [ HA.class "buttons" ]
+               [ div [ HA.class "menu-item" ]
+                 [ p [] [ text "Waiting for another player" ]
+                 , p [] [ text "They can join using the following link:" ]
+                 ]
+               , input [ HA.class "menu-item", HA.readonly True, HA.value gameUrl ] []
+               , button [ HA.class "menu-item", onClick (CancelledRemote) ] [ text "Cancel" ]
+               ]
+
+        menu = div [ HA.id "menu" ] [ titleDiv, mainDiv ]
+
+        containerClass = "fade-in"
+
+        menuContainer = div [ HA.id "menu-container", HA.class containerClass ] [ menu ]
+    in
+    menuContainer
+
+viewMainMenu : Maybe Winner -> Html Msg
+viewMainMenu maybeWinner =
     let
         title =
             case maybeWinner of
@@ -232,9 +285,9 @@ viewMenu maybeWinner =
 
         options =
             div [ HA.class "buttons" ]
-                [ button [ onClick (ChoseGameMode GameMode.OnePlayerVsAI) ] [ text "1 Player vs AI" ]
-                , button [ onClick (ChoseGameMode GameMode.TwoPlayersLocal) ] [ text "2 Players (local)" ]
-                , button [ onClick (ChoseGameMode GameMode.TwoPlayersRemote) ] [ text "2 Players (remote)" ]
+                [ button [ HA.class "menu-item", onClick (ChoseGameMode GameMode.OnePlayerVsAI) ] [ text "1 Player vs AI" ]
+                , button [ HA.class "menu-item", onClick (ChoseGameMode GameMode.TwoPlayersLocal) ] [ text "2 Players (local)" ]
+                , button [ HA.class "menu-item", onClick (ChoseGameMode GameMode.TwoPlayersRemote) ] [ text "2 Players (remote)" ]
                 ]
 
         menu = div [ HA.id "menu" ] [ titleDiv, options ]
@@ -260,7 +313,7 @@ viewGameState minSize gameSettings gameState =
 
         msgType =
             case gameSettings of
-                Just GameMode.OnePlayerVsAI ->
+                LocalVsAI ->
                     PerformedMove Player.X
 
                 _ ->

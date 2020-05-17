@@ -5,25 +5,38 @@
     text-align: center;
     text-decoration: none;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 20px;
     margin-top: 10px;
-    margin-bottom: 30px;
+    margin-bottom: 80px;
 }
 
-button {
+* {
+    text-transform: uppercase;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: 'Oswald', sans-serif;
+}
+
+input.menu-item {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.menu-item {
+    margin-bottom: 30px;
+    text-align: center;
+    text-decoration: none;
+    width: 100%;
+}
+
+button.menu-item {
+    padding: 15px 32px;
     background-color: #CED0CE;
     border: none;
     color: #1C140D;
-    padding: 15px 32px;
-    margin-bottom: 30px;
-    text-transform: uppercase;
-    text-align: center;
-    text-decoration: none;
     font-weight: bold;
     cursor: pointer;
     display: block;
     font-size: 16px;
-    width: 100%;
 }
 
 div#menu-container {
