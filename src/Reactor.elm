@@ -21,4 +21,4 @@ main =
 
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
-init = \_ -> Main.init { baseUrl = "http://test-base-url", remotePlayServerUrl = "http://test-remote-url" }
+init = \_ -> Main.init { baseUrl = "http://test-base-url", remotePlayServerUrl = "https://ultimate-tictactoe-server.osc-fr1.scalingo.io" }

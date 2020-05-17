@@ -1,6 +1,7 @@
 module Main exposing (GameSettings, Model, Msg(..), PlayerType(..), Route(..), css, getAIMove, init, main, subscriptions, update, view, viewGameState)
 
 import Random
+import Http
 import Browser
 import Browser.Dom
 import Browser.Events
@@ -18,6 +19,7 @@ import Url exposing (Url)
 import Sizes
 import AI
 import GameMode
+import RemoteGame
 import TicTacToeBase
 import Tuple3 as T3
 import GameId
@@ -44,7 +46,7 @@ type GameSettings
    = NotYetSelected
    | LocalVsAI
    | Local2Players
-   | Remote2Players GameId.GameId PlayState
+   | Remote2Players GameId.GameId RemoteState
 
 
 type alias Config =
@@ -76,8 +78,10 @@ init conf url key =
     )
 
 
-type PlayState
-   = WaitingForPlayers
+type RemoteState
+   = Creating
+   | RemoteError Http.Error
+   | WaitingForPlayers
    | InProgress
 
 -- URL PARSING
@@ -100,16 +104,17 @@ type PlayerType
 type Msg
     = PerformedMove Player Move
     | NewWindowSize WindowSize
-    | GeneratedRemoteGameId GameId.GameId
+    | RemoteGameIdCreated GameId.GameId
+    | RemoteGameCreated GameId.GameId RemoteGameCreatedResponse
     | ChoseGameMode GameMode.Mode
-    | CancelledRemote
+    | RequestedMainMenu
     | ClickedLink Browser.UrlRequest
     | ChangedUrl Url
     | Ignored
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ gameState, gameSettings, windowSize } as model) =
+update msg ({ config, gameState, gameSettings, windowSize } as model) =
     case msg of
         PerformedMove player move ->
             let
@@ -132,19 +137,35 @@ update msg ({ gameState, gameSettings, windowSize } as model) =
             , Cmd.none
             )
 
-        CancelledRemote ->
-            ( { model | gameSettings = NotYetSelected, gameState = UltimateTicTacToe.init }
+        RequestedMainMenu ->
+            ( { model | gameSettings = NotYetSelected }
             , Cmd.none
             )
 
-        GeneratedRemoteGameId gameId ->
-            ( { model | gameSettings = (Remote2Players gameId WaitingForPlayers), gameState = UltimateTicTacToe.init }
+        RemoteGameIdCreated gameId ->
+            ( { model | gameSettings = (Remote2Players gameId Creating) }
+            , createGameOnServer config.remotePlayServerUrl gameId
+            )
+
+        RemoteGameCreated gameId Success ->
+            ( { model | gameSettings = (Remote2Players gameId WaitingForPlayers) }
+            , Cmd.none
+            )
+
+        RemoteGameCreated gameId AlreadyExistsError ->
+            ( model
+            , RemoteGame.createNewGame RemoteGameIdCreated
+            )
+
+        RemoteGameCreated gameId (OtherError error) ->
+            Debug.log ("Oh no! We got an unexpected error communicating with the remote play server @ " ++ config.remotePlayServerUrl) error |> 
+            \_ -> ( { model | gameSettings = (Remote2Players gameId (RemoteError error)) }
             , Cmd.none
             )
 
         ChoseGameMode GameMode.TwoPlayersRemote ->
             ( model
-            , Random.generate GeneratedRemoteGameId GameId.random
+            , RemoteGame.createNewGame RemoteGameIdCreated
             )
 
         ChoseGameMode GameMode.OnePlayerVsAI ->
@@ -163,8 +184,29 @@ update msg ({ gameState, gameSettings, windowSize } as model) =
             )
 
 
--- TODO
+createGameOnServer : String -> GameId.GameId -> Cmd Msg
+createGameOnServer serverUrl gameId =
+  Http.request
+    { method = "PUT"
+    , headers = []
+    , url = serverUrl ++ "/games/" ++ gameId
+    , body = Http.emptyBody
+    , expect = Http.expectWhatever (parseResponse gameId)
+    , timeout = Nothing
+    , tracker = Nothing
+    }
 
+parseResponse : GameId.GameId -> Result Http.Error () -> Msg
+parseResponse gameId result =
+    case result of
+       Ok () -> RemoteGameCreated gameId Success
+       Err (Http.BadStatus 409) -> RemoteGameCreated gameId AlreadyExistsError
+       Err other -> RemoteGameCreated gameId (OtherError other)
+
+type RemoteGameCreatedResponse
+    = Success
+    | AlreadyExistsError
+    | OtherError Http.Error
 
 getInitialWindowSize : Cmd Msg
 getInitialWindowSize =
@@ -226,6 +268,8 @@ view ({ config, gameState, gameSettings, windowSize } as model) =
             case (gameSettings, UltimateTicTacToe.winner gameState.board) of
                 (NotYetSelected, _) ->
                     Just (viewMainMenu Nothing)
+                (Remote2Players gameId (RemoteError error), _) ->
+                    Just (viewError error)
                 (Remote2Players gameId WaitingForPlayers, _) ->
                     let
                         gameUrl = config.baseUrl ++ "/game/" ++ gameId
@@ -245,6 +289,33 @@ view ({ config, gameState, gameSettings, windowSize } as model) =
        , body = [ html ]
        }
 
+viewError : Http.Error -> Html Msg
+viewError error =
+    let
+        title = "Woops..."
+
+        titleDiv =
+            div [ HA.class "menutitle" ] [ text title ]
+
+        errorMessage = case error of
+           _ -> "Error communicating with the server, cannot play remotely :-("
+
+        mainDiv =
+            div [ HA.class "buttons" ]
+               [ div [ HA.class "menu-item" ]
+                 [ p [] [ text errorMessage ]
+                 ]
+               , button [ HA.class "menu-item", onClick (RequestedMainMenu) ] [ text "Back to main menu" ]
+               ]
+
+        menu = div [ HA.id "menu" ] [ titleDiv, mainDiv ]
+
+        containerClass = "fade-in"
+
+        menuContainer = div [ HA.id "menu-container", HA.class containerClass ] [ menu ]
+    in
+    menuContainer
+
 viewWaitingForPlayerMenu : String -> Html Msg
 viewWaitingForPlayerMenu gameUrl =
     let
@@ -260,7 +331,7 @@ viewWaitingForPlayerMenu gameUrl =
                  , p [] [ text "They can join using the following link:" ]
                  ]
                , input [ HA.class "menu-item", HA.readonly True, HA.value gameUrl ] []
-               , button [ HA.class "menu-item", onClick (CancelledRemote) ] [ text "Cancel" ]
+               , button [ HA.class "menu-item", onClick (RequestedMainMenu) ] [ text "Cancel" ]
                ]
 
         menu = div [ HA.id "menu" ] [ titleDiv, mainDiv ]
