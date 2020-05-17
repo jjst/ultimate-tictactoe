@@ -4294,6 +4294,89 @@ function _Browser_load(url)
 		}
 	}));
 }
+
+
+
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
+
+
+
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
 var $author$project$Main$ChangedUrl = function (a) {
 	return {$: 'ChangedUrl', a: a};
 };
@@ -5091,6 +5174,7 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$application = _Browser_application;
 var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Main$NotYetSelected = {$: 'NotYetSelected'};
 var $author$project$Main$NewWindowSize = function (a) {
 	return {$: 'NewWindowSize', a: a};
 };
@@ -5125,7 +5209,7 @@ var $author$project$Main$init = F3(
 	function (conf, url, key) {
 		var model = {
 			config: conf,
-			gameSettings: $elm$core$Maybe$Nothing,
+			gameSettings: $author$project$Main$NotYetSelected,
 			gameState: $author$project$UltimateTicTacToe$init,
 			windowSize: {height: 0, width: 0}
 		};
@@ -5559,7 +5643,123 @@ var $author$project$Main$subscriptions = function (model) {
 		_List_fromArray(
 			[$author$project$Main$onWindowResize]));
 };
-var $author$project$GameMode$OnePlayerVsAI = {$: 'OnePlayerVsAI'};
+var $author$project$Main$GeneratedRemoteGameId = function (a) {
+	return {$: 'GeneratedRemoteGameId', a: a};
+};
+var $author$project$Main$Local2Players = {$: 'Local2Players'};
+var $author$project$Main$LocalVsAI = {$: 'LocalVsAI'};
+var $author$project$Main$Remote2Players = F2(
+	function (a, b) {
+		return {$: 'Remote2Players', a: a, b: b};
+	});
+var $author$project$Main$WaitingForPlayers = {$: 'WaitingForPlayers'};
+var $elm$random$Random$Generate = function (a) {
+	return {$: 'Generate', a: a};
+};
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var $elm$random$Random$initialSeed = function (x) {
+	var _v0 = $elm$random$Random$next(
+		A2($elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _v0.a;
+	var incr = _v0.b;
+	var state2 = (state1 + x) >>> 0;
+	return $elm$random$Random$next(
+		A2($elm$random$Random$Seed, state2, incr));
+};
+var $elm$time$Time$Name = function (a) {
+	return {$: 'Name', a: a};
+};
+var $elm$time$Time$Offset = function (a) {
+	return {$: 'Offset', a: a};
+};
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 'Zone', a: a, b: b};
+	});
+var $elm$time$Time$customZone = $elm$time$Time$Zone;
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
+var $elm$time$Time$posixToMillis = function (_v0) {
+	var millis = _v0.a;
+	return millis;
+};
+var $elm$random$Random$init = A2(
+	$elm$core$Task$andThen,
+	function (time) {
+		return $elm$core$Task$succeed(
+			$elm$random$Random$initialSeed(
+				$elm$time$Time$posixToMillis(time)));
+	},
+	$elm$time$Time$now);
+var $elm$random$Random$step = F2(
+	function (_v0, seed) {
+		var generator = _v0.a;
+		return generator(seed);
+	});
+var $elm$random$Random$onEffects = F3(
+	function (router, commands, seed) {
+		if (!commands.b) {
+			return $elm$core$Task$succeed(seed);
+		} else {
+			var generator = commands.a.a;
+			var rest = commands.b;
+			var _v1 = A2($elm$random$Random$step, generator, seed);
+			var value = _v1.a;
+			var newSeed = _v1.b;
+			return A2(
+				$elm$core$Task$andThen,
+				function (_v2) {
+					return A3($elm$random$Random$onEffects, router, rest, newSeed);
+				},
+				A2($elm$core$Platform$sendToApp, router, value));
+		}
+	});
+var $elm$random$Random$onSelfMsg = F3(
+	function (_v0, _v1, seed) {
+		return $elm$core$Task$succeed(seed);
+	});
+var $elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var $elm$random$Random$map = F2(
+	function (func, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v1 = genA(seed0);
+				var a = _v1.a;
+				var seed1 = _v1.b;
+				return _Utils_Tuple2(
+					func(a),
+					seed1);
+			});
+	});
+var $elm$random$Random$cmdMap = F2(
+	function (func, _v0) {
+		var generator = _v0.a;
+		return $elm$random$Random$Generate(
+			A2($elm$random$Random$map, func, generator));
+	});
+_Platform_effectManagers['Random'] = _Platform_createManager($elm$random$Random$init, $elm$random$Random$onEffects, $elm$random$Random$onSelfMsg, $elm$random$Random$cmdMap);
+var $elm$random$Random$command = _Platform_leaf('Random');
+var $elm$random$Random$generate = F2(
+	function (tagger, generator) {
+		return $elm$random$Random$command(
+			$elm$random$Random$Generate(
+				A2($elm$random$Random$map, tagger, generator)));
+	});
 var $author$project$Player$O = {$: 'O'};
 var $author$project$Main$PerformedMove = F2(
 	function (a, b) {
@@ -6258,6 +6458,181 @@ var $author$project$Main$getAIMove = function (currentBoard) {
 		return $elm$core$Platform$Cmd$none;
 	}
 };
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$random$Random$andThen = F2(
+	function (callback, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed) {
+				var _v1 = genA(seed);
+				var result = _v1.a;
+				var newSeed = _v1.b;
+				var _v2 = callback(result);
+				var genB = _v2.a;
+				return genB(newSeed);
+			});
+	});
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$xor = _Bitwise_xor;
+var $elm$random$Random$peel = function (_v0) {
+	var state = _v0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var $elm$random$Random$float = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var seed1 = $elm$random$Random$next(seed0);
+				var range = $elm$core$Basics$abs(b - a);
+				var n1 = $elm$random$Random$peel(seed1);
+				var n0 = $elm$random$Random$peel(seed0);
+				var lo = (134217727 & n1) * 1.0;
+				var hi = (67108863 & n0) * 1.0;
+				var val = ((hi * 134217728.0) + lo) / 9007199254740992.0;
+				var scaled = (val * range) + a;
+				return _Utils_Tuple2(
+					scaled,
+					$elm$random$Random$next(seed1));
+			});
+	});
+var $elm_community$random_extra$Random$Extra$frequency = F2(
+	function (head, pairs) {
+		var total = $elm$core$List$sum(
+			A2(
+				$elm$core$List$map,
+				A2($elm$core$Basics$composeL, $elm$core$Basics$abs, $elm$core$Tuple$first),
+				A2($elm$core$List$cons, head, pairs)));
+		var pick = F2(
+			function (someChoices, n) {
+				pick:
+				while (true) {
+					if (someChoices.b) {
+						var _v1 = someChoices.a;
+						var k = _v1.a;
+						var g = _v1.b;
+						var rest = someChoices.b;
+						if (_Utils_cmp(n, k) < 1) {
+							return g;
+						} else {
+							var $temp$someChoices = rest,
+								$temp$n = n - k;
+							someChoices = $temp$someChoices;
+							n = $temp$n;
+							continue pick;
+						}
+					} else {
+						return head.b;
+					}
+				}
+			});
+		return A2(
+			$elm$random$Random$andThen,
+			pick(
+				A2($elm$core$List$cons, head, pairs)),
+			A2($elm$random$Random$float, 0, total));
+	});
+var $elm_community$random_extra$Random$Extra$choices = F2(
+	function (hd, gens) {
+		return A2(
+			$elm_community$random_extra$Random$Extra$frequency,
+			_Utils_Tuple2(1, hd),
+			A2(
+				$elm$core$List$map,
+				function (g) {
+					return _Utils_Tuple2(1, g);
+				},
+				gens));
+	});
+var $elm$core$Char$fromCode = _Char_fromCode;
+var $elm$random$Random$int = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _v0.a;
+				var hi = _v0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
+						$elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = $elm$random$Random$peel(seed);
+							var seedN = $elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
+	});
+var $elm_community$random_extra$Random$Char$char = F2(
+	function (start, end) {
+		return A2(
+			$elm$random$Random$map,
+			$elm$core$Char$fromCode,
+			A2($elm$random$Random$int, start, end));
+	});
+var $elm_community$random_extra$Random$Char$lowerCaseLatin = A2($elm_community$random_extra$Random$Char$char, 97, 122);
+var $elm_community$random_extra$Random$Char$upperCaseLatin = A2($elm_community$random_extra$Random$Char$char, 65, 90);
+var $elm_community$random_extra$Random$Char$latin = A2(
+	$elm_community$random_extra$Random$Extra$choices,
+	$elm_community$random_extra$Random$Char$lowerCaseLatin,
+	_List_fromArray(
+		[$elm_community$random_extra$Random$Char$upperCaseLatin]));
+var $elm_community$random_extra$Random$Char$english = $elm_community$random_extra$Random$Char$latin;
+var $elm$core$String$fromList = _String_fromList;
+var $elm$random$Random$listHelp = F4(
+	function (revList, n, gen, seed) {
+		listHelp:
+		while (true) {
+			if (n < 1) {
+				return _Utils_Tuple2(revList, seed);
+			} else {
+				var _v0 = gen(seed);
+				var value = _v0.a;
+				var newSeed = _v0.b;
+				var $temp$revList = A2($elm$core$List$cons, value, revList),
+					$temp$n = n - 1,
+					$temp$gen = gen,
+					$temp$seed = newSeed;
+				revList = $temp$revList;
+				n = $temp$n;
+				gen = $temp$gen;
+				seed = $temp$seed;
+				continue listHelp;
+			}
+		}
+	});
+var $elm$random$Random$list = F2(
+	function (n, _v0) {
+		var gen = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed) {
+				return A4($elm$random$Random$listHelp, _List_Nil, n, gen, seed);
+			});
+	});
+var $elm_community$random_extra$Random$String$string = F2(
+	function (stringLength, charGenerator) {
+		return A2(
+			$elm$random$Random$map,
+			$elm$core$String$fromList,
+			A2($elm$random$Random$list, stringLength, charGenerator));
+	});
+var $author$project$GameId$random = A2($elm_community$random_extra$Random$String$string, 6, $elm_community$random_extra$Random$Char$english);
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		var gameState = model.gameState;
@@ -6268,9 +6643,7 @@ var $author$project$Main$update = F2(
 				var player = msg.a;
 				var move = msg.b;
 				var newState = A3($author$project$UltimateTicTacToe$performMove, player, move, gameState);
-				var cmd = (_Utils_eq(player, $author$project$Player$X) && _Utils_eq(
-					gameSettings,
-					$elm$core$Maybe$Just($author$project$GameMode$OnePlayerVsAI))) ? $author$project$Main$getAIMove(newState) : $elm$core$Platform$Cmd$none;
+				var cmd = (_Utils_eq(player, $author$project$Player$X) && _Utils_eq(gameSettings, $author$project$Main$LocalVsAI)) ? $author$project$Main$getAIMove(newState) : $elm$core$Platform$Cmd$none;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6283,16 +6656,44 @@ var $author$project$Main$update = F2(
 						model,
 						{windowSize: size}),
 					$elm$core$Platform$Cmd$none);
-			case 'ChoseGameMode':
-				var gameMode = msg.a;
+			case 'CancelledRemote':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{gameSettings: $author$project$Main$NotYetSelected, gameState: $author$project$UltimateTicTacToe$init}),
+					$elm$core$Platform$Cmd$none);
+			case 'GeneratedRemoteGameId':
+				var gameId = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							gameSettings: $elm$core$Maybe$Just(gameMode),
+							gameSettings: A2($author$project$Main$Remote2Players, gameId, $author$project$Main$WaitingForPlayers),
 							gameState: $author$project$UltimateTicTacToe$init
 						}),
 					$elm$core$Platform$Cmd$none);
+			case 'ChoseGameMode':
+				switch (msg.a.$) {
+					case 'TwoPlayersRemote':
+						var _v1 = msg.a;
+						return _Utils_Tuple2(
+							model,
+							A2($elm$random$Random$generate, $author$project$Main$GeneratedRemoteGameId, $author$project$GameId$random));
+					case 'OnePlayerVsAI':
+						var _v2 = msg.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{gameSettings: $author$project$Main$LocalVsAI, gameState: $author$project$UltimateTicTacToe$init}),
+							$elm$core$Platform$Cmd$none);
+					default:
+						var _v3 = msg.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{gameSettings: $author$project$Main$Local2Players, gameState: $author$project$UltimateTicTacToe$init}),
+							$elm$core$Platform$Cmd$none);
+				}
 			default:
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
@@ -6796,8 +7197,7 @@ var $author$project$Main$viewGameState = F3(
 	function (minSize, gameSettings, gameState) {
 		var size = $elm$core$String$fromFloat(minSize);
 		var msgType = function () {
-			if ((gameSettings.$ === 'Just') && (gameSettings.a.$ === 'OnePlayerVsAI')) {
-				var _v1 = gameSettings.a;
+			if (gameSettings.$ === 'LocalVsAI') {
 				return $author$project$Main$PerformedMove($author$project$Player$X);
 			} else {
 				return $author$project$Main$PerformedMove(gameState.currentPlayer);
@@ -6825,6 +7225,7 @@ var $author$project$Main$viewGameState = F3(
 var $author$project$Main$ChoseGameMode = function (a) {
 	return {$: 'ChoseGameMode', a: a};
 };
+var $author$project$GameMode$OnePlayerVsAI = {$: 'OnePlayerVsAI'};
 var $author$project$GameMode$TwoPlayersLocal = {$: 'TwoPlayersLocal'};
 var $author$project$GameMode$TwoPlayersRemote = {$: 'TwoPlayersRemote'};
 var $elm$html$Html$button = _VirtualDom_node('button');
@@ -6832,7 +7233,7 @@ var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Main$viewMenu = function (maybeWinner) {
+var $author$project$Main$viewMainMenu = function (maybeWinner) {
 	var title = function () {
 		if (maybeWinner.$ === 'Nothing') {
 			return 'Ultimate Tic-Tac-Toe';
@@ -6873,6 +7274,7 @@ var $author$project$Main$viewMenu = function (maybeWinner) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$class('menu-item'),
 						$elm$html$Html$Events$onClick(
 						$author$project$Main$ChoseGameMode($author$project$GameMode$OnePlayerVsAI))
 					]),
@@ -6884,6 +7286,7 @@ var $author$project$Main$viewMenu = function (maybeWinner) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$class('menu-item'),
 						$elm$html$Html$Events$onClick(
 						$author$project$Main$ChoseGameMode($author$project$GameMode$TwoPlayersLocal))
 					]),
@@ -6895,6 +7298,7 @@ var $author$project$Main$viewMenu = function (maybeWinner) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$class('menu-item'),
 						$elm$html$Html$Events$onClick(
 						$author$project$Main$ChoseGameMode($author$project$GameMode$TwoPlayersRemote))
 					]),
@@ -6923,7 +7327,105 @@ var $author$project$Main$viewMenu = function (maybeWinner) {
 			[menu]));
 	return menuContainer;
 };
+var $author$project$Main$CancelledRemote = {$: 'CancelledRemote'};
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$viewWaitingForPlayerMenu = function (gameUrl) {
+	var title = 'Waiting for players...';
+	var titleDiv = A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('menutitle')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(title)
+			]));
+	var mainDiv = A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('buttons')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu-item')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Waiting for another player')
+							])),
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('They can join using the following link:')
+							]))
+					])),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu-item'),
+						$elm$html$Html$Attributes$readonly(true),
+						$elm$html$Html$Attributes$value(gameUrl)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu-item'),
+						$elm$html$Html$Events$onClick($author$project$Main$CancelledRemote)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Cancel')
+					]))
+			]));
+	var menu = A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('menu')
+			]),
+		_List_fromArray(
+			[titleDiv, mainDiv]));
+	var containerClass = 'fade-in';
+	var menuContainer = A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('menu-container'),
+				$elm$html$Html$Attributes$class(containerClass)
+			]),
+		_List_fromArray(
+			[menu]));
+	return menuContainer;
+};
 var $author$project$Main$view = function (model) {
+	var config = model.config;
 	var gameState = model.gameState;
 	var gameSettings = model.gameSettings;
 	var windowSize = model.windowSize;
@@ -6933,20 +7435,44 @@ var $author$project$Main$view = function (model) {
 		var _v0 = _Utils_Tuple2(
 			gameSettings,
 			$author$project$UltimateTicTacToe$winner(gameState.board));
-		if (_v0.a.$ === 'Nothing') {
-			var _v1 = _v0.a;
-			return $elm$core$Maybe$Just(
-				$author$project$Main$viewMenu($elm$core$Maybe$Nothing));
-		} else {
-			if (_v0.b.$ === 'Just') {
-				var winner = _v0.b.a;
-				return $elm$core$Maybe$Just(
-					$author$project$Main$viewMenu(
-						$elm$core$Maybe$Just(winner)));
-			} else {
-				return $elm$core$Maybe$Nothing;
+		_v0$2:
+		while (true) {
+			_v0$3:
+			while (true) {
+				switch (_v0.a.$) {
+					case 'NotYetSelected':
+						var _v1 = _v0.a;
+						return $elm$core$Maybe$Just(
+							$author$project$Main$viewMainMenu($elm$core$Maybe$Nothing));
+					case 'Remote2Players':
+						if (_v0.a.b.$ === 'WaitingForPlayers') {
+							var _v2 = _v0.a;
+							var gameId = _v2.a;
+							var _v3 = _v2.b;
+							var gameUrl = config.baseUrl + ('/game/' + gameId);
+							return $elm$core$Maybe$Just(
+								$author$project$Main$viewWaitingForPlayerMenu(gameUrl));
+						} else {
+							if (_v0.b.$ === 'Just') {
+								break _v0$2;
+							} else {
+								break _v0$3;
+							}
+						}
+					default:
+						if (_v0.b.$ === 'Just') {
+							break _v0$2;
+						} else {
+							break _v0$3;
+						}
+				}
 			}
+			return $elm$core$Maybe$Nothing;
 		}
+		var winner = _v0.b.a;
+		return $elm$core$Maybe$Just(
+			$author$project$Main$viewMainMenu(
+				$elm$core$Maybe$Just(winner)));
 	}();
 	var mainDivStyles = _List_fromArray(
 		[
@@ -6982,7 +7508,12 @@ _Platform_export({'Main':{'init':$author$project$Main$main(
 	A2(
 		$elm$json$Json$Decode$andThen,
 		function (remotePlayServerUrl) {
-			return $elm$json$Json$Decode$succeed(
-				{remotePlayServerUrl: remotePlayServerUrl});
+			return A2(
+				$elm$json$Json$Decode$andThen,
+				function (baseUrl) {
+					return $elm$json$Json$Decode$succeed(
+						{baseUrl: baseUrl, remotePlayServerUrl: remotePlayServerUrl});
+				},
+				A2($elm$json$Json$Decode$field, 'baseUrl', $elm$json$Json$Decode$string));
 		},
 		A2($elm$json$Json$Decode$field, 'remotePlayServerUrl', $elm$json$Json$Decode$string)))(0)}});}(this));
