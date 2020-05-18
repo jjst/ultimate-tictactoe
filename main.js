@@ -5411,6 +5411,11 @@ var $elm$core$Task$perform = F2(
 var $elm$browser$Browser$application = _Browser_application;
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Main$NotYetSelected = {$: 'NotYetSelected'};
+var $author$project$UrlUtils$baseUrl = function (url) {
+	return _Utils_update(
+		url,
+		{fragment: $elm$core$Maybe$Nothing, path: '', query: $elm$core$Maybe$Nothing});
+};
 var $author$project$Main$NewWindowSize = function (a) {
 	return {$: 'NewWindowSize', a: a};
 };
@@ -5445,6 +5450,7 @@ var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$init = F3(
 	function (conf, url, key) {
 		var model = {
+			baseUrl: $author$project$UrlUtils$baseUrl(url),
 			config: conf,
 			gameSettings: $author$project$Main$NotYetSelected,
 			gameState: $author$project$UltimateTicTacToe$init,
@@ -8388,6 +8394,50 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
+var $elm$url$Url$addPort = F2(
+	function (maybePort, starter) {
+		if (maybePort.$ === 'Nothing') {
+			return starter;
+		} else {
+			var port_ = maybePort.a;
+			return starter + (':' + $elm$core$String$fromInt(port_));
+		}
+	});
+var $elm$url$Url$addPrefixed = F3(
+	function (prefix, maybeSegment, starter) {
+		if (maybeSegment.$ === 'Nothing') {
+			return starter;
+		} else {
+			var segment = maybeSegment.a;
+			return _Utils_ap(
+				starter,
+				_Utils_ap(prefix, segment));
+		}
+	});
+var $elm$url$Url$toString = function (url) {
+	var http = function () {
+		var _v0 = url.protocol;
+		if (_v0.$ === 'Http') {
+			return 'http://';
+		} else {
+			return 'https://';
+		}
+	}();
+	return A3(
+		$elm$url$Url$addPrefixed,
+		'#',
+		url.fragment,
+		A3(
+			$elm$url$Url$addPrefixed,
+			'?',
+			url.query,
+			_Utils_ap(
+				A2(
+					$elm$url$Url$addPort,
+					url.port_,
+					_Utils_ap(http, url.host)),
+				url.path)));
+};
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$viewWaitingForPlayerMenu = function (gameUrl) {
 	var title = 'Waiting for players...';
@@ -8438,7 +8488,8 @@ var $author$project$Main$viewWaitingForPlayerMenu = function (gameUrl) {
 					[
 						$elm$html$Html$Attributes$class('menu-item'),
 						$elm$html$Html$Attributes$readonly(true),
-						$elm$html$Html$Attributes$value(gameUrl)
+						$elm$html$Html$Attributes$value(
+						$elm$url$Url$toString(gameUrl))
 					]),
 				_List_Nil),
 				A2(
@@ -8474,6 +8525,7 @@ var $author$project$Main$viewWaitingForPlayerMenu = function (gameUrl) {
 	return menuContainer;
 };
 var $author$project$Main$view = function (model) {
+	var baseUrl = model.baseUrl;
 	var config = model.config;
 	var gameState = model.gameState;
 	var gameSettings = model.gameSettings;
@@ -8505,7 +8557,9 @@ var $author$project$Main$view = function (model) {
 								var _v3 = _v0.a;
 								var gameId = _v3.a;
 								var _v4 = _v3.b;
-								var gameUrl = config.baseUrl + ('/' + gameId);
+								var gameUrl = _Utils_update(
+									baseUrl,
+									{path: '/' + gameId});
 								return $elm$core$Maybe$Just(
 									$author$project$Main$viewWaitingForPlayerMenu(gameUrl));
 							default:
@@ -8564,12 +8618,7 @@ _Platform_export({'Main':{'init':$author$project$Main$main(
 	A2(
 		$elm$json$Json$Decode$andThen,
 		function (remotePlayServerUrl) {
-			return A2(
-				$elm$json$Json$Decode$andThen,
-				function (baseUrl) {
-					return $elm$json$Json$Decode$succeed(
-						{baseUrl: baseUrl, remotePlayServerUrl: remotePlayServerUrl});
-				},
-				A2($elm$json$Json$Decode$field, 'baseUrl', $elm$json$Json$Decode$string));
+			return $elm$json$Json$Decode$succeed(
+				{remotePlayServerUrl: remotePlayServerUrl});
 		},
 		A2($elm$json$Json$Decode$field, 'remotePlayServerUrl', $elm$json$Json$Decode$string)))(0)}});}(this));
