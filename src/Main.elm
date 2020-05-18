@@ -272,7 +272,7 @@ view ({ config, gameState, gameSettings, windowSize } as model) =
                     Just (viewError error)
                 (Remote2Players gameId WaitingForPlayers, _) ->
                     let
-                        gameUrl = config.baseUrl ++ "/game/" ++ gameId
+                        gameUrl = config.baseUrl ++ "/" ++ gameId
                     in
                     Just (viewWaitingForPlayerMenu gameUrl)
                 (_, Just winner) ->
