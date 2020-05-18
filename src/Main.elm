@@ -66,6 +66,8 @@ type alias Model =
 init : Config -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init conf url key =
     let
+        debug = Debug.log "url" url
+        debug2 = Debug.log "key" key
         model =
             { config = conf
             , gameState = UltimateTicTacToe.init
