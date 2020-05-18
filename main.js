@@ -8503,7 +8503,7 @@ var $author$project$Main$view = function (model) {
 								var _v3 = _v0.a;
 								var gameId = _v3.a;
 								var _v4 = _v3.b;
-								var gameUrl = config.baseUrl + ('/game/' + gameId);
+								var gameUrl = config.baseUrl + ('/' + gameId);
 								return $elm$core$Maybe$Just(
 									$author$project$Main$viewWaitingForPlayerMenu(gameUrl));
 							default:
