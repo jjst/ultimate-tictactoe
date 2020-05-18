@@ -5441,6 +5441,7 @@ var $author$project$UltimateTicTacToe$init = {
 	currentBoardCoords: $elm$core$Maybe$Nothing,
 	currentPlayer: $author$project$Player$X
 };
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$init = F3(
 	function (conf, url, key) {
 		var model = {
@@ -5449,6 +5450,8 @@ var $author$project$Main$init = F3(
 			gameState: $author$project$UltimateTicTacToe$init,
 			windowSize: {height: 0, width: 0}
 		};
+		var debug2 = A2($elm$core$Debug$log, 'key', key);
+		var debug = A2($elm$core$Debug$log, 'url', url);
 		return _Utils_Tuple2(model, $author$project$Main$getInitialWindowSize);
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
@@ -6908,7 +6911,6 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
