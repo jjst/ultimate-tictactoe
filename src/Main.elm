@@ -14,7 +14,8 @@ import Svg exposing (svg)
 import Svg.Attributes as SA
 import SvgUtils
 import Task
-import Url exposing (Url)
+import Url
+import UrlUtils
 
 import Sizes
 import AI
@@ -50,26 +51,33 @@ type GameSettings
 
 
 type alias Config =
-   { baseUrl : String
-   , remotePlayServerUrl : String
+   { remotePlayServerUrl : String
    }
 
 
 type alias Model =
-    { config : Config
+    { baseUrl: Url.Url
+    , config : Config
     , gameState : GameState
     , gameSettings : GameSettings
     , windowSize : WindowSize
     }
 
+type RemoteState
+   = Creating
+   | RemoteError Http.Error
+   | WaitingForPlayers
+   | InProgress
 
-init : Config -> Url -> Nav.Key -> ( Model, Cmd Msg )
+
+init : Config -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init conf url key =
     let
         debug = Debug.log "url" url
         debug2 = Debug.log "key" key
         model =
-            { config = conf
+            { baseUrl = UrlUtils.baseUrl url
+            , config = conf
             , gameState = UltimateTicTacToe.init
             , gameSettings = NotYetSelected
             , windowSize = { width = 0, height = 0 }
@@ -79,12 +87,6 @@ init conf url key =
     , getInitialWindowSize
     )
 
-
-type RemoteState
-   = Creating
-   | RemoteError Http.Error
-   | WaitingForPlayers
-   | InProgress
 
 -- URL PARSING
 
@@ -111,7 +113,7 @@ type Msg
     | ChoseGameMode GameMode.Mode
     | RequestedMainMenu
     | ClickedLink Browser.UrlRequest
-    | ChangedUrl Url
+    | ChangedUrl Url.Url
     | Ignored
 
 
@@ -248,7 +250,7 @@ prependMaybe list maybe =
              list
 
 view : Model -> Browser.Document Msg
-view ({ config, gameState, gameSettings, windowSize } as model) =
+view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
     let
         minSize =
             (Basics.min windowSize.width windowSize.height |> toFloat) - 5
@@ -274,7 +276,7 @@ view ({ config, gameState, gameSettings, windowSize } as model) =
                     Just (viewError error)
                 (Remote2Players gameId WaitingForPlayers, _) ->
                     let
-                        gameUrl = config.baseUrl ++ "/" ++ gameId
+                        gameUrl = { baseUrl | path = "/" ++ gameId }
                     in
                     Just (viewWaitingForPlayerMenu gameUrl)
                 (_, Just winner) ->
@@ -318,7 +320,7 @@ viewError error =
     in
     menuContainer
 
-viewWaitingForPlayerMenu : String -> Html Msg
+viewWaitingForPlayerMenu : Url.Url -> Html Msg
 viewWaitingForPlayerMenu gameUrl =
     let
         title = "Waiting for players..."
@@ -332,7 +334,7 @@ viewWaitingForPlayerMenu gameUrl =
                  [ p [] [ text "Waiting for another player" ]
                  , p [] [ text "They can join using the following link:" ]
                  ]
-               , input [ HA.class "menu-item", HA.readonly True, HA.value gameUrl ] []
+               , input [ HA.class "menu-item", HA.readonly True, HA.value (Url.toString gameUrl) ] []
                , button [ HA.class "menu-item", onClick (RequestedMainMenu) ] [ text "Cancel" ]
                ]
 
