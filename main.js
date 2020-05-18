@@ -4357,6 +4357,23 @@ function _Browser_load(url)
 }
 
 
+function _Url_percentEncode(string)
+{
+	return encodeURIComponent(string);
+}
+
+function _Url_percentDecode(string)
+{
+	try
+	{
+		return $elm$core$Maybe$Just(decodeURIComponent(string));
+	}
+	catch (e)
+	{
+		return $elm$core$Maybe$Nothing;
+	}
+}
+
 
 // SEND REQUEST
 
@@ -5411,11 +5428,16 @@ var $elm$core$Task$perform = F2(
 var $elm$browser$Browser$application = _Browser_application;
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Main$NotYetSelected = {$: 'NotYetSelected'};
+var $author$project$Main$RemoteGameJoined = F2(
+	function (a, b) {
+		return {$: 'RemoteGameJoined', a: a, b: b};
+	});
 var $author$project$UrlUtils$baseUrl = function (url) {
 	return _Utils_update(
 		url,
 		{fragment: $elm$core$Maybe$Nothing, path: '', query: $elm$core$Maybe$Nothing});
 };
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$Main$NewWindowSize = function (a) {
 	return {$: 'NewWindowSize', a: a};
 };
@@ -5446,57 +5468,126 @@ var $author$project$UltimateTicTacToe$init = {
 	currentBoardCoords: $elm$core$Maybe$Nothing,
 	currentPlayer: $author$project$Player$X
 };
-var $elm$core$Debug$log = _Debug_log;
-var $author$project$Main$init = F3(
-	function (conf, url, key) {
-		var model = {
-			baseUrl: $author$project$UrlUtils$baseUrl(url),
-			config: conf,
-			gameSettings: $author$project$Main$NotYetSelected,
-			gameState: $author$project$UltimateTicTacToe$init,
-			windowSize: {height: 0, width: 0}
-		};
-		var debug2 = A2($elm$core$Debug$log, 'key', key);
-		var debug = A2($elm$core$Debug$log, 'url', url);
-		return _Utils_Tuple2(model, $author$project$Main$getInitialWindowSize);
+var $author$project$GameServer$NotSupportedYet = {$: 'NotSupportedYet'};
+var $author$project$GameServer$Problem = function (a) {
+	return {$: 'Problem', a: a};
+};
+var $elm$core$Platform$Cmd$map = _Platform_map;
+var $author$project$GameServer$joinGame = F3(
+	function (f, serverUrl, gameId) {
+		return A2(
+			$elm$core$Platform$Cmd$map,
+			f,
+			A2(
+				$elm$core$Task$perform,
+				$author$project$GameServer$Problem,
+				$elm$core$Task$succeed($author$project$GameServer$NotSupportedYet)));
 	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$browser$Browser$Events$Window = {$: 'Window'};
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$browser$Browser$Events$MySub = F3(
-	function (a, b, c) {
-		return {$: 'MySub', a: a, b: b, c: c};
+var $author$project$Main$Home = {$: 'Home'};
+var $elm$url$Url$Parser$State = F5(
+	function (visited, unvisited, params, frag, value) {
+		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
 	});
-var $elm$browser$Browser$Events$State = F2(
-	function (subs, pids) {
-		return {pids: pids, subs: subs};
-	});
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
-	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
-var $elm$browser$Browser$Events$nodeToKey = function (node) {
-	if (node.$ === 'Document') {
-		return 'd_';
-	} else {
-		return 'w_';
+var $elm$url$Url$Parser$getFirstMatch = function (states) {
+	getFirstMatch:
+	while (true) {
+		if (!states.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var state = states.a;
+			var rest = states.b;
+			var _v1 = state.unvisited;
+			if (!_v1.b) {
+				return $elm$core$Maybe$Just(state.value);
+			} else {
+				if ((_v1.a === '') && (!_v1.b.b)) {
+					return $elm$core$Maybe$Just(state.value);
+				} else {
+					var $temp$states = rest;
+					states = $temp$states;
+					continue getFirstMatch;
+				}
+			}
+		}
 	}
 };
-var $elm$browser$Browser$Events$addKey = function (sub) {
-	var node = sub.a;
-	var name = sub.b;
-	return _Utils_Tuple2(
-		_Utils_ap(
-			$elm$browser$Browser$Events$nodeToKey(node),
-			name),
-		sub);
+var $elm$url$Url$Parser$removeFinalEmpty = function (segments) {
+	if (!segments.b) {
+		return _List_Nil;
+	} else {
+		if ((segments.a === '') && (!segments.b.b)) {
+			return _List_Nil;
+		} else {
+			var segment = segments.a;
+			var rest = segments.b;
+			return A2(
+				$elm$core$List$cons,
+				segment,
+				$elm$url$Url$Parser$removeFinalEmpty(rest));
+		}
+	}
 };
+var $elm$url$Url$Parser$preparePath = function (path) {
+	var _v0 = A2($elm$core$String$split, '/', path);
+	if (_v0.b && (_v0.a === '')) {
+		var segments = _v0.b;
+		return $elm$url$Url$Parser$removeFinalEmpty(segments);
+	} else {
+		var segments = _v0;
+		return $elm$url$Url$Parser$removeFinalEmpty(segments);
+	}
+};
+var $elm$url$Url$Parser$addToParametersHelp = F2(
+	function (value, maybeList) {
+		if (maybeList.$ === 'Nothing') {
+			return $elm$core$Maybe$Just(
+				_List_fromArray(
+					[value]));
+		} else {
+			var list = maybeList.a;
+			return $elm$core$Maybe$Just(
+				A2($elm$core$List$cons, value, list));
+		}
+	});
+var $elm$url$Url$percentDecode = _Url_percentDecode;
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
 var $elm$core$Dict$Black = {$: 'Black'};
 var $elm$core$Dict$RBNode_elm_builtin = F5(
 	function (a, b, c, d, e) {
 		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
 	});
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$Red = {$: 'Red'};
 var $elm$core$Dict$balance = F5(
 	function (color, key, value, left, right) {
@@ -5552,7 +5643,6 @@ var $elm$core$Dict$balance = F5(
 			}
 		}
 	});
-var $elm$core$Basics$compare = _Utils_compare;
 var $elm$core$Dict$insertHelp = F3(
 	function (key, value, dict) {
 		if (dict.$ === 'RBEmpty_elm_builtin') {
@@ -5599,364 +5689,6 @@ var $elm$core$Dict$insert = F3(
 		} else {
 			var x = _v0;
 			return x;
-		}
-	});
-var $elm$core$Dict$fromList = function (assocs) {
-	return A3(
-		$elm$core$List$foldl,
-		F2(
-			function (_v0, dict) {
-				var key = _v0.a;
-				var value = _v0.b;
-				return A3($elm$core$Dict$insert, key, value, dict);
-			}),
-		$elm$core$Dict$empty,
-		assocs);
-};
-var $elm$core$Process$kill = _Scheduler_kill;
-var $elm$core$Dict$foldl = F3(
-	function (func, acc, dict) {
-		foldl:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return acc;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var $temp$func = func,
-					$temp$acc = A3(
-					func,
-					key,
-					value,
-					A3($elm$core$Dict$foldl, func, acc, left)),
-					$temp$dict = right;
-				func = $temp$func;
-				acc = $temp$acc;
-				dict = $temp$dict;
-				continue foldl;
-			}
-		}
-	});
-var $elm$core$Dict$merge = F6(
-	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
-		var stepState = F3(
-			function (rKey, rValue, _v0) {
-				stepState:
-				while (true) {
-					var list = _v0.a;
-					var result = _v0.b;
-					if (!list.b) {
-						return _Utils_Tuple2(
-							list,
-							A3(rightStep, rKey, rValue, result));
-					} else {
-						var _v2 = list.a;
-						var lKey = _v2.a;
-						var lValue = _v2.b;
-						var rest = list.b;
-						if (_Utils_cmp(lKey, rKey) < 0) {
-							var $temp$rKey = rKey,
-								$temp$rValue = rValue,
-								$temp$_v0 = _Utils_Tuple2(
-								rest,
-								A3(leftStep, lKey, lValue, result));
-							rKey = $temp$rKey;
-							rValue = $temp$rValue;
-							_v0 = $temp$_v0;
-							continue stepState;
-						} else {
-							if (_Utils_cmp(lKey, rKey) > 0) {
-								return _Utils_Tuple2(
-									list,
-									A3(rightStep, rKey, rValue, result));
-							} else {
-								return _Utils_Tuple2(
-									rest,
-									A4(bothStep, lKey, lValue, rValue, result));
-							}
-						}
-					}
-				}
-			});
-		var _v3 = A3(
-			$elm$core$Dict$foldl,
-			stepState,
-			_Utils_Tuple2(
-				$elm$core$Dict$toList(leftDict),
-				initialResult),
-			rightDict);
-		var leftovers = _v3.a;
-		var intermediateResult = _v3.b;
-		return A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v4, result) {
-					var k = _v4.a;
-					var v = _v4.b;
-					return A3(leftStep, k, v, result);
-				}),
-			intermediateResult,
-			leftovers);
-	});
-var $elm$browser$Browser$Events$Event = F2(
-	function (key, event) {
-		return {event: event, key: key};
-	});
-var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
-var $elm$browser$Browser$Events$spawn = F3(
-	function (router, key, _v0) {
-		var node = _v0.a;
-		var name = _v0.b;
-		var actualNode = function () {
-			if (node.$ === 'Document') {
-				return _Browser_doc;
-			} else {
-				return _Browser_window;
-			}
-		}();
-		return A2(
-			$elm$core$Task$map,
-			function (value) {
-				return _Utils_Tuple2(key, value);
-			},
-			A3(
-				_Browser_on,
-				actualNode,
-				name,
-				function (event) {
-					return A2(
-						$elm$core$Platform$sendToSelf,
-						router,
-						A2($elm$browser$Browser$Events$Event, key, event));
-				}));
-	});
-var $elm$core$Dict$union = F2(
-	function (t1, t2) {
-		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
-	});
-var $elm$browser$Browser$Events$onEffects = F3(
-	function (router, subs, state) {
-		var stepRight = F3(
-			function (key, sub, _v6) {
-				var deads = _v6.a;
-				var lives = _v6.b;
-				var news = _v6.c;
-				return _Utils_Tuple3(
-					deads,
-					lives,
-					A2(
-						$elm$core$List$cons,
-						A3($elm$browser$Browser$Events$spawn, router, key, sub),
-						news));
-			});
-		var stepLeft = F3(
-			function (_v4, pid, _v5) {
-				var deads = _v5.a;
-				var lives = _v5.b;
-				var news = _v5.c;
-				return _Utils_Tuple3(
-					A2($elm$core$List$cons, pid, deads),
-					lives,
-					news);
-			});
-		var stepBoth = F4(
-			function (key, pid, _v2, _v3) {
-				var deads = _v3.a;
-				var lives = _v3.b;
-				var news = _v3.c;
-				return _Utils_Tuple3(
-					deads,
-					A3($elm$core$Dict$insert, key, pid, lives),
-					news);
-			});
-		var newSubs = A2($elm$core$List$map, $elm$browser$Browser$Events$addKey, subs);
-		var _v0 = A6(
-			$elm$core$Dict$merge,
-			stepLeft,
-			stepBoth,
-			stepRight,
-			state.pids,
-			$elm$core$Dict$fromList(newSubs),
-			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
-		var deadPids = _v0.a;
-		var livePids = _v0.b;
-		var makeNewPids = _v0.c;
-		return A2(
-			$elm$core$Task$andThen,
-			function (pids) {
-				return $elm$core$Task$succeed(
-					A2(
-						$elm$browser$Browser$Events$State,
-						newSubs,
-						A2(
-							$elm$core$Dict$union,
-							livePids,
-							$elm$core$Dict$fromList(pids))));
-			},
-			A2(
-				$elm$core$Task$andThen,
-				function (_v1) {
-					return $elm$core$Task$sequence(makeNewPids);
-				},
-				$elm$core$Task$sequence(
-					A2($elm$core$List$map, $elm$core$Process$kill, deadPids))));
-	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
-var $elm$browser$Browser$Events$onSelfMsg = F3(
-	function (router, _v0, state) {
-		var key = _v0.key;
-		var event = _v0.event;
-		var toMessage = function (_v2) {
-			var subKey = _v2.a;
-			var _v3 = _v2.b;
-			var node = _v3.a;
-			var name = _v3.b;
-			var decoder = _v3.c;
-			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
-		};
-		var messages = A2($elm$core$List$filterMap, toMessage, state.subs);
-		return A2(
-			$elm$core$Task$andThen,
-			function (_v1) {
-				return $elm$core$Task$succeed(state);
-			},
-			$elm$core$Task$sequence(
-				A2(
-					$elm$core$List$map,
-					$elm$core$Platform$sendToApp(router),
-					messages)));
-	});
-var $elm$browser$Browser$Events$subMap = F2(
-	function (func, _v0) {
-		var node = _v0.a;
-		var name = _v0.b;
-		var decoder = _v0.c;
-		return A3(
-			$elm$browser$Browser$Events$MySub,
-			node,
-			name,
-			A2($elm$json$Json$Decode$map, func, decoder));
-	});
-_Platform_effectManagers['Browser.Events'] = _Platform_createManager($elm$browser$Browser$Events$init, $elm$browser$Browser$Events$onEffects, $elm$browser$Browser$Events$onSelfMsg, 0, $elm$browser$Browser$Events$subMap);
-var $elm$browser$Browser$Events$subscription = _Platform_leaf('Browser.Events');
-var $elm$browser$Browser$Events$on = F3(
-	function (node, name, decoder) {
-		return $elm$browser$Browser$Events$subscription(
-			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
-	});
-var $elm$browser$Browser$Events$onResize = function (func) {
-	return A3(
-		$elm$browser$Browser$Events$on,
-		$elm$browser$Browser$Events$Window,
-		'resize',
-		A2(
-			$elm$json$Json$Decode$field,
-			'target',
-			A3(
-				$elm$json$Json$Decode$map2,
-				func,
-				A2($elm$json$Json$Decode$field, 'innerWidth', $elm$json$Json$Decode$int),
-				A2($elm$json$Json$Decode$field, 'innerHeight', $elm$json$Json$Decode$int))));
-};
-var $author$project$Main$onWindowResize = $elm$browser$Browser$Events$onResize(
-	F2(
-		function (w, h) {
-			return $author$project$Main$NewWindowSize(
-				{height: h, width: w});
-		}));
-var $author$project$Main$subscriptions = function (model) {
-	return $elm$core$Platform$Sub$batch(
-		_List_fromArray(
-			[$author$project$Main$onWindowResize]));
-};
-var $author$project$Main$Creating = {$: 'Creating'};
-var $author$project$Main$Local2Players = {$: 'Local2Players'};
-var $author$project$Main$LocalVsAI = {$: 'LocalVsAI'};
-var $author$project$Main$Remote2Players = F2(
-	function (a, b) {
-		return {$: 'Remote2Players', a: a, b: b};
-	});
-var $author$project$Main$RemoteError = function (a) {
-	return {$: 'RemoteError', a: a};
-};
-var $author$project$Main$RemoteGameIdCreated = function (a) {
-	return {$: 'RemoteGameIdCreated', a: a};
-};
-var $author$project$Main$WaitingForPlayers = {$: 'WaitingForPlayers'};
-var $elm$http$Http$BadStatus_ = F2(
-	function (a, b) {
-		return {$: 'BadStatus_', a: a, b: b};
-	});
-var $elm$http$Http$BadUrl_ = function (a) {
-	return {$: 'BadUrl_', a: a};
-};
-var $elm$http$Http$GoodStatus_ = F2(
-	function (a, b) {
-		return {$: 'GoodStatus_', a: a, b: b};
-	});
-var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
-var $elm$http$Http$Receiving = function (a) {
-	return {$: 'Receiving', a: a};
-};
-var $elm$http$Http$Sending = function (a) {
-	return {$: 'Sending', a: a};
-};
-var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
-var $elm$core$Maybe$isJust = function (maybe) {
-	if (maybe.$ === 'Just') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
 		}
 	});
 var $elm$core$Dict$getMin = function (dict) {
@@ -6332,6 +6064,583 @@ var $elm$core$Dict$update = F3(
 			return A2($elm$core$Dict$remove, targetKey, dictionary);
 		}
 	});
+var $elm$url$Url$Parser$addParam = F2(
+	function (segment, dict) {
+		var _v0 = A2($elm$core$String$split, '=', segment);
+		if ((_v0.b && _v0.b.b) && (!_v0.b.b.b)) {
+			var rawKey = _v0.a;
+			var _v1 = _v0.b;
+			var rawValue = _v1.a;
+			var _v2 = $elm$url$Url$percentDecode(rawKey);
+			if (_v2.$ === 'Nothing') {
+				return dict;
+			} else {
+				var key = _v2.a;
+				var _v3 = $elm$url$Url$percentDecode(rawValue);
+				if (_v3.$ === 'Nothing') {
+					return dict;
+				} else {
+					var value = _v3.a;
+					return A3(
+						$elm$core$Dict$update,
+						key,
+						$elm$url$Url$Parser$addToParametersHelp(value),
+						dict);
+				}
+			}
+		} else {
+			return dict;
+		}
+	});
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
+	if (maybeQuery.$ === 'Nothing') {
+		return $elm$core$Dict$empty;
+	} else {
+		var qry = maybeQuery.a;
+		return A3(
+			$elm$core$List$foldr,
+			$elm$url$Url$Parser$addParam,
+			$elm$core$Dict$empty,
+			A2($elm$core$String$split, '&', qry));
+	}
+};
+var $elm$url$Url$Parser$parse = F2(
+	function (_v0, url) {
+		var parser = _v0.a;
+		return $elm$url$Url$Parser$getFirstMatch(
+			parser(
+				A5(
+					$elm$url$Url$Parser$State,
+					_List_Nil,
+					$elm$url$Url$Parser$preparePath(url.path),
+					$elm$url$Url$Parser$prepareQuery(url.query),
+					url.fragment,
+					$elm$core$Basics$identity)));
+	});
+var $author$project$Main$JoinRemoteGame = function (a) {
+	return {$: 'JoinRemoteGame', a: a};
+};
+var $elm$url$Url$Parser$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var $elm$url$Url$Parser$mapState = F2(
+	function (func, _v0) {
+		var visited = _v0.visited;
+		var unvisited = _v0.unvisited;
+		var params = _v0.params;
+		var frag = _v0.frag;
+		var value = _v0.value;
+		return A5(
+			$elm$url$Url$Parser$State,
+			visited,
+			unvisited,
+			params,
+			frag,
+			func(value));
+	});
+var $elm$url$Url$Parser$map = F2(
+	function (subValue, _v0) {
+		var parseArg = _v0.a;
+		return $elm$url$Url$Parser$Parser(
+			function (_v1) {
+				var visited = _v1.visited;
+				var unvisited = _v1.unvisited;
+				var params = _v1.params;
+				var frag = _v1.frag;
+				var value = _v1.value;
+				return A2(
+					$elm$core$List$map,
+					$elm$url$Url$Parser$mapState(value),
+					parseArg(
+						A5($elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
+			});
+	});
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$core$List$concatMap = F2(
+	function (f, list) {
+		return $elm$core$List$concat(
+			A2($elm$core$List$map, f, list));
+	});
+var $elm$url$Url$Parser$oneOf = function (parsers) {
+	return $elm$url$Url$Parser$Parser(
+		function (state) {
+			return A2(
+				$elm$core$List$concatMap,
+				function (_v0) {
+					var parser = _v0.a;
+					return parser(state);
+				},
+				parsers);
+		});
+};
+var $elm$url$Url$Parser$custom = F2(
+	function (tipe, stringToSomething) {
+		return $elm$url$Url$Parser$Parser(
+			function (_v0) {
+				var visited = _v0.visited;
+				var unvisited = _v0.unvisited;
+				var params = _v0.params;
+				var frag = _v0.frag;
+				var value = _v0.value;
+				if (!unvisited.b) {
+					return _List_Nil;
+				} else {
+					var next = unvisited.a;
+					var rest = unvisited.b;
+					var _v2 = stringToSomething(next);
+					if (_v2.$ === 'Just') {
+						var nextValue = _v2.a;
+						return _List_fromArray(
+							[
+								A5(
+								$elm$url$Url$Parser$State,
+								A2($elm$core$List$cons, next, visited),
+								rest,
+								params,
+								frag,
+								value(nextValue))
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}
+			});
+	});
+var $elm$url$Url$Parser$string = A2($elm$url$Url$Parser$custom, 'STRING', $elm$core$Maybe$Just);
+var $elm$url$Url$Parser$top = $elm$url$Url$Parser$Parser(
+	function (state) {
+		return _List_fromArray(
+			[state]);
+	});
+var $author$project$Main$urlParser = $elm$url$Url$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2($elm$url$Url$Parser$map, $author$project$Main$Home, $elm$url$Url$Parser$top),
+			A2($elm$url$Url$Parser$map, $author$project$Main$JoinRemoteGame, $elm$url$Url$Parser$string)
+		]));
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$route = function (url) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		$author$project$Main$Home,
+		A2($elm$url$Url$Parser$parse, $author$project$Main$urlParser, url));
+};
+var $author$project$Main$init = F3(
+	function (conf, url, key) {
+		var msgs = function () {
+			var _v0 = $author$project$Main$route(url);
+			if (_v0.$ === 'Home') {
+				return _List_Nil;
+			} else {
+				var gameId = _v0.a;
+				return _List_fromArray(
+					[
+						A3(
+						$author$project$GameServer$joinGame,
+						$author$project$Main$RemoteGameJoined(gameId),
+						conf.remotePlayServerUrl,
+						gameId)
+					]);
+			}
+		}();
+		var model = {
+			baseUrl: $author$project$UrlUtils$baseUrl(url),
+			config: conf,
+			gameSettings: $author$project$Main$NotYetSelected,
+			gameState: $author$project$UltimateTicTacToe$init,
+			windowSize: {height: 0, width: 0}
+		};
+		return _Utils_Tuple2(
+			model,
+			$elm$core$Platform$Cmd$batch(
+				A2($elm$core$List$cons, $author$project$Main$getInitialWindowSize, msgs)));
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$browser$Browser$Events$Window = {$: 'Window'};
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$browser$Browser$Events$MySub = F3(
+	function (a, b, c) {
+		return {$: 'MySub', a: a, b: b, c: c};
+	});
+var $elm$browser$Browser$Events$State = F2(
+	function (subs, pids) {
+		return {pids: pids, subs: subs};
+	});
+var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
+	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
+var $elm$browser$Browser$Events$nodeToKey = function (node) {
+	if (node.$ === 'Document') {
+		return 'd_';
+	} else {
+		return 'w_';
+	}
+};
+var $elm$browser$Browser$Events$addKey = function (sub) {
+	var node = sub.a;
+	var name = sub.b;
+	return _Utils_Tuple2(
+		_Utils_ap(
+			$elm$browser$Browser$Events$nodeToKey(node),
+			name),
+		sub);
+};
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
+};
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3($elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var $elm$core$Dict$merge = F6(
+	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
+		var stepState = F3(
+			function (rKey, rValue, _v0) {
+				stepState:
+				while (true) {
+					var list = _v0.a;
+					var result = _v0.b;
+					if (!list.b) {
+						return _Utils_Tuple2(
+							list,
+							A3(rightStep, rKey, rValue, result));
+					} else {
+						var _v2 = list.a;
+						var lKey = _v2.a;
+						var lValue = _v2.b;
+						var rest = list.b;
+						if (_Utils_cmp(lKey, rKey) < 0) {
+							var $temp$rKey = rKey,
+								$temp$rValue = rValue,
+								$temp$_v0 = _Utils_Tuple2(
+								rest,
+								A3(leftStep, lKey, lValue, result));
+							rKey = $temp$rKey;
+							rValue = $temp$rValue;
+							_v0 = $temp$_v0;
+							continue stepState;
+						} else {
+							if (_Utils_cmp(lKey, rKey) > 0) {
+								return _Utils_Tuple2(
+									list,
+									A3(rightStep, rKey, rValue, result));
+							} else {
+								return _Utils_Tuple2(
+									rest,
+									A4(bothStep, lKey, lValue, rValue, result));
+							}
+						}
+					}
+				}
+			});
+		var _v3 = A3(
+			$elm$core$Dict$foldl,
+			stepState,
+			_Utils_Tuple2(
+				$elm$core$Dict$toList(leftDict),
+				initialResult),
+			rightDict);
+		var leftovers = _v3.a;
+		var intermediateResult = _v3.b;
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v4, result) {
+					var k = _v4.a;
+					var v = _v4.b;
+					return A3(leftStep, k, v, result);
+				}),
+			intermediateResult,
+			leftovers);
+	});
+var $elm$browser$Browser$Events$Event = F2(
+	function (key, event) {
+		return {event: event, key: key};
+	});
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$browser$Browser$Events$spawn = F3(
+	function (router, key, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var actualNode = function () {
+			if (node.$ === 'Document') {
+				return _Browser_doc;
+			} else {
+				return _Browser_window;
+			}
+		}();
+		return A2(
+			$elm$core$Task$map,
+			function (value) {
+				return _Utils_Tuple2(key, value);
+			},
+			A3(
+				_Browser_on,
+				actualNode,
+				name,
+				function (event) {
+					return A2(
+						$elm$core$Platform$sendToSelf,
+						router,
+						A2($elm$browser$Browser$Events$Event, key, event));
+				}));
+	});
+var $elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
+	});
+var $elm$browser$Browser$Events$onEffects = F3(
+	function (router, subs, state) {
+		var stepRight = F3(
+			function (key, sub, _v6) {
+				var deads = _v6.a;
+				var lives = _v6.b;
+				var news = _v6.c;
+				return _Utils_Tuple3(
+					deads,
+					lives,
+					A2(
+						$elm$core$List$cons,
+						A3($elm$browser$Browser$Events$spawn, router, key, sub),
+						news));
+			});
+		var stepLeft = F3(
+			function (_v4, pid, _v5) {
+				var deads = _v5.a;
+				var lives = _v5.b;
+				var news = _v5.c;
+				return _Utils_Tuple3(
+					A2($elm$core$List$cons, pid, deads),
+					lives,
+					news);
+			});
+		var stepBoth = F4(
+			function (key, pid, _v2, _v3) {
+				var deads = _v3.a;
+				var lives = _v3.b;
+				var news = _v3.c;
+				return _Utils_Tuple3(
+					deads,
+					A3($elm$core$Dict$insert, key, pid, lives),
+					news);
+			});
+		var newSubs = A2($elm$core$List$map, $elm$browser$Browser$Events$addKey, subs);
+		var _v0 = A6(
+			$elm$core$Dict$merge,
+			stepLeft,
+			stepBoth,
+			stepRight,
+			state.pids,
+			$elm$core$Dict$fromList(newSubs),
+			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
+		var deadPids = _v0.a;
+		var livePids = _v0.b;
+		var makeNewPids = _v0.c;
+		return A2(
+			$elm$core$Task$andThen,
+			function (pids) {
+				return $elm$core$Task$succeed(
+					A2(
+						$elm$browser$Browser$Events$State,
+						newSubs,
+						A2(
+							$elm$core$Dict$union,
+							livePids,
+							$elm$core$Dict$fromList(pids))));
+			},
+			A2(
+				$elm$core$Task$andThen,
+				function (_v1) {
+					return $elm$core$Task$sequence(makeNewPids);
+				},
+				$elm$core$Task$sequence(
+					A2($elm$core$List$map, $elm$core$Process$kill, deadPids))));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$browser$Browser$Events$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var key = _v0.key;
+		var event = _v0.event;
+		var toMessage = function (_v2) {
+			var subKey = _v2.a;
+			var _v3 = _v2.b;
+			var node = _v3.a;
+			var name = _v3.b;
+			var decoder = _v3.c;
+			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
+		};
+		var messages = A2($elm$core$List$filterMap, toMessage, state.subs);
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$map,
+					$elm$core$Platform$sendToApp(router),
+					messages)));
+	});
+var $elm$browser$Browser$Events$subMap = F2(
+	function (func, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var decoder = _v0.c;
+		return A3(
+			$elm$browser$Browser$Events$MySub,
+			node,
+			name,
+			A2($elm$json$Json$Decode$map, func, decoder));
+	});
+_Platform_effectManagers['Browser.Events'] = _Platform_createManager($elm$browser$Browser$Events$init, $elm$browser$Browser$Events$onEffects, $elm$browser$Browser$Events$onSelfMsg, 0, $elm$browser$Browser$Events$subMap);
+var $elm$browser$Browser$Events$subscription = _Platform_leaf('Browser.Events');
+var $elm$browser$Browser$Events$on = F3(
+	function (node, name, decoder) {
+		return $elm$browser$Browser$Events$subscription(
+			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
+	});
+var $elm$browser$Browser$Events$onResize = function (func) {
+	return A3(
+		$elm$browser$Browser$Events$on,
+		$elm$browser$Browser$Events$Window,
+		'resize',
+		A2(
+			$elm$json$Json$Decode$field,
+			'target',
+			A3(
+				$elm$json$Json$Decode$map2,
+				func,
+				A2($elm$json$Json$Decode$field, 'innerWidth', $elm$json$Json$Decode$int),
+				A2($elm$json$Json$Decode$field, 'innerHeight', $elm$json$Json$Decode$int))));
+};
+var $author$project$Main$onWindowResize = $elm$browser$Browser$Events$onResize(
+	F2(
+		function (w, h) {
+			return $author$project$Main$NewWindowSize(
+				{height: h, width: w});
+		}));
+var $author$project$Main$subscriptions = function (model) {
+	return $elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[$author$project$Main$onWindowResize]));
+};
+var $author$project$Main$Creating = {$: 'Creating'};
+var $author$project$Main$Expected = function (a) {
+	return {$: 'Expected', a: a};
+};
+var $author$project$Main$Joining = {$: 'Joining'};
+var $author$project$Main$Local2Players = {$: 'Local2Players'};
+var $author$project$Main$LocalVsAI = {$: 'LocalVsAI'};
+var $author$project$Main$Remote2Players = F2(
+	function (a, b) {
+		return {$: 'Remote2Players', a: a, b: b};
+	});
+var $author$project$Main$RemoteError = function (a) {
+	return {$: 'RemoteError', a: a};
+};
+var $author$project$Main$RemoteGameCreated = F2(
+	function (a, b) {
+		return {$: 'RemoteGameCreated', a: a, b: b};
+	});
+var $author$project$Main$RemoteGameIdCreated = function (a) {
+	return {$: 'RemoteGameIdCreated', a: a};
+};
+var $author$project$Main$Unexpected = function (a) {
+	return {$: 'Unexpected', a: a};
+};
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 'BadStatus_', a: a, b: b};
+	});
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
+	});
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
 var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
@@ -6400,28 +6709,21 @@ var $elm$http$Http$expectWhatever = function (toMsg) {
 				return $elm$core$Result$Ok(_Utils_Tuple0);
 			}));
 };
-var $author$project$Main$AlreadyExistsError = {$: 'AlreadyExistsError'};
-var $author$project$Main$OtherError = function (a) {
-	return {$: 'OtherError', a: a};
+var $author$project$GameServer$AlreadyExistsError = {$: 'AlreadyExistsError'};
+var $author$project$GameServer$Success = {$: 'Success'};
+var $author$project$GameServer$UnexpectedError = function (a) {
+	return {$: 'UnexpectedError', a: a};
 };
-var $author$project$Main$RemoteGameCreated = F2(
-	function (a, b) {
-		return {$: 'RemoteGameCreated', a: a, b: b};
-	});
-var $author$project$Main$Success = {$: 'Success'};
-var $author$project$Main$parseResponse = F2(
+var $author$project$GameServer$parseResponse = F2(
 	function (gameId, result) {
 		if (result.$ === 'Ok') {
-			return A2($author$project$Main$RemoteGameCreated, gameId, $author$project$Main$Success);
+			return $author$project$GameServer$Success;
 		} else {
 			if ((result.a.$ === 'BadStatus') && (result.a.a === 409)) {
-				return A2($author$project$Main$RemoteGameCreated, gameId, $author$project$Main$AlreadyExistsError);
+				return $author$project$GameServer$Problem($author$project$GameServer$AlreadyExistsError);
 			} else {
 				var other = result.a;
-				return A2(
-					$author$project$Main$RemoteGameCreated,
-					gameId,
-					$author$project$Main$OtherError(other));
+				return $author$project$GameServer$UnexpectedError(other);
 			}
 		}
 	});
@@ -6574,21 +6876,24 @@ var $elm$http$Http$request = function (r) {
 		$elm$http$Http$Request(
 			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
 };
-var $author$project$Main$createGameOnServer = F2(
-	function (serverUrl, gameId) {
-		return $elm$http$Http$request(
-			{
-				body: $elm$http$Http$emptyBody,
-				expect: $elm$http$Http$expectWhatever(
-					$author$project$Main$parseResponse(gameId)),
-				headers: _List_Nil,
-				method: 'PUT',
-				timeout: $elm$core$Maybe$Nothing,
-				tracker: $elm$core$Maybe$Nothing,
-				url: serverUrl + ('/games/' + gameId)
-			});
+var $author$project$GameServer$createGame = F3(
+	function (f, serverUrl, gameId) {
+		return A2(
+			$elm$core$Platform$Cmd$map,
+			f,
+			$elm$http$Http$request(
+				{
+					body: $elm$http$Http$emptyBody,
+					expect: $elm$http$Http$expectWhatever(
+						$author$project$GameServer$parseResponse(gameId)),
+					headers: _List_Nil,
+					method: 'PUT',
+					timeout: $elm$core$Maybe$Nothing,
+					tracker: $elm$core$Maybe$Nothing,
+					url: serverUrl + ('/games/' + gameId)
+				}));
 	});
-var $author$project$RemoteGame$GeneratedGameId = function (a) {
+var $author$project$GameServer$GeneratedGameId = function (a) {
 	return {$: 'GeneratedGameId', a: a};
 };
 var $elm$random$Random$Generate = function (a) {
@@ -6698,11 +7003,10 @@ var $elm$random$Random$generate = F2(
 			$elm$random$Random$Generate(
 				A2($elm$random$Random$map, tagger, generator)));
 	});
-var $author$project$RemoteGame$getGameId = function (_v0) {
+var $author$project$GameServer$getGameId = function (_v0) {
 	var g = _v0.a;
 	return g;
 };
-var $elm$core$Platform$Cmd$map = _Platform_map;
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
@@ -6893,14 +7197,14 @@ var $elm_community$random_extra$Random$String$string = F2(
 			A2($elm$random$Random$list, stringLength, charGenerator));
 	});
 var $author$project$GameId$random = A2($elm_community$random_extra$Random$String$string, 6, $elm_community$random_extra$Random$Char$english);
-var $author$project$RemoteGame$createNewGame = function (f) {
+var $author$project$GameServer$generateGameId = function (f) {
 	return A2(
 		$elm$core$Platform$Cmd$map,
 		function (g) {
 			return f(
-				$author$project$RemoteGame$getGameId(g));
+				$author$project$GameServer$getGameId(g));
 		},
-		A2($elm$random$Random$generate, $author$project$RemoteGame$GeneratedGameId, $author$project$GameId$random));
+		A2($elm$random$Random$generate, $author$project$GameServer$GeneratedGameId, $author$project$GameId$random));
 };
 var $author$project$Player$O = {$: 'O'};
 var $author$project$Main$PerformedMove = F2(
@@ -6917,6 +7221,7 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -7063,17 +7368,6 @@ var $author$project$Player$Left = function (a) {
 };
 var $author$project$Player$Right = function (a) {
 	return {$: 'Right', a: a};
-};
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
 var $author$project$Board$flatten = function (board) {
 	return $elm$core$List$concat(
@@ -7467,15 +7761,6 @@ var $author$project$AI$validMoves = function (_v0) {
 		return _List_Nil;
 	}
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$AI$minimax = F3(
 	function (ticTacToe, depth, action) {
 		var _v0 = $author$project$UltimateTicTacToe$winner(ticTacToe.board);
@@ -7567,7 +7852,6 @@ var $author$project$AI$nextMove = function (gameState) {
 			'next move',
 			$elm$core$List$head(scoredMoves)));
 };
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Process$sleep = _Process_sleep;
 var $author$project$Main$getAIMove = function (currentBoard) {
@@ -7590,99 +7874,167 @@ var $author$project$Main$update = F2(
 		var gameState = model.gameState;
 		var gameSettings = model.gameSettings;
 		var windowSize = model.windowSize;
-		switch (msg.$) {
-			case 'PerformedMove':
-				var player = msg.a;
-				var move = msg.b;
-				var newState = A3($author$project$UltimateTicTacToe$performMove, player, move, gameState);
-				var cmd = (_Utils_eq(player, $author$project$Player$X) && _Utils_eq(gameSettings, $author$project$Main$LocalVsAI)) ? $author$project$Main$getAIMove(newState) : $elm$core$Platform$Cmd$none;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{gameState: newState}),
-					cmd);
-			case 'NewWindowSize':
-				var size = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{windowSize: size}),
-					$elm$core$Platform$Cmd$none);
-			case 'RequestedMainMenu':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{gameSettings: $author$project$Main$NotYetSelected}),
-					$elm$core$Platform$Cmd$none);
-			case 'RemoteGameIdCreated':
-				var gameId = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							gameSettings: A2($author$project$Main$Remote2Players, gameId, $author$project$Main$Creating)
-						}),
-					A2($author$project$Main$createGameOnServer, config.remotePlayServerUrl, gameId));
-			case 'RemoteGameCreated':
-				switch (msg.b.$) {
-					case 'Success':
-						var gameId = msg.a;
-						var _v1 = msg.b;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									gameSettings: A2($author$project$Main$Remote2Players, gameId, $author$project$Main$WaitingForPlayers)
-								}),
-							$elm$core$Platform$Cmd$none);
-					case 'AlreadyExistsError':
-						var gameId = msg.a;
-						var _v2 = msg.b;
-						return _Utils_Tuple2(
+		_v0$13:
+		while (true) {
+			switch (msg.$) {
+				case 'PerformedMove':
+					var player = msg.a;
+					var move = msg.b;
+					var newState = A3($author$project$UltimateTicTacToe$performMove, player, move, gameState);
+					var cmd = (_Utils_eq(player, $author$project$Player$X) && _Utils_eq(gameSettings, $author$project$Main$LocalVsAI)) ? $author$project$Main$getAIMove(newState) : $elm$core$Platform$Cmd$none;
+					return _Utils_Tuple2(
+						_Utils_update(
 							model,
-							$author$project$RemoteGame$createNewGame($author$project$Main$RemoteGameIdCreated));
-					default:
-						var gameId = msg.a;
-						var error = msg.b.a;
-						return function (_v3) {
+							{gameState: newState}),
+						cmd);
+				case 'NewWindowSize':
+					var size = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{windowSize: size}),
+						$elm$core$Platform$Cmd$none);
+				case 'RequestedMainMenu':
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{gameSettings: $author$project$Main$NotYetSelected}),
+						$elm$core$Platform$Cmd$none);
+				case 'RemoteGameIdCreated':
+					var gameId = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								gameSettings: A2($author$project$Main$Remote2Players, gameId, $author$project$Main$Creating)
+							}),
+						A3(
+							$author$project$GameServer$createGame,
+							$author$project$Main$RemoteGameCreated(gameId),
+							config.remotePlayServerUrl,
+							gameId));
+				case 'RemoteGameCreated':
+					switch (msg.b.$) {
+						case 'Success':
+							var gameId = msg.a;
+							var _v1 = msg.b;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
 									{
-										gameSettings: A2(
-											$author$project$Main$Remote2Players,
-											gameId,
-											$author$project$Main$RemoteError(error))
+										gameSettings: A2($author$project$Main$Remote2Players, gameId, $author$project$Main$Joining)
 									}),
+								A3(
+									$author$project$GameServer$joinGame,
+									$author$project$Main$RemoteGameJoined(gameId),
+									config.remotePlayServerUrl,
+									gameId));
+						case 'Problem':
+							var gameId = msg.a;
+							var _v2 = msg.b.a;
+							return _Utils_Tuple2(
+								model,
+								$author$project$GameServer$generateGameId($author$project$Main$RemoteGameIdCreated));
+						default:
+							var gameId = msg.a;
+							var error = msg.b.a;
+							return function (_v3) {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A2(
+												$author$project$Main$Remote2Players,
+												gameId,
+												$author$project$Main$RemoteError(
+													$author$project$Main$Unexpected(error)))
+										}),
+									$elm$core$Platform$Cmd$none);
+							}(
+								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
+					}
+				case 'RemoteGameJoined':
+					switch (msg.b.$) {
+						case 'UnexpectedError':
+							var gameId = msg.a;
+							var error = msg.b.a;
+							return function (_v4) {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A2(
+												$author$project$Main$Remote2Players,
+												gameId,
+												$author$project$Main$RemoteError(
+													$author$project$Main$Unexpected(error)))
+										}),
+									$elm$core$Platform$Cmd$none);
+							}(
+								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
+						case 'Problem':
+							switch (msg.b.a.$) {
+								case 'NotSupportedYet':
+									var gameId = msg.a;
+									var _v5 = msg.b.a;
+									return _Utils_Tuple2(
+										_Utils_update(
+											model,
+											{
+												gameSettings: A2(
+													$author$project$Main$Remote2Players,
+													gameId,
+													$author$project$Main$RemoteError(
+														$author$project$Main$Expected('Remote multiplayer isn\'t supported yet... come back soon :-)')))
+											}),
+										$elm$core$Platform$Cmd$none);
+								case 'GameDoesNotExist':
+									var gameId = msg.a;
+									var _v6 = msg.b.a;
+									return _Utils_Tuple2(
+										_Utils_update(
+											model,
+											{
+												gameSettings: A2(
+													$author$project$Main$Remote2Players,
+													gameId,
+													$author$project$Main$RemoteError(
+														$author$project$Main$Expected('Sorry, this game does not exist!')))
+											}),
+										$elm$core$Platform$Cmd$none);
+								default:
+									break _v0$13;
+							}
+						default:
+							break _v0$13;
+					}
+				case 'ChoseGameMode':
+					switch (msg.a.$) {
+						case 'TwoPlayersRemote':
+							var _v7 = msg.a;
+							return _Utils_Tuple2(
+								model,
+								$author$project$GameServer$generateGameId($author$project$Main$RemoteGameIdCreated));
+						case 'OnePlayerVsAI':
+							var _v8 = msg.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{gameSettings: $author$project$Main$LocalVsAI, gameState: $author$project$UltimateTicTacToe$init}),
 								$elm$core$Platform$Cmd$none);
-						}(
-							A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
-				}
-			case 'ChoseGameMode':
-				switch (msg.a.$) {
-					case 'TwoPlayersRemote':
-						var _v4 = msg.a;
-						return _Utils_Tuple2(
-							model,
-							$author$project$RemoteGame$createNewGame($author$project$Main$RemoteGameIdCreated));
-					case 'OnePlayerVsAI':
-						var _v5 = msg.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{gameSettings: $author$project$Main$LocalVsAI, gameState: $author$project$UltimateTicTacToe$init}),
-							$elm$core$Platform$Cmd$none);
-					default:
-						var _v6 = msg.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{gameSettings: $author$project$Main$Local2Players, gameState: $author$project$UltimateTicTacToe$init}),
-							$elm$core$Platform$Cmd$none);
-				}
-			default:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						default:
+							var _v9 = msg.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{gameSettings: $author$project$Main$Local2Players, gameState: $author$project$UltimateTicTacToe$init}),
+								$elm$core$Platform$Cmd$none);
+					}
+				default:
+					break _v0$13;
+			}
 		}
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -7764,7 +8116,14 @@ var $author$project$Main$viewError = function (error) {
 			[
 				$elm$html$Html$text(title)
 			]));
-	var errorMessage = 'Error communicating with the server, cannot play remotely :-(';
+	var errorMessage = function () {
+		if (error.$ === 'Expected') {
+			var e = error.a;
+			return e;
+		} else {
+			return 'Error communicating with the server, cannot play remotely :-(';
+		}
+	}();
 	var mainDiv = A2(
 		$elm$html$Html$div,
 		_List_fromArray(
