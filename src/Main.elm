@@ -15,12 +15,13 @@ import Svg.Attributes as SA
 import SvgUtils
 import Task
 import Url
+import Url.Parser as UrlParser
 import UrlUtils
 
 import Sizes
 import AI
 import GameMode
-import RemoteGame
+import GameServer
 import TicTacToeBase
 import Tuple3 as T3
 import GameId
@@ -65,16 +66,25 @@ type alias Model =
 
 type RemoteState
    = Creating
-   | RemoteError Http.Error
+   | Joining
+   | RemoteError RemoteProblem
    | WaitingForPlayers
    | InProgress
+
+type RemoteProblem
+  = Expected String
+  | Unexpected Http.Error
 
 
 init : Config -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init conf url key =
     let
-        debug = Debug.log "url" url
-        debug2 = Debug.log "key" key
+        msgs =
+            case route url of
+                Home ->
+                    []
+                JoinRemoteGame gameId ->
+                    [ GameServer.joinGame (RemoteGameJoined gameId) conf.remotePlayServerUrl gameId ]
         model =
             { baseUrl = UrlUtils.baseUrl url
             , config = conf
@@ -84,7 +94,7 @@ init conf url key =
             }
     in
     ( model
-    , getInitialWindowSize
+    , Cmd.batch (getInitialWindowSize :: msgs)
     )
 
 
@@ -95,6 +105,17 @@ init conf url key =
 type Route
     = Home
     | JoinRemoteGame GameId.GameId
+
+urlParser : UrlParser.Parser (Route -> a) a
+urlParser =
+  UrlParser.oneOf
+    [ UrlParser.map Home UrlParser.top
+    , UrlParser.map JoinRemoteGame UrlParser.string
+    ]
+
+route : Url.Url -> Route
+route url =
+    Maybe.withDefault Home (UrlParser.parse urlParser url)
 
 -- UPDATE
 
@@ -109,7 +130,8 @@ type Msg
     = PerformedMove Player Move
     | NewWindowSize WindowSize
     | RemoteGameIdCreated GameId.GameId
-    | RemoteGameCreated GameId.GameId RemoteGameCreatedResponse
+    | RemoteGameCreated GameId.GameId GameServer.CreateGameResult
+    | RemoteGameJoined GameId.GameId GameServer.JoinGameResult
     | ChoseGameMode GameMode.Mode
     | RequestedMainMenu
     | ClickedLink Browser.UrlRequest
@@ -148,28 +170,44 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
 
         RemoteGameIdCreated gameId ->
             ( { model | gameSettings = (Remote2Players gameId Creating) }
-            , createGameOnServer config.remotePlayServerUrl gameId
+            , GameServer.createGame (RemoteGameCreated gameId) config.remotePlayServerUrl gameId
             )
 
-        RemoteGameCreated gameId Success ->
-            ( { model | gameSettings = (Remote2Players gameId WaitingForPlayers) }
+        RemoteGameCreated gameId GameServer.Success ->
+            ( { model | gameSettings = (Remote2Players gameId Joining) }
+            , GameServer.joinGame (RemoteGameJoined gameId) config.remotePlayServerUrl gameId
+            )
+
+        RemoteGameCreated gameId (GameServer.Problem GameServer.AlreadyExistsError) ->
+            ( model
+            , GameServer.generateGameId RemoteGameIdCreated
+            )
+
+        RemoteGameCreated gameId (GameServer.UnexpectedError error) ->
+            Debug.log ("Oh no! We got an unexpected error communicating with the remote play server @ " ++ config.remotePlayServerUrl) error |>
+            \_ -> ( { model | gameSettings = (Remote2Players gameId (RemoteError (Unexpected error))) }
             , Cmd.none
             )
 
-        RemoteGameCreated gameId AlreadyExistsError ->
-            ( model
-            , RemoteGame.createNewGame RemoteGameIdCreated
+        RemoteGameJoined gameId (GameServer.UnexpectedError error) ->
+            Debug.log ("Oh no! We got an unexpected error communicating with the remote play server @ " ++ config.remotePlayServerUrl) error |>
+            \_ -> ( { model | gameSettings = (Remote2Players gameId (RemoteError (Unexpected error))) }
+            , Cmd.none
             )
 
-        RemoteGameCreated gameId (OtherError error) ->
-            Debug.log ("Oh no! We got an unexpected error communicating with the remote play server @ " ++ config.remotePlayServerUrl) error |> 
-            \_ -> ( { model | gameSettings = (Remote2Players gameId (RemoteError error)) }
+        RemoteGameJoined gameId (GameServer.Problem GameServer.NotSupportedYet) ->
+            ( { model | gameSettings = (Remote2Players gameId (RemoteError (Expected "Remote multiplayer isn't supported yet... come back soon :-)"))) }
+            , Cmd.none
+            )
+
+        RemoteGameJoined gameId (GameServer.Problem GameServer.GameDoesNotExist) ->
+            ( { model | gameSettings = (Remote2Players gameId (RemoteError (Expected "Sorry, this game does not exist!"))) }
             , Cmd.none
             )
 
         ChoseGameMode GameMode.TwoPlayersRemote ->
             ( model
-            , RemoteGame.createNewGame RemoteGameIdCreated
+            , GameServer.generateGameId RemoteGameIdCreated
             )
 
         ChoseGameMode GameMode.OnePlayerVsAI ->
@@ -187,30 +225,6 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
             , Cmd.none
             )
 
-
-createGameOnServer : String -> GameId.GameId -> Cmd Msg
-createGameOnServer serverUrl gameId =
-  Http.request
-    { method = "PUT"
-    , headers = []
-    , url = serverUrl ++ "/games/" ++ gameId
-    , body = Http.emptyBody
-    , expect = Http.expectWhatever (parseResponse gameId)
-    , timeout = Nothing
-    , tracker = Nothing
-    }
-
-parseResponse : GameId.GameId -> Result Http.Error () -> Msg
-parseResponse gameId result =
-    case result of
-       Ok () -> RemoteGameCreated gameId Success
-       Err (Http.BadStatus 409) -> RemoteGameCreated gameId AlreadyExistsError
-       Err other -> RemoteGameCreated gameId (OtherError other)
-
-type RemoteGameCreatedResponse
-    = Success
-    | AlreadyExistsError
-    | OtherError Http.Error
 
 getInitialWindowSize : Cmd Msg
 getInitialWindowSize =
@@ -293,7 +307,7 @@ view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
        , body = [ html ]
        }
 
-viewError : Http.Error -> Html Msg
+viewError : RemoteProblem -> Html Msg
 viewError error =
     let
         title = "Woops..."
@@ -302,7 +316,8 @@ viewError error =
             div [ HA.class "menutitle" ] [ text title ]
 
         errorMessage = case error of
-           _ -> "Error communicating with the server, cannot play remotely :-("
+           Expected e -> e
+           Unexpected _ -> "Error communicating with the server, cannot play remotely :-("
 
         mainDiv =
             div [ HA.class "buttons" ]
