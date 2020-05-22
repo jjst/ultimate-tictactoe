@@ -1,4 +1,4 @@
-module Player exposing (Draw(..), Either(..), Player(..), Winner, opponent)
+module Player exposing (Draw(..), Either(..), Player(..), Winner, opponent, toString)
 
 
 type Player
@@ -20,6 +20,11 @@ opponent player =
         O ->
             X
 
+toString : Player -> String
+toString player =
+    case player of
+        X -> "X"
+        O -> "O"
 
 type Draw
     = Draw

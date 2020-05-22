@@ -22,7 +22,6 @@ type alias UltimateTicTacToeBoard =
     Board TicTacToeBoard
 
 
-
 -- MODEL
 
 
