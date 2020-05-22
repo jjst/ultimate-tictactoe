@@ -14,6 +14,34 @@
       flags: {
         remotePlayServerUrl: "https://ultimate-tictactoe-server.osc-fr1.scalingo.io"
       }});
+
+    var socket = null;
+
+    app.ports.joinRemoteGame.subscribe(function(gameUrl) {
+        console.log("Creating new websocket to url: " + gameUrl);
+        try {
+          socket = new WebSocket(gameUrl);
+        } catch(err) {
+          app.ports.gameMessageReceiver.send("E " + err);
+        }
+        // When a message comes into our WebSocket, we pass the message along
+        // to the `messageReceiver` port.
+        socket.addEventListener("error", function(error) {
+            console.error("Error! " + error);
+            app.ports.gameMessageReceiver.send("E " + error);
+        });
+        // When a message comes into our WebSocket, we pass the message along
+        // to the `messageReceiver` port.
+        socket.addEventListener("message", function(event) {
+            app.ports.gameMessageReceiver.send(event.data);
+        });
+        // When a command goes to the `sendMessage` port, we pass the message
+        // along to the WebSocket.
+        app.ports.sendGameMessage.subscribe(function(message) {
+            socket.send(message);
+        });
+    });
+
   </script>
 </body>
 </html>

@@ -4375,6 +4375,219 @@ function _Url_percentDecode(string)
 }
 
 
+
+// STRINGS
+
+
+var _Parser_isSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var smallLength = smallString.length;
+	var isGood = offset + smallLength <= bigString.length;
+
+	for (var i = 0; isGood && i < smallLength; )
+	{
+		var code = bigString.charCodeAt(offset);
+		isGood =
+			smallString[i++] === bigString[offset++]
+			&& (
+				code === 0x000A /* \n */
+					? ( row++, col=1 )
+					: ( col++, (code & 0xF800) === 0xD800 ? smallString[i++] === bigString[offset++] : 1 )
+			)
+	}
+
+	return _Utils_Tuple3(isGood ? offset : -1, row, col);
+});
+
+
+
+// CHARS
+
+
+var _Parser_isSubChar = F3(function(predicate, offset, string)
+{
+	return (
+		string.length <= offset
+			? -1
+			:
+		(string.charCodeAt(offset) & 0xF800) === 0xD800
+			? (predicate(_Utils_chr(string.substr(offset, 2))) ? offset + 2 : -1)
+			:
+		(predicate(_Utils_chr(string[offset]))
+			? ((string[offset] === '\n') ? -2 : (offset + 1))
+			: -1
+		)
+	);
+});
+
+
+var _Parser_isAsciiCode = F3(function(code, offset, string)
+{
+	return string.charCodeAt(offset) === code;
+});
+
+
+
+// NUMBERS
+
+
+var _Parser_chompBase10 = F2(function(offset, string)
+{
+	for (; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (code < 0x30 || 0x39 < code)
+		{
+			return offset;
+		}
+	}
+	return offset;
+});
+
+
+var _Parser_consumeBase = F3(function(base, offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var digit = string.charCodeAt(offset) - 0x30;
+		if (digit < 0 || base <= digit) break;
+		total = base * total + digit;
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+var _Parser_consumeBase16 = F2(function(offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (0x30 <= code && code <= 0x39)
+		{
+			total = 16 * total + code - 0x30;
+		}
+		else if (0x41 <= code && code <= 0x46)
+		{
+			total = 16 * total + code - 55;
+		}
+		else if (0x61 <= code && code <= 0x66)
+		{
+			total = 16 * total + code - 87;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+
+// FIND STRING
+
+
+var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var newOffset = bigString.indexOf(smallString, offset);
+	var target = newOffset < 0 ? bigString.length : newOffset + smallString.length;
+
+	while (offset < target)
+	{
+		var code = bigString.charCodeAt(offset++);
+		code === 0x000A /* \n */
+			? ( col=1, row++ )
+			: ( col++, (code & 0xF800) === 0xD800 && offset++ )
+	}
+
+	return _Utils_Tuple3(newOffset, row, col);
+});
+
+
+
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
+
+
+
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
+
+
+
 // SEND REQUEST
 
 var _Http_toTask = F3(function(router, toTask, request)
@@ -4547,90 +4760,7 @@ function _Http_track(router, xhr, tracker)
 			size: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
 		}))));
 	});
-}
-
-
-var _Bitwise_and = F2(function(a, b)
-{
-	return a & b;
-});
-
-var _Bitwise_or = F2(function(a, b)
-{
-	return a | b;
-});
-
-var _Bitwise_xor = F2(function(a, b)
-{
-	return a ^ b;
-});
-
-function _Bitwise_complement(a)
-{
-	return ~a;
-};
-
-var _Bitwise_shiftLeftBy = F2(function(offset, a)
-{
-	return a << offset;
-});
-
-var _Bitwise_shiftRightBy = F2(function(offset, a)
-{
-	return a >> offset;
-});
-
-var _Bitwise_shiftRightZfBy = F2(function(offset, a)
-{
-	return a >>> offset;
-});
-
-
-
-function _Time_now(millisToPosix)
-{
-	return _Scheduler_binding(function(callback)
-	{
-		callback(_Scheduler_succeed(millisToPosix(Date.now())));
-	});
-}
-
-var _Time_setInterval = F2(function(interval, task)
-{
-	return _Scheduler_binding(function(callback)
-	{
-		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
-		return function() { clearInterval(id); };
-	});
-});
-
-function _Time_here()
-{
-	return _Scheduler_binding(function(callback)
-	{
-		callback(_Scheduler_succeed(
-			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
-		));
-	});
-}
-
-
-function _Time_getZoneName()
-{
-	return _Scheduler_binding(function(callback)
-	{
-		try
-		{
-			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
-		}
-		catch (e)
-		{
-			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
-		}
-		callback(_Scheduler_succeed(name));
-	});
-}
-var $author$project$Main$ChangedUrl = function (a) {
+}var $author$project$Main$ChangedUrl = function (a) {
 	return {$: 'ChangedUrl', a: a};
 };
 var $author$project$Main$ClickedLink = function (a) {
@@ -5427,10 +5557,19 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$application = _Browser_application;
 var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Main$Joining = {$: 'Joining'};
 var $author$project$Main$NotYetSelected = {$: 'NotYetSelected'};
-var $author$project$Main$RemoteGameJoined = F2(
-	function (a, b) {
-		return {$: 'RemoteGameJoined', a: a, b: b};
+var $author$project$Player$O = {$: 'O'};
+var $author$project$Main$Remote2Players = F3(
+	function (a, b, c) {
+		return {$: 'Remote2Players', a: a, b: b, c: c};
+	});
+var $author$project$Main$RemoteGameJoined = function (a) {
+	return {$: 'RemoteGameJoined', a: a};
+};
+var $author$project$Main$RemoteGameMsg = F3(
+	function (a, b, c) {
+		return {$: 'RemoteGameMsg', a: a, b: b, c: c};
 	});
 var $author$project$UrlUtils$baseUrl = function (url) {
 	return _Utils_update(
@@ -5468,20 +5607,26 @@ var $author$project$UltimateTicTacToe$init = {
 	currentBoardCoords: $elm$core$Maybe$Nothing,
 	currentPlayer: $author$project$Player$X
 };
-var $author$project$GameServer$NotSupportedYet = {$: 'NotSupportedYet'};
-var $author$project$GameServer$Problem = function (a) {
-	return {$: 'Problem', a: a};
-};
-var $elm$core$Platform$Cmd$map = _Platform_map;
-var $author$project$GameServer$joinGame = F3(
-	function (f, serverUrl, gameId) {
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$GameServer$joinRemoteGame = _Platform_outgoingPort('joinRemoteGame', $elm$json$Json$Encode$string);
+var $elm$core$String$replace = F3(
+	function (before, after, string) {
 		return A2(
-			$elm$core$Platform$Cmd$map,
-			f,
-			A2(
-				$elm$core$Task$perform,
-				$author$project$GameServer$Problem,
-				$elm$core$Task$succeed($author$project$GameServer$NotSupportedYet)));
+			$elm$core$String$join,
+			after,
+			A2($elm$core$String$split, before, string));
+	});
+var $author$project$GameServer$joinGame = F4(
+	function (f, serverUrl, gameId, player) {
+		var p = function () {
+			if (player.$ === 'X') {
+				return 'x';
+			} else {
+				return 'o';
+			}
+		}();
+		return $author$project$GameServer$joinRemoteGame(
+			A3($elm$core$String$replace, 'https', 'wss', serverUrl + ('/games/' + (gameId + ('/ws/' + p)))));
 	});
 var $author$project$Main$Home = {$: 'Home'};
 var $elm$url$Url$Parser$State = F5(
@@ -6246,26 +6391,38 @@ var $author$project$Main$route = function (url) {
 };
 var $author$project$Main$init = F3(
 	function (conf, url, key) {
-		var msgs = function () {
-			var _v0 = $author$project$Main$route(url);
-			if (_v0.$ === 'Home') {
-				return _List_Nil;
+		var _v0 = function () {
+			var _v1 = $author$project$Main$route(url);
+			if (_v1.$ === 'Home') {
+				return _Utils_Tuple2($author$project$Main$NotYetSelected, _List_Nil);
 			} else {
-				var gameId = _v0.a;
-				return _List_fromArray(
-					[
-						A3(
-						$author$project$GameServer$joinGame,
-						$author$project$Main$RemoteGameJoined(gameId),
-						conf.remotePlayServerUrl,
-						gameId)
-					]);
+				var gameId = _v1.a;
+				var player = $author$project$Player$O;
+				return _Utils_Tuple2(
+					A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$Joining),
+					_List_fromArray(
+						[
+							A4(
+							$author$project$GameServer$joinGame,
+							function (e) {
+								return A3(
+									$author$project$Main$RemoteGameMsg,
+									gameId,
+									player,
+									$author$project$Main$RemoteGameJoined(e));
+							},
+							conf.remotePlayServerUrl,
+							gameId,
+							$author$project$Player$O)
+						]));
 			}
 		}();
+		var gameSettings_ = _v0.a;
+		var msgs = _v0.b;
 		var model = {
 			baseUrl: $author$project$UrlUtils$baseUrl(url),
 			config: conf,
-			gameSettings: $author$project$Main$NotYetSelected,
+			gameSettings: gameSettings_,
 			gameState: $author$project$UltimateTicTacToe$init,
 			windowSize: {height: 0, width: 0}
 		};
@@ -6275,7 +6432,520 @@ var $author$project$Main$init = F3(
 				A2($elm$core$List$cons, $author$project$Main$getInitialWindowSize, msgs)));
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$RemoteGameReceivedEvent = function (a) {
+	return {$: 'RemoteGameReceivedEvent', a: a};
+};
 var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $author$project$GameServer$OtherEvent = {$: 'OtherEvent'};
+var $author$project$GameServer$Error = function (a) {
+	return {$: 'Error', a: a};
+};
+var $elm$parser$Parser$Advanced$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var $elm$parser$Parser$Advanced$Good = F3(
+	function (a, b, c) {
+		return {$: 'Good', a: a, b: b, c: c};
+	});
+var $elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$parser$Parser$Advanced$chompWhileHelp = F5(
+	function (isGood, offset, row, col, s0) {
+		chompWhileHelp:
+		while (true) {
+			var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
+			if (_Utils_eq(newOffset, -1)) {
+				return A3(
+					$elm$parser$Parser$Advanced$Good,
+					_Utils_cmp(s0.offset, offset) < 0,
+					_Utils_Tuple0,
+					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
+			} else {
+				if (_Utils_eq(newOffset, -2)) {
+					var $temp$isGood = isGood,
+						$temp$offset = offset + 1,
+						$temp$row = row + 1,
+						$temp$col = 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				} else {
+					var $temp$isGood = isGood,
+						$temp$offset = newOffset,
+						$temp$row = row,
+						$temp$col = col + 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				}
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$chompWhile = function (isGood) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A5($elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
+		});
+};
+var $elm$parser$Parser$chompWhile = $elm$parser$Parser$Advanced$chompWhile;
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $elm$parser$Parser$Advanced$Bad = F2(
+	function (a, b) {
+		return {$: 'Bad', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$mapChompedString = F2(
+	function (func, _v0) {
+		var parse = _v0.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Bad') {
+					var p = _v1.a;
+					var x = _v1.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p = _v1.a;
+					var a = _v1.b;
+					var s1 = _v1.c;
+					return A3(
+						$elm$parser$Parser$Advanced$Good,
+						p,
+						A2(
+							func,
+							A3($elm$core$String$slice, s0.offset, s1.offset, s0.src),
+							a),
+						s1);
+				}
+			});
+	});
+var $elm$parser$Parser$Advanced$getChompedString = function (parser) {
+	return A2($elm$parser$Parser$Advanced$mapChompedString, $elm$core$Basics$always, parser);
+};
+var $elm$parser$Parser$getChompedString = $elm$parser$Parser$Advanced$getChompedString;
+var $elm$parser$Parser$Advanced$map2 = F3(
+	function (func, _v0, _v1) {
+		var parseA = _v0.a;
+		var parseB = _v1.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v2 = parseA(s0);
+				if (_v2.$ === 'Bad') {
+					var p = _v2.a;
+					var x = _v2.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p1 = _v2.a;
+					var a = _v2.b;
+					var s1 = _v2.c;
+					var _v3 = parseB(s1);
+					if (_v3.$ === 'Bad') {
+						var p2 = _v3.a;
+						var x = _v3.b;
+						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _v3.a;
+						var b = _v3.b;
+						var s2 = _v3.c;
+						return A3(
+							$elm$parser$Parser$Advanced$Good,
+							p1 || p2,
+							A2(func, a, b),
+							s2);
+					}
+				}
+			});
+	});
+var $elm$parser$Parser$Advanced$ignorer = F2(
+	function (keepParser, ignoreParser) {
+		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$always, keepParser, ignoreParser);
+	});
+var $elm$parser$Parser$ignorer = $elm$parser$Parser$Advanced$ignorer;
+var $elm$parser$Parser$Advanced$succeed = function (a) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3($elm$parser$Parser$Advanced$Good, false, a, s);
+		});
+};
+var $elm$parser$Parser$succeed = $elm$parser$Parser$Advanced$succeed;
+var $author$project$GameServer$errorMsgParser = $elm$parser$Parser$getChompedString(
+	A2(
+		$elm$parser$Parser$ignorer,
+		$elm$parser$Parser$succeed(_Utils_Tuple0),
+		$elm$parser$Parser$chompWhile(
+			function (_v0) {
+				return true;
+			})));
+var $elm$parser$Parser$Advanced$keeper = F2(
+	function (parseFunc, parseArg) {
+		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$apL, parseFunc, parseArg);
+	});
+var $elm$parser$Parser$keeper = $elm$parser$Parser$Advanced$keeper;
+var $elm$parser$Parser$ExpectingKeyword = function (a) {
+	return {$: 'ExpectingKeyword', a: a};
+};
+var $elm$parser$Parser$Advanced$Token = F2(
+	function (a, b) {
+		return {$: 'Token', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$AddRight = F2(
+	function (a, b) {
+		return {$: 'AddRight', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$DeadEnd = F4(
+	function (row, col, problem, contextStack) {
+		return {col: col, contextStack: contextStack, problem: problem, row: row};
+	});
+var $elm$parser$Parser$Advanced$Empty = {$: 'Empty'};
+var $elm$parser$Parser$Advanced$fromState = F2(
+	function (s, x) {
+		return A2(
+			$elm$parser$Parser$Advanced$AddRight,
+			$elm$parser$Parser$Advanced$Empty,
+			A4($elm$parser$Parser$Advanced$DeadEnd, s.row, s.col, x, s.context));
+	});
+var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
+var $elm$core$Basics$not = _Basics_not;
+var $elm$parser$Parser$Advanced$keyword = function (_v0) {
+	var kwd = _v0.a;
+	var expecting = _v0.b;
+	var progress = !$elm$core$String$isEmpty(kwd);
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _v1 = A5($elm$parser$Parser$Advanced$isSubString, kwd, s.offset, s.row, s.col, s.src);
+			var newOffset = _v1.a;
+			var newRow = _v1.b;
+			var newCol = _v1.c;
+			return (_Utils_eq(newOffset, -1) || (0 <= A3(
+				$elm$parser$Parser$Advanced$isSubChar,
+				function (c) {
+					return $elm$core$Char$isAlphaNum(c) || _Utils_eq(
+						c,
+						_Utils_chr('_'));
+				},
+				newOffset,
+				s.src))) ? A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+				$elm$parser$Parser$Advanced$Good,
+				progress,
+				_Utils_Tuple0,
+				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
+		});
+};
+var $elm$parser$Parser$keyword = function (kwd) {
+	return $elm$parser$Parser$Advanced$keyword(
+		A2(
+			$elm$parser$Parser$Advanced$Token,
+			kwd,
+			$elm$parser$Parser$ExpectingKeyword(kwd)));
+};
+var $elm$parser$Parser$Advanced$spaces = $elm$parser$Parser$Advanced$chompWhile(
+	function (c) {
+		return _Utils_eq(
+			c,
+			_Utils_chr(' ')) || (_Utils_eq(
+			c,
+			_Utils_chr('\n')) || _Utils_eq(
+			c,
+			_Utils_chr('\r')));
+	});
+var $elm$parser$Parser$spaces = $elm$parser$Parser$Advanced$spaces;
+var $author$project$GameServer$errorParser = A2(
+	$elm$parser$Parser$keeper,
+	A2(
+		$elm$parser$Parser$ignorer,
+		A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$GameServer$Error),
+			$elm$parser$Parser$keyword('E')),
+		$elm$parser$Parser$spaces),
+	$author$project$GameServer$errorMsgParser);
+var $author$project$GameServer$GameStarted = {$: 'GameStarted'};
+var $author$project$GameServer$gameStartedParser = A2(
+	$elm$parser$Parser$ignorer,
+	A2(
+		$elm$parser$Parser$ignorer,
+		A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$GameServer$GameStarted),
+			$elm$parser$Parser$spaces),
+		$elm$parser$Parser$keyword('S')),
+	$elm$parser$Parser$spaces);
+var $author$project$GameServer$KeepAlive = {$: 'KeepAlive'};
+var $author$project$GameServer$keepAliveParser = A2(
+	$elm$parser$Parser$ignorer,
+	A2(
+		$elm$parser$Parser$ignorer,
+		A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$GameServer$KeepAlive),
+			$elm$parser$Parser$spaces),
+		$elm$parser$Parser$keyword('K')),
+	$elm$parser$Parser$spaces);
+var $elm$parser$Parser$Advanced$Append = F2(
+	function (a, b) {
+		return {$: 'Append', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$oneOfHelp = F3(
+	function (s0, bag, parsers) {
+		oneOfHelp:
+		while (true) {
+			if (!parsers.b) {
+				return A2($elm$parser$Parser$Advanced$Bad, false, bag);
+			} else {
+				var parse = parsers.a.a;
+				var remainingParsers = parsers.b;
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Good') {
+					var step = _v1;
+					return step;
+				} else {
+					var step = _v1;
+					var p = step.a;
+					var x = step.b;
+					if (p) {
+						return step;
+					} else {
+						var $temp$s0 = s0,
+							$temp$bag = A2($elm$parser$Parser$Advanced$Append, bag, x),
+							$temp$parsers = remainingParsers;
+						s0 = $temp$s0;
+						bag = $temp$bag;
+						parsers = $temp$parsers;
+						continue oneOfHelp;
+					}
+				}
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$oneOf = function (parsers) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3($elm$parser$Parser$Advanced$oneOfHelp, s, $elm$parser$Parser$Advanced$Empty, parsers);
+		});
+};
+var $elm$parser$Parser$oneOf = $elm$parser$Parser$Advanced$oneOf;
+var $author$project$GameServer$PlayerJoined = function (a) {
+	return {$: 'PlayerJoined', a: a};
+};
+var $author$project$GameServer$playerParser = $elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$Player$X),
+			$elm$parser$Parser$keyword('X')),
+			A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$Player$O),
+			$elm$parser$Parser$keyword('O'))
+		]));
+var $author$project$GameServer$playerJoinedParser = A2(
+	$elm$parser$Parser$keeper,
+	A2(
+		$elm$parser$Parser$ignorer,
+		A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$GameServer$PlayerJoined),
+			$elm$parser$Parser$keyword('J')),
+		$elm$parser$Parser$spaces),
+	$author$project$GameServer$playerParser);
+var $author$project$GameServer$PlayerLeft = function (a) {
+	return {$: 'PlayerLeft', a: a};
+};
+var $author$project$GameServer$playerLeftParser = A2(
+	$elm$parser$Parser$keeper,
+	A2(
+		$elm$parser$Parser$ignorer,
+		A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$GameServer$PlayerLeft),
+			$elm$parser$Parser$keyword('L')),
+		$elm$parser$Parser$spaces),
+	$author$project$GameServer$playerParser);
+var $author$project$GameServer$PlayerMove = F2(
+	function (a, b) {
+		return {$: 'PlayerMove', a: a, b: b};
+	});
+var $author$project$UltimateTicTacToe$Move = F2(
+	function (boardCoords, cellCoords) {
+		return {boardCoords: boardCoords, cellCoords: cellCoords};
+	});
+var $author$project$Tuple3$I1 = {$: 'I1'};
+var $author$project$Tuple3$I2 = {$: 'I2'};
+var $author$project$Tuple3$I3 = {$: 'I3'};
+var $author$project$GameServer$idxParser = $elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$Tuple3$I1),
+			$elm$parser$Parser$keyword('1')),
+			A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$Tuple3$I2),
+			$elm$parser$Parser$keyword('2')),
+			A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($author$project$Tuple3$I3),
+			$elm$parser$Parser$keyword('3'))
+		]));
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $author$project$GameServer$coordsParser = A2(
+	$elm$parser$Parser$keeper,
+	A2(
+		$elm$parser$Parser$keeper,
+		$elm$parser$Parser$succeed($elm$core$Tuple$pair),
+		A2($elm$parser$Parser$ignorer, $author$project$GameServer$idxParser, $elm$parser$Parser$spaces)),
+	$author$project$GameServer$idxParser);
+var $author$project$GameServer$moveParser = A2(
+	$elm$parser$Parser$keeper,
+	A2(
+		$elm$parser$Parser$keeper,
+		$elm$parser$Parser$succeed($author$project$UltimateTicTacToe$Move),
+		A2($elm$parser$Parser$ignorer, $author$project$GameServer$coordsParser, $elm$parser$Parser$spaces)),
+	$author$project$GameServer$coordsParser);
+var $elm$parser$Parser$ExpectingSymbol = function (a) {
+	return {$: 'ExpectingSymbol', a: a};
+};
+var $elm$parser$Parser$Advanced$token = function (_v0) {
+	var str = _v0.a;
+	var expecting = _v0.b;
+	var progress = !$elm$core$String$isEmpty(str);
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _v1 = A5($elm$parser$Parser$Advanced$isSubString, str, s.offset, s.row, s.col, s.src);
+			var newOffset = _v1.a;
+			var newRow = _v1.b;
+			var newCol = _v1.c;
+			return _Utils_eq(newOffset, -1) ? A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+				$elm$parser$Parser$Advanced$Good,
+				progress,
+				_Utils_Tuple0,
+				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
+		});
+};
+var $elm$parser$Parser$Advanced$symbol = $elm$parser$Parser$Advanced$token;
+var $elm$parser$Parser$symbol = function (str) {
+	return $elm$parser$Parser$Advanced$symbol(
+		A2(
+			$elm$parser$Parser$Advanced$Token,
+			str,
+			$elm$parser$Parser$ExpectingSymbol(str)));
+};
+var $author$project$GameServer$playerMoveParser = A2(
+	$elm$parser$Parser$keeper,
+	A2(
+		$elm$parser$Parser$keeper,
+		A2(
+			$elm$parser$Parser$ignorer,
+			A2(
+				$elm$parser$Parser$ignorer,
+				$elm$parser$Parser$succeed($author$project$GameServer$PlayerMove),
+				$elm$parser$Parser$symbol('M')),
+			$elm$parser$Parser$spaces),
+		A2($elm$parser$Parser$ignorer, $author$project$GameServer$playerParser, $elm$parser$Parser$spaces)),
+	$author$project$GameServer$moveParser);
+var $author$project$GameServer$messageParser = $elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[$author$project$GameServer$playerJoinedParser, $author$project$GameServer$playerLeftParser, $author$project$GameServer$gameStartedParser, $author$project$GameServer$playerMoveParser, $author$project$GameServer$keepAliveParser, $author$project$GameServer$errorParser]));
+var $elm$parser$Parser$DeadEnd = F3(
+	function (row, col, problem) {
+		return {col: col, problem: problem, row: row};
+	});
+var $elm$parser$Parser$problemToDeadEnd = function (p) {
+	return A3($elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
+};
+var $elm$parser$Parser$Advanced$bagToList = F2(
+	function (bag, list) {
+		bagToList:
+		while (true) {
+			switch (bag.$) {
+				case 'Empty':
+					return list;
+				case 'AddRight':
+					var bag1 = bag.a;
+					var x = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2($elm$core$List$cons, x, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+				default:
+					var bag1 = bag.a;
+					var bag2 = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2($elm$parser$Parser$Advanced$bagToList, bag2, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$run = F2(
+	function (_v0, src) {
+		var parse = _v0.a;
+		var _v1 = parse(
+			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
+		if (_v1.$ === 'Good') {
+			var value = _v1.b;
+			return $elm$core$Result$Ok(value);
+		} else {
+			var bag = _v1.b;
+			return $elm$core$Result$Err(
+				A2($elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
+		}
+	});
+var $elm$parser$Parser$run = F2(
+	function (parser, source) {
+		var _v0 = A2($elm$parser$Parser$Advanced$run, parser, source);
+		if (_v0.$ === 'Ok') {
+			var a = _v0.a;
+			return $elm$core$Result$Ok(a);
+		} else {
+			var problems = _v0.a;
+			return $elm$core$Result$Err(
+				A2($elm$core$List$map, $elm$parser$Parser$problemToDeadEnd, problems));
+		}
+	});
+var $author$project$GameServer$decodeGameMessage = function (message) {
+	var _v0 = A2($elm$parser$Parser$run, $author$project$GameServer$messageParser, message);
+	if (_v0.$ === 'Ok') {
+		var event = _v0.a;
+		return event;
+	} else {
+		return $author$project$GameServer$OtherEvent;
+	}
+};
+var $author$project$GameServer$gameMessageReceiver = _Platform_incomingPort('gameMessageReceiver', $elm$json$Json$Decode$string);
+var $elm$core$Platform$Sub$map = _Platform_map;
+var $author$project$GameServer$onRemoteGameEvent = F2(
+	function (gameId, f) {
+		return A2(
+			$elm$core$Platform$Sub$map,
+			f,
+			$author$project$GameServer$gameMessageReceiver($author$project$GameServer$decodeGameMessage));
+	});
 var $elm$browser$Browser$Events$Window = {$: 'Window'};
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$browser$Browser$Events$MySub = F3(
@@ -6587,312 +7257,32 @@ var $author$project$Main$onWindowResize = $elm$browser$Browser$Events$onResize(
 				{height: h, width: w});
 		}));
 var $author$project$Main$subscriptions = function (model) {
-	return $elm$core$Platform$Sub$batch(
-		_List_fromArray(
-			[$author$project$Main$onWindowResize]));
-};
-var $author$project$Main$Creating = {$: 'Creating'};
-var $author$project$Main$Expected = function (a) {
-	return {$: 'Expected', a: a};
-};
-var $author$project$Main$Joining = {$: 'Joining'};
-var $author$project$Main$Local2Players = {$: 'Local2Players'};
-var $author$project$Main$LocalVsAI = {$: 'LocalVsAI'};
-var $author$project$Main$Remote2Players = F2(
-	function (a, b) {
-		return {$: 'Remote2Players', a: a, b: b};
-	});
-var $author$project$Main$RemoteError = function (a) {
-	return {$: 'RemoteError', a: a};
-};
-var $author$project$Main$RemoteGameCreated = F2(
-	function (a, b) {
-		return {$: 'RemoteGameCreated', a: a, b: b};
-	});
-var $author$project$Main$RemoteGameIdCreated = function (a) {
-	return {$: 'RemoteGameIdCreated', a: a};
-};
-var $author$project$Main$Unexpected = function (a) {
-	return {$: 'Unexpected', a: a};
-};
-var $elm$http$Http$BadStatus_ = F2(
-	function (a, b) {
-		return {$: 'BadStatus_', a: a, b: b};
-	});
-var $elm$http$Http$BadUrl_ = function (a) {
-	return {$: 'BadUrl_', a: a};
-};
-var $elm$http$Http$GoodStatus_ = F2(
-	function (a, b) {
-		return {$: 'GoodStatus_', a: a, b: b};
-	});
-var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
-var $elm$http$Http$Receiving = function (a) {
-	return {$: 'Receiving', a: a};
-};
-var $elm$http$Http$Sending = function (a) {
-	return {$: 'Sending', a: a};
-};
-var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
-var $elm$core$Maybe$isJust = function (maybe) {
-	if (maybe.$ === 'Just') {
-		return true;
+	var _v0 = model.gameSettings;
+	if (_v0.$ === 'Remote2Players') {
+		var gameId = _v0.a;
+		var player = _v0.b;
+		return $elm$core$Platform$Sub$batch(
+			_List_fromArray(
+				[
+					$author$project$Main$onWindowResize,
+					A2(
+					$author$project$GameServer$onRemoteGameEvent,
+					gameId,
+					function (e) {
+						return A3(
+							$author$project$Main$RemoteGameMsg,
+							gameId,
+							player,
+							$author$project$Main$RemoteGameReceivedEvent(e));
+					})
+				]));
 	} else {
-		return false;
+		return $author$project$Main$onWindowResize;
 	}
 };
-var $elm$http$Http$emptyBody = _Http_emptyBody;
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var $elm$http$Http$expectBytesResponse = F2(
-	function (toMsg, toResult) {
-		return A3(
-			_Http_expect,
-			'arraybuffer',
-			_Http_toDataView,
-			A2($elm$core$Basics$composeR, toResult, toMsg));
-	});
-var $elm$http$Http$BadBody = function (a) {
-	return {$: 'BadBody', a: a};
-};
-var $elm$http$Http$BadStatus = function (a) {
-	return {$: 'BadStatus', a: a};
-};
-var $elm$http$Http$BadUrl = function (a) {
-	return {$: 'BadUrl', a: a};
-};
-var $elm$http$Http$NetworkError = {$: 'NetworkError'};
-var $elm$http$Http$Timeout = {$: 'Timeout'};
-var $elm$core$Result$mapError = F2(
-	function (f, result) {
-		if (result.$ === 'Ok') {
-			var v = result.a;
-			return $elm$core$Result$Ok(v);
-		} else {
-			var e = result.a;
-			return $elm$core$Result$Err(
-				f(e));
-		}
-	});
-var $elm$http$Http$resolve = F2(
-	function (toResult, response) {
-		switch (response.$) {
-			case 'BadUrl_':
-				var url = response.a;
-				return $elm$core$Result$Err(
-					$elm$http$Http$BadUrl(url));
-			case 'Timeout_':
-				return $elm$core$Result$Err($elm$http$Http$Timeout);
-			case 'NetworkError_':
-				return $elm$core$Result$Err($elm$http$Http$NetworkError);
-			case 'BadStatus_':
-				var metadata = response.a;
-				return $elm$core$Result$Err(
-					$elm$http$Http$BadStatus(metadata.statusCode));
-			default:
-				var body = response.b;
-				return A2(
-					$elm$core$Result$mapError,
-					$elm$http$Http$BadBody,
-					toResult(body));
-		}
-	});
-var $elm$http$Http$expectWhatever = function (toMsg) {
-	return A2(
-		$elm$http$Http$expectBytesResponse,
-		toMsg,
-		$elm$http$Http$resolve(
-			function (_v0) {
-				return $elm$core$Result$Ok(_Utils_Tuple0);
-			}));
-};
-var $author$project$GameServer$AlreadyExistsError = {$: 'AlreadyExistsError'};
-var $author$project$GameServer$Success = {$: 'Success'};
-var $author$project$GameServer$UnexpectedError = function (a) {
-	return {$: 'UnexpectedError', a: a};
-};
-var $author$project$GameServer$parseResponse = F2(
-	function (gameId, result) {
-		if (result.$ === 'Ok') {
-			return $author$project$GameServer$Success;
-		} else {
-			if ((result.a.$ === 'BadStatus') && (result.a.a === 409)) {
-				return $author$project$GameServer$Problem($author$project$GameServer$AlreadyExistsError);
-			} else {
-				var other = result.a;
-				return $author$project$GameServer$UnexpectedError(other);
-			}
-		}
-	});
-var $elm$http$Http$Request = function (a) {
-	return {$: 'Request', a: a};
-};
-var $elm$http$Http$State = F2(
-	function (reqs, subs) {
-		return {reqs: reqs, subs: subs};
-	});
-var $elm$http$Http$init = $elm$core$Task$succeed(
-	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
-var $elm$core$Process$spawn = _Scheduler_spawn;
-var $elm$http$Http$updateReqs = F3(
-	function (router, cmds, reqs) {
-		updateReqs:
-		while (true) {
-			if (!cmds.b) {
-				return $elm$core$Task$succeed(reqs);
-			} else {
-				var cmd = cmds.a;
-				var otherCmds = cmds.b;
-				if (cmd.$ === 'Cancel') {
-					var tracker = cmd.a;
-					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
-					if (_v2.$ === 'Nothing') {
-						var $temp$router = router,
-							$temp$cmds = otherCmds,
-							$temp$reqs = reqs;
-						router = $temp$router;
-						cmds = $temp$cmds;
-						reqs = $temp$reqs;
-						continue updateReqs;
-					} else {
-						var pid = _v2.a;
-						return A2(
-							$elm$core$Task$andThen,
-							function (_v3) {
-								return A3(
-									$elm$http$Http$updateReqs,
-									router,
-									otherCmds,
-									A2($elm$core$Dict$remove, tracker, reqs));
-							},
-							$elm$core$Process$kill(pid));
-					}
-				} else {
-					var req = cmd.a;
-					return A2(
-						$elm$core$Task$andThen,
-						function (pid) {
-							var _v4 = req.tracker;
-							if (_v4.$ === 'Nothing') {
-								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
-							} else {
-								var tracker = _v4.a;
-								return A3(
-									$elm$http$Http$updateReqs,
-									router,
-									otherCmds,
-									A3($elm$core$Dict$insert, tracker, pid, reqs));
-							}
-						},
-						$elm$core$Process$spawn(
-							A3(
-								_Http_toTask,
-								router,
-								$elm$core$Platform$sendToApp(router),
-								req)));
-				}
-			}
-		}
-	});
-var $elm$http$Http$onEffects = F4(
-	function (router, cmds, subs, state) {
-		return A2(
-			$elm$core$Task$andThen,
-			function (reqs) {
-				return $elm$core$Task$succeed(
-					A2($elm$http$Http$State, reqs, subs));
-			},
-			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
-	});
-var $elm$http$Http$maybeSend = F4(
-	function (router, desiredTracker, progress, _v0) {
-		var actualTracker = _v0.a;
-		var toMsg = _v0.b;
-		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
-			A2(
-				$elm$core$Platform$sendToApp,
-				router,
-				toMsg(progress))) : $elm$core$Maybe$Nothing;
-	});
-var $elm$http$Http$onSelfMsg = F3(
-	function (router, _v0, state) {
-		var tracker = _v0.a;
-		var progress = _v0.b;
-		return A2(
-			$elm$core$Task$andThen,
-			function (_v1) {
-				return $elm$core$Task$succeed(state);
-			},
-			$elm$core$Task$sequence(
-				A2(
-					$elm$core$List$filterMap,
-					A3($elm$http$Http$maybeSend, router, tracker, progress),
-					state.subs)));
-	});
-var $elm$http$Http$Cancel = function (a) {
-	return {$: 'Cancel', a: a};
-};
-var $elm$http$Http$cmdMap = F2(
-	function (func, cmd) {
-		if (cmd.$ === 'Cancel') {
-			var tracker = cmd.a;
-			return $elm$http$Http$Cancel(tracker);
-		} else {
-			var r = cmd.a;
-			return $elm$http$Http$Request(
-				{
-					allowCookiesFromOtherDomains: r.allowCookiesFromOtherDomains,
-					body: r.body,
-					expect: A2(_Http_mapExpect, func, r.expect),
-					headers: r.headers,
-					method: r.method,
-					timeout: r.timeout,
-					tracker: r.tracker,
-					url: r.url
-				});
-		}
-	});
-var $elm$http$Http$MySub = F2(
-	function (a, b) {
-		return {$: 'MySub', a: a, b: b};
-	});
-var $elm$http$Http$subMap = F2(
-	function (func, _v0) {
-		var tracker = _v0.a;
-		var toMsg = _v0.b;
-		return A2(
-			$elm$http$Http$MySub,
-			tracker,
-			A2($elm$core$Basics$composeR, toMsg, func));
-	});
-_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
-var $elm$http$Http$command = _Platform_leaf('Http');
-var $elm$http$Http$subscription = _Platform_leaf('Http');
-var $elm$http$Http$request = function (r) {
-	return $elm$http$Http$command(
-		$elm$http$Http$Request(
-			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
-};
-var $author$project$GameServer$createGame = F3(
-	function (f, serverUrl, gameId) {
-		return A2(
-			$elm$core$Platform$Cmd$map,
-			f,
-			$elm$http$Http$request(
-				{
-					body: $elm$http$Http$emptyBody,
-					expect: $elm$http$Http$expectWhatever(
-						$author$project$GameServer$parseResponse(gameId)),
-					headers: _List_Nil,
-					method: 'PUT',
-					timeout: $elm$core$Maybe$Nothing,
-					tracker: $elm$core$Maybe$Nothing,
-					url: serverUrl + ('/games/' + gameId)
-				}));
-	});
+var $author$project$Main$LocalVsAI = {$: 'LocalVsAI'};
+var $author$project$Main$Local2Players = {$: 'Local2Players'};
+var $author$project$Main$RemoteGameIdCreated = {$: 'RemoteGameIdCreated'};
 var $author$project$GameServer$GeneratedGameId = function (a) {
 	return {$: 'GeneratedGameId', a: a};
 };
@@ -7007,9 +7397,7 @@ var $author$project$GameServer$getGameId = function (_v0) {
 	var g = _v0.a;
 	return g;
 };
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
+var $elm$core$Platform$Cmd$map = _Platform_map;
 var $elm$core$Basics$abs = function (n) {
 	return (n < 0) ? (-n) : n;
 };
@@ -7196,7 +7584,11 @@ var $elm_community$random_extra$Random$String$string = F2(
 			$elm$core$String$fromList,
 			A2($elm$random$Random$list, stringLength, charGenerator));
 	});
-var $author$project$GameId$random = A2($elm_community$random_extra$Random$String$string, 6, $elm_community$random_extra$Random$Char$english);
+var $elm$core$String$toUpper = _String_toUpper;
+var $author$project$GameId$random = A2(
+	$elm$random$Random$map,
+	$elm$core$String$toUpper,
+	A2($elm_community$random_extra$Random$String$string, 4, $elm_community$random_extra$Random$Char$english));
 var $author$project$GameServer$generateGameId = function (f) {
 	return A2(
 		$elm$core$Platform$Cmd$map,
@@ -7206,7 +7598,31 @@ var $author$project$GameServer$generateGameId = function (f) {
 		},
 		A2($elm$random$Random$generate, $author$project$GameServer$GeneratedGameId, $author$project$GameId$random));
 };
-var $author$project$Player$O = {$: 'O'};
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Main$chooseGameMode = F2(
+	function (mode, model) {
+		switch (mode.$) {
+			case 'OnePlayerVsAI':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{gameSettings: $author$project$Main$LocalVsAI, gameState: $author$project$UltimateTicTacToe$init}),
+					$elm$core$Platform$Cmd$none);
+			case 'TwoPlayersLocal':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{gameSettings: $author$project$Main$Local2Players, gameState: $author$project$UltimateTicTacToe$init}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(
+					model,
+					$author$project$GameServer$generateGameId(
+						function (gameId) {
+							return A3($author$project$Main$RemoteGameMsg, gameId, $author$project$Player$X, $author$project$Main$RemoteGameIdCreated);
+						}));
+		}
+	});
 var $author$project$Main$PerformedMove = F2(
 	function (a, b) {
 		return {$: 'PerformedMove', a: a, b: b};
@@ -7233,9 +7649,6 @@ var $elm$core$Maybe$map = F2(
 		}
 	});
 var $author$project$AI$Maximize = {$: 'Maximize'};
-var $author$project$Tuple3$I1 = {$: 'I1'};
-var $author$project$Tuple3$I2 = {$: 'I2'};
-var $author$project$Tuple3$I3 = {$: 'I3'};
 var $author$project$Tuple3$map = F2(
 	function (f, _v0) {
 		var a1 = _v0.a;
@@ -7374,7 +7787,6 @@ var $author$project$Board$flatten = function (board) {
 		$author$project$Tuple3$toList(
 			A2($author$project$Tuple3$map, $author$project$Tuple3$toList, board)));
 };
-var $elm$core$Basics$not = _Basics_not;
 var $elm$core$List$all = F2(
 	function (isOkay, list) {
 		return !A2(
@@ -7852,7 +8264,6 @@ var $author$project$AI$nextMove = function (gameState) {
 			'next move',
 			$elm$core$List$head(scoredMoves)));
 };
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Process$sleep = _Process_sleep;
 var $author$project$Main$getAIMove = function (currentBoard) {
 	var _v0 = $author$project$AI$nextMove(currentBoard);
@@ -7868,18 +8279,568 @@ var $author$project$Main$getAIMove = function (currentBoard) {
 		return $elm$core$Platform$Cmd$none;
 	}
 };
+var $author$project$Main$Creating = {$: 'Creating'};
+var $author$project$Main$Expected = function (a) {
+	return {$: 'Expected', a: a};
+};
+var $author$project$Main$InProgress = {$: 'InProgress'};
+var $author$project$Main$RemoteError = function (a) {
+	return {$: 'RemoteError', a: a};
+};
+var $author$project$Main$RemoteGameCreated = function (a) {
+	return {$: 'RemoteGameCreated', a: a};
+};
+var $author$project$Main$UnexpectedHttpError = function (a) {
+	return {$: 'UnexpectedHttpError', a: a};
+};
+var $author$project$Main$UnexpectedOther = function (a) {
+	return {$: 'UnexpectedOther', a: a};
+};
+var $author$project$Main$WaitingForPlayers = {$: 'WaitingForPlayers'};
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 'BadStatus_', a: a, b: b};
+	});
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
+	});
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$http$Http$emptyBody = _Http_emptyBody;
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$http$Http$expectBytesResponse = F2(
+	function (toMsg, toResult) {
+		return A3(
+			_Http_expect,
+			'arraybuffer',
+			_Http_toDataView,
+			A2($elm$core$Basics$composeR, toResult, toMsg));
+	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $elm$http$Http$resolve = F2(
+	function (toResult, response) {
+		switch (response.$) {
+			case 'BadUrl_':
+				var url = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadUrl(url));
+			case 'Timeout_':
+				return $elm$core$Result$Err($elm$http$Http$Timeout);
+			case 'NetworkError_':
+				return $elm$core$Result$Err($elm$http$Http$NetworkError);
+			case 'BadStatus_':
+				var metadata = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadStatus(metadata.statusCode));
+			default:
+				var body = response.b;
+				return A2(
+					$elm$core$Result$mapError,
+					$elm$http$Http$BadBody,
+					toResult(body));
+		}
+	});
+var $elm$http$Http$expectWhatever = function (toMsg) {
+	return A2(
+		$elm$http$Http$expectBytesResponse,
+		toMsg,
+		$elm$http$Http$resolve(
+			function (_v0) {
+				return $elm$core$Result$Ok(_Utils_Tuple0);
+			}));
+};
+var $author$project$GameServer$AlreadyExistsError = {$: 'AlreadyExistsError'};
+var $author$project$GameServer$Problem = function (a) {
+	return {$: 'Problem', a: a};
+};
+var $author$project$GameServer$Success = {$: 'Success'};
+var $author$project$GameServer$UnexpectedError = function (a) {
+	return {$: 'UnexpectedError', a: a};
+};
+var $author$project$GameServer$parseResponse = F2(
+	function (gameId, result) {
+		if (result.$ === 'Ok') {
+			return $author$project$GameServer$Success;
+		} else {
+			if ((result.a.$ === 'BadStatus') && (result.a.a === 409)) {
+				return $author$project$GameServer$Problem($author$project$GameServer$AlreadyExistsError);
+			} else {
+				var other = result.a;
+				return $author$project$GameServer$UnexpectedError(other);
+			}
+		}
+	});
+var $elm$http$Http$Request = function (a) {
+	return {$: 'Request', a: a};
+};
+var $elm$http$Http$State = F2(
+	function (reqs, subs) {
+		return {reqs: reqs, subs: subs};
+	});
+var $elm$http$Http$init = $elm$core$Task$succeed(
+	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$http$Http$updateReqs = F3(
+	function (router, cmds, reqs) {
+		updateReqs:
+		while (true) {
+			if (!cmds.b) {
+				return $elm$core$Task$succeed(reqs);
+			} else {
+				var cmd = cmds.a;
+				var otherCmds = cmds.b;
+				if (cmd.$ === 'Cancel') {
+					var tracker = cmd.a;
+					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
+					if (_v2.$ === 'Nothing') {
+						var $temp$router = router,
+							$temp$cmds = otherCmds,
+							$temp$reqs = reqs;
+						router = $temp$router;
+						cmds = $temp$cmds;
+						reqs = $temp$reqs;
+						continue updateReqs;
+					} else {
+						var pid = _v2.a;
+						return A2(
+							$elm$core$Task$andThen,
+							function (_v3) {
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A2($elm$core$Dict$remove, tracker, reqs));
+							},
+							$elm$core$Process$kill(pid));
+					}
+				} else {
+					var req = cmd.a;
+					return A2(
+						$elm$core$Task$andThen,
+						function (pid) {
+							var _v4 = req.tracker;
+							if (_v4.$ === 'Nothing') {
+								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
+							} else {
+								var tracker = _v4.a;
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A3($elm$core$Dict$insert, tracker, pid, reqs));
+							}
+						},
+						$elm$core$Process$spawn(
+							A3(
+								_Http_toTask,
+								router,
+								$elm$core$Platform$sendToApp(router),
+								req)));
+				}
+			}
+		}
+	});
+var $elm$http$Http$onEffects = F4(
+	function (router, cmds, subs, state) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (reqs) {
+				return $elm$core$Task$succeed(
+					A2($elm$http$Http$State, reqs, subs));
+			},
+			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
+	});
+var $elm$http$Http$maybeSend = F4(
+	function (router, desiredTracker, progress, _v0) {
+		var actualTracker = _v0.a;
+		var toMsg = _v0.b;
+		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
+			A2(
+				$elm$core$Platform$sendToApp,
+				router,
+				toMsg(progress))) : $elm$core$Maybe$Nothing;
+	});
+var $elm$http$Http$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var tracker = _v0.a;
+		var progress = _v0.b;
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$filterMap,
+					A3($elm$http$Http$maybeSend, router, tracker, progress),
+					state.subs)));
+	});
+var $elm$http$Http$Cancel = function (a) {
+	return {$: 'Cancel', a: a};
+};
+var $elm$http$Http$cmdMap = F2(
+	function (func, cmd) {
+		if (cmd.$ === 'Cancel') {
+			var tracker = cmd.a;
+			return $elm$http$Http$Cancel(tracker);
+		} else {
+			var r = cmd.a;
+			return $elm$http$Http$Request(
+				{
+					allowCookiesFromOtherDomains: r.allowCookiesFromOtherDomains,
+					body: r.body,
+					expect: A2(_Http_mapExpect, func, r.expect),
+					headers: r.headers,
+					method: r.method,
+					timeout: r.timeout,
+					tracker: r.tracker,
+					url: r.url
+				});
+		}
+	});
+var $elm$http$Http$MySub = F2(
+	function (a, b) {
+		return {$: 'MySub', a: a, b: b};
+	});
+var $elm$http$Http$subMap = F2(
+	function (func, _v0) {
+		var tracker = _v0.a;
+		var toMsg = _v0.b;
+		return A2(
+			$elm$http$Http$MySub,
+			tracker,
+			A2($elm$core$Basics$composeR, toMsg, func));
+	});
+_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
+var $elm$http$Http$command = _Platform_leaf('Http');
+var $elm$http$Http$subscription = _Platform_leaf('Http');
+var $elm$http$Http$request = function (r) {
+	return $elm$http$Http$command(
+		$elm$http$Http$Request(
+			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
+};
+var $author$project$GameServer$createGame = F3(
+	function (f, serverUrl, gameId) {
+		return A2(
+			$elm$core$Platform$Cmd$map,
+			f,
+			$elm$http$Http$request(
+				{
+					body: $elm$http$Http$emptyBody,
+					expect: $elm$http$Http$expectWhatever(
+						$author$project$GameServer$parseResponse(gameId)),
+					headers: _List_Nil,
+					method: 'PUT',
+					timeout: $elm$core$Maybe$Nothing,
+					tracker: $elm$core$Maybe$Nothing,
+					url: serverUrl + ('/games/' + gameId)
+				}));
+	});
+var $author$project$Main$handleRemoteMessage = F4(
+	function (gameId, player, message, model) {
+		var config = model.config;
+		var gameSettings = model.gameSettings;
+		var gameState = model.gameState;
+		_v0$13:
+		while (true) {
+			switch (message.$) {
+				case 'RemoteGameIdCreated':
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$Creating)
+							}),
+						A3(
+							$author$project$GameServer$createGame,
+							function (e) {
+								return A3(
+									$author$project$Main$RemoteGameMsg,
+									gameId,
+									player,
+									$author$project$Main$RemoteGameCreated(e));
+							},
+							config.remotePlayServerUrl,
+							gameId));
+				case 'RemoteGameCreated':
+					switch (message.a.$) {
+						case 'Success':
+							var _v1 = message.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$Joining)
+									}),
+								A4(
+									$author$project$GameServer$joinGame,
+									function (e) {
+										return A3(
+											$author$project$Main$RemoteGameMsg,
+											gameId,
+											player,
+											$author$project$Main$RemoteGameJoined(e));
+									},
+									config.remotePlayServerUrl,
+									gameId,
+									$author$project$Player$X));
+						case 'Problem':
+							var _v2 = message.a.a;
+							return _Utils_Tuple2(
+								model,
+								$author$project$GameServer$generateGameId(
+									function (e) {
+										return A3($author$project$Main$RemoteGameMsg, gameId, player, $author$project$Main$RemoteGameIdCreated);
+									}));
+						default:
+							var error = message.a.a;
+							return function (_v3) {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A3(
+												$author$project$Main$Remote2Players,
+												gameId,
+												player,
+												$author$project$Main$RemoteError(
+													$author$project$Main$UnexpectedHttpError(error)))
+										}),
+									$elm$core$Platform$Cmd$none);
+							}(
+								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
+					}
+				case 'RemoteGameJoined':
+					switch (message.a.$) {
+						case 'UnexpectedError':
+							var error = message.a.a;
+							return function (_v4) {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A3(
+												$author$project$Main$Remote2Players,
+												gameId,
+												player,
+												$author$project$Main$RemoteError(
+													$author$project$Main$UnexpectedHttpError(error)))
+										}),
+									$elm$core$Platform$Cmd$none);
+							}(
+								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
+						case 'Success':
+							var _v5 = message.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$WaitingForPlayers)
+									}),
+								$elm$core$Platform$Cmd$none);
+						default:
+							switch (message.a.a.$) {
+								case 'GameFullError':
+									var _v6 = message.a.a;
+									return _Utils_Tuple2(
+										_Utils_update(
+											model,
+											{
+												gameSettings: A3(
+													$author$project$Main$Remote2Players,
+													gameId,
+													player,
+													$author$project$Main$RemoteError(
+														$author$project$Main$Expected('You cannot join this game, it\'s already full!')))
+											}),
+										$elm$core$Platform$Cmd$none);
+								case 'NotSupportedYet':
+									var _v7 = message.a.a;
+									return _Utils_Tuple2(
+										_Utils_update(
+											model,
+											{
+												gameSettings: A3(
+													$author$project$Main$Remote2Players,
+													gameId,
+													player,
+													$author$project$Main$RemoteError(
+														$author$project$Main$Expected('Remote multiplayer isn\'t supported yet... come back soon :-)')))
+											}),
+										$elm$core$Platform$Cmd$none);
+								default:
+									var _v8 = message.a.a;
+									return _Utils_Tuple2(
+										_Utils_update(
+											model,
+											{
+												gameSettings: A3(
+													$author$project$Main$Remote2Players,
+													gameId,
+													player,
+													$author$project$Main$RemoteError(
+														$author$project$Main$Expected('Sorry, this game does not exist!')))
+											}),
+										$elm$core$Platform$Cmd$none);
+							}
+					}
+				default:
+					switch (message.a.$) {
+						case 'Error':
+							var error = message.a.a;
+							return function (_v9) {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A3(
+												$author$project$Main$Remote2Players,
+												gameId,
+												player,
+												$author$project$Main$RemoteError(
+													$author$project$Main$UnexpectedOther(error)))
+										}),
+									$elm$core$Platform$Cmd$none);
+							}(
+								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
+						case 'PlayerJoined':
+							if (message.a.a.$ === 'X') {
+								var _v10 = message.a.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$WaitingForPlayers)
+										}),
+									$elm$core$Platform$Cmd$none);
+							} else {
+								break _v0$13;
+							}
+						case 'GameStarted':
+							var _v11 = message.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$InProgress)
+									}),
+								$elm$core$Platform$Cmd$none);
+						case 'PlayerMove':
+							var _v12 = message.a;
+							var p = _v12.a;
+							var move = _v12.b;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										gameState: A3($author$project$UltimateTicTacToe$performMove, p, move, gameState)
+									}),
+								$elm$core$Platform$Cmd$none);
+						default:
+							break _v0$13;
+					}
+			}
+		}
+		var otherEvent = message.a;
+		return function (_v13) {
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}(
+			A2($elm$core$Debug$log, 'Received unprocessed game event', otherEvent));
+	});
+var $author$project$GameServer$encodeTuple3Index = function (idx) {
+	switch (idx.$) {
+		case 'I1':
+			return '1';
+		case 'I2':
+			return '2';
+		default:
+			return '3';
+	}
+};
+var $author$project$GameServer$encodeCoords = function (_v0) {
+	var x = _v0.a;
+	var y = _v0.b;
+	return $author$project$GameServer$encodeTuple3Index(x) + (' ' + $author$project$GameServer$encodeTuple3Index(y));
+};
+var $author$project$GameServer$encodeMove = function (_v0) {
+	var boardCoords = _v0.boardCoords;
+	var cellCoords = _v0.cellCoords;
+	return $author$project$GameServer$encodeCoords(boardCoords) + (' ' + $author$project$GameServer$encodeCoords(cellCoords));
+};
+var $author$project$Player$toString = function (player) {
+	if (player.$ === 'X') {
+		return 'X';
+	} else {
+		return 'O';
+	}
+};
+var $author$project$GameServer$encodePlayer = $author$project$Player$toString;
+var $author$project$GameServer$sendGameMessage = _Platform_outgoingPort('sendGameMessage', $elm$json$Json$Encode$string);
+var $author$project$GameServer$playMove = F4(
+	function (serverUrl, gameId, player, move) {
+		return $author$project$GameServer$sendGameMessage(
+			'M ' + ($author$project$GameServer$encodePlayer(player) + (' ' + $author$project$GameServer$encodeMove(move))));
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		var config = model.config;
 		var gameState = model.gameState;
 		var gameSettings = model.gameSettings;
 		var windowSize = model.windowSize;
-		_v0$13:
-		while (true) {
-			switch (msg.$) {
-				case 'PerformedMove':
-					var player = msg.a;
-					var move = msg.b;
+		switch (msg.$) {
+			case 'PerformedMove':
+				var player = msg.a;
+				var move = msg.b;
+				if ((gameSettings.$ === 'Remote2Players') && (gameSettings.c.$ === 'InProgress')) {
+					var gameId = gameSettings.a;
+					var thisPlayer = gameSettings.b;
+					var _v2 = gameSettings.c;
+					return _Utils_eq(thisPlayer, player) ? _Utils_Tuple2(
+						model,
+						A4($author$project$GameServer$playMove, config.remotePlayServerUrl, gameId, player, move)) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
 					var newState = A3($author$project$UltimateTicTacToe$performMove, player, move, gameState);
 					var cmd = (_Utils_eq(player, $author$project$Player$X) && _Utils_eq(gameSettings, $author$project$Main$LocalVsAI)) ? $author$project$Main$getAIMove(newState) : $elm$core$Platform$Cmd$none;
 					return _Utils_Tuple2(
@@ -7887,156 +8848,32 @@ var $author$project$Main$update = F2(
 							model,
 							{gameState: newState}),
 						cmd);
-				case 'NewWindowSize':
-					var size = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{windowSize: size}),
-						$elm$core$Platform$Cmd$none);
-				case 'RequestedMainMenu':
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{gameSettings: $author$project$Main$NotYetSelected}),
-						$elm$core$Platform$Cmd$none);
-				case 'RemoteGameIdCreated':
-					var gameId = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								gameSettings: A2($author$project$Main$Remote2Players, gameId, $author$project$Main$Creating)
-							}),
-						A3(
-							$author$project$GameServer$createGame,
-							$author$project$Main$RemoteGameCreated(gameId),
-							config.remotePlayServerUrl,
-							gameId));
-				case 'RemoteGameCreated':
-					switch (msg.b.$) {
-						case 'Success':
-							var gameId = msg.a;
-							var _v1 = msg.b;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										gameSettings: A2($author$project$Main$Remote2Players, gameId, $author$project$Main$Joining)
-									}),
-								A3(
-									$author$project$GameServer$joinGame,
-									$author$project$Main$RemoteGameJoined(gameId),
-									config.remotePlayServerUrl,
-									gameId));
-						case 'Problem':
-							var gameId = msg.a;
-							var _v2 = msg.b.a;
-							return _Utils_Tuple2(
-								model,
-								$author$project$GameServer$generateGameId($author$project$Main$RemoteGameIdCreated));
-						default:
-							var gameId = msg.a;
-							var error = msg.b.a;
-							return function (_v3) {
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											gameSettings: A2(
-												$author$project$Main$Remote2Players,
-												gameId,
-												$author$project$Main$RemoteError(
-													$author$project$Main$Unexpected(error)))
-										}),
-									$elm$core$Platform$Cmd$none);
-							}(
-								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
-					}
-				case 'RemoteGameJoined':
-					switch (msg.b.$) {
-						case 'UnexpectedError':
-							var gameId = msg.a;
-							var error = msg.b.a;
-							return function (_v4) {
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											gameSettings: A2(
-												$author$project$Main$Remote2Players,
-												gameId,
-												$author$project$Main$RemoteError(
-													$author$project$Main$Unexpected(error)))
-										}),
-									$elm$core$Platform$Cmd$none);
-							}(
-								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
-						case 'Problem':
-							switch (msg.b.a.$) {
-								case 'NotSupportedYet':
-									var gameId = msg.a;
-									var _v5 = msg.b.a;
-									return _Utils_Tuple2(
-										_Utils_update(
-											model,
-											{
-												gameSettings: A2(
-													$author$project$Main$Remote2Players,
-													gameId,
-													$author$project$Main$RemoteError(
-														$author$project$Main$Expected('Remote multiplayer isn\'t supported yet... come back soon :-)')))
-											}),
-										$elm$core$Platform$Cmd$none);
-								case 'GameDoesNotExist':
-									var gameId = msg.a;
-									var _v6 = msg.b.a;
-									return _Utils_Tuple2(
-										_Utils_update(
-											model,
-											{
-												gameSettings: A2(
-													$author$project$Main$Remote2Players,
-													gameId,
-													$author$project$Main$RemoteError(
-														$author$project$Main$Expected('Sorry, this game does not exist!')))
-											}),
-										$elm$core$Platform$Cmd$none);
-								default:
-									break _v0$13;
-							}
-						default:
-							break _v0$13;
-					}
-				case 'ChoseGameMode':
-					switch (msg.a.$) {
-						case 'TwoPlayersRemote':
-							var _v7 = msg.a;
-							return _Utils_Tuple2(
-								model,
-								$author$project$GameServer$generateGameId($author$project$Main$RemoteGameIdCreated));
-						case 'OnePlayerVsAI':
-							var _v8 = msg.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{gameSettings: $author$project$Main$LocalVsAI, gameState: $author$project$UltimateTicTacToe$init}),
-								$elm$core$Platform$Cmd$none);
-						default:
-							var _v9 = msg.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{gameSettings: $author$project$Main$Local2Players, gameState: $author$project$UltimateTicTacToe$init}),
-								$elm$core$Platform$Cmd$none);
-					}
-				default:
-					break _v0$13;
-			}
+				}
+			case 'NewWindowSize':
+				var size = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{windowSize: size}),
+					$elm$core$Platform$Cmd$none);
+			case 'RequestedMainMenu':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{gameSettings: $author$project$Main$NotYetSelected}),
+					$elm$core$Platform$Cmd$none);
+			case 'RemoteGameMsg':
+				var gameId = msg.a;
+				var player = msg.b;
+				var message = msg.c;
+				return A4($author$project$Main$handleRemoteMessage, gameId, player, message, model);
+			case 'ChoseGameMode':
+				var mode = msg.a;
+				return A2($author$project$Main$chooseGameMode, mode, model);
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
-		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -8798,91 +9635,93 @@ var $elm$url$Url$toString = function (url) {
 				url.path)));
 };
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $author$project$Main$viewWaitingForPlayerMenu = function (gameUrl) {
-	var title = 'Waiting for players...';
-	var titleDiv = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('menutitle')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text(title)
-			]));
-	var mainDiv = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('buttons')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$p,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Waiting for another player')
-							])),
-						A2(
-						$elm$html$Html$p,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text('They can join using the following link:')
-							]))
-					])),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Attributes$readonly(true),
-						$elm$html$Html$Attributes$value(
-						$elm$url$Url$toString(gameUrl))
-					]),
-				_List_Nil),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Cancel')
-					]))
-			]));
-	var menu = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$id('menu')
-			]),
-		_List_fromArray(
-			[titleDiv, mainDiv]));
-	var containerClass = 'fade-in';
-	var menuContainer = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$id('menu-container'),
-				$elm$html$Html$Attributes$class(containerClass)
-			]),
-		_List_fromArray(
-			[menu]));
-	return menuContainer;
-};
+var $author$project$Main$viewWaitingForPlayerMenu = F2(
+	function (gameUrl, player) {
+		var title = 'Waiting for players...';
+		var titleDiv = A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menutitle')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(title)
+				]));
+		var mainDiv = A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('buttons')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('menu-item')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$p,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									'Waiting for another player. You\'ll be playing as \'' + ($author$project$Player$toString(player) + '\''))
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('They can join using the following link:')
+								]))
+						])),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('menu-item'),
+							$elm$html$Html$Attributes$readonly(true),
+							$elm$html$Html$Attributes$value(
+							$elm$url$Url$toString(gameUrl))
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('menu-item'),
+							$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Cancel')
+						]))
+				]));
+		var menu = A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$id('menu')
+				]),
+			_List_fromArray(
+				[titleDiv, mainDiv]));
+		var containerClass = 'fade-in';
+		var menuContainer = A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$id('menu-container'),
+					$elm$html$Html$Attributes$class(containerClass)
+				]),
+			_List_fromArray(
+				[menu]));
+		return menuContainer;
+	});
 var $author$project$Main$view = function (model) {
 	var baseUrl = model.baseUrl;
 	var config = model.config;
@@ -8892,70 +9731,82 @@ var $author$project$Main$view = function (model) {
 	var minSize = A2($elm$core$Basics$min, windowSize.width, windowSize.height) - 5;
 	var size = $elm$core$String$fromFloat(minSize);
 	var maybeMenu = function () {
-		var _v0 = _Utils_Tuple2(
+		var _v2 = _Utils_Tuple2(
 			gameSettings,
 			$author$project$UltimateTicTacToe$winner(gameState.board));
-		_v0$3:
+		_v2$3:
 		while (true) {
-			_v0$4:
+			_v2$4:
 			while (true) {
-				switch (_v0.a.$) {
+				switch (_v2.a.$) {
 					case 'NotYetSelected':
-						var _v1 = _v0.a;
+						var _v3 = _v2.a;
 						return $elm$core$Maybe$Just(
 							$author$project$Main$viewMainMenu($elm$core$Maybe$Nothing));
 					case 'Remote2Players':
-						switch (_v0.a.b.$) {
+						switch (_v2.a.c.$) {
 							case 'RemoteError':
-								var _v2 = _v0.a;
-								var gameId = _v2.a;
-								var error = _v2.b.a;
+								var _v4 = _v2.a;
+								var gameId = _v4.a;
+								var error = _v4.c.a;
 								return $elm$core$Maybe$Just(
 									$author$project$Main$viewError(error));
 							case 'WaitingForPlayers':
-								var _v3 = _v0.a;
-								var gameId = _v3.a;
-								var _v4 = _v3.b;
+								var _v5 = _v2.a;
+								var gameId = _v5.a;
+								var player = _v5.b;
+								var _v6 = _v5.c;
 								var gameUrl = _Utils_update(
 									baseUrl,
 									{path: '/' + gameId});
 								return $elm$core$Maybe$Just(
-									$author$project$Main$viewWaitingForPlayerMenu(gameUrl));
+									A2($author$project$Main$viewWaitingForPlayerMenu, gameUrl, player));
 							default:
-								if (_v0.b.$ === 'Just') {
-									break _v0$3;
+								if (_v2.b.$ === 'Just') {
+									break _v2$3;
 								} else {
-									break _v0$4;
+									break _v2$4;
 								}
 						}
 					default:
-						if (_v0.b.$ === 'Just') {
-							break _v0$3;
+						if (_v2.b.$ === 'Just') {
+							break _v2$3;
 						} else {
-							break _v0$4;
+							break _v2$4;
 						}
 				}
 			}
 			return $elm$core$Maybe$Nothing;
 		}
-		var winner = _v0.b.a;
+		var winner = _v2.b.a;
 		return $elm$core$Maybe$Just(
 			$author$project$Main$viewMainMenu(
 				$elm$core$Maybe$Just(winner)));
 	}();
-	var mainDivStyles = _List_fromArray(
-		[
-			A2($elm$html$Html$Attributes$style, 'margin', 'auto'),
-			A2($elm$html$Html$Attributes$style, 'position', 'relative'),
-			A2($elm$html$Html$Attributes$style, 'width', size + 'px'),
-			A2($elm$html$Html$Attributes$style, 'height', size + 'px')
-		]);
 	var gameBoardView = A3($author$project$Main$viewGameState, minSize, gameSettings, gameState);
 	var elementsToDisplay = A2(
 		$author$project$Main$prependMaybe,
 		_List_fromArray(
 			[gameBoardView]),
 		maybeMenu);
+	var cursorStyle = function () {
+		if ((gameSettings.$ === 'Remote2Players') && (gameSettings.c.$ === 'InProgress')) {
+			var gameId = gameSettings.a;
+			var player = gameSettings.b;
+			var _v1 = gameSettings.c;
+			return _Utils_eq(player, gameState.currentPlayer) ? 'auto' : 'wait';
+		} else {
+			return 'auto';
+		}
+	}();
+	var mainDivStyles = _List_fromArray(
+		[
+			A2($elm$html$Html$Attributes$style, 'margin', 'auto'),
+			A2($elm$html$Html$Attributes$style, 'position', 'relative'),
+			A2($elm$html$Html$Attributes$style, 'width', size + 'px'),
+			A2($elm$html$Html$Attributes$style, 'height', size + 'px'),
+			A2($elm$html$Html$Attributes$style, 'cursor', cursorStyle)
+		]);
 	var html = A2(
 		$elm$html$Html$div,
 		mainDivStyles,
