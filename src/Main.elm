@@ -157,20 +157,32 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ config, gameState, gameSettings, windowSize } as model) =
     case msg of
         PerformedMove player move ->
-            let
-                newState =
-                    UltimateTicTacToe.performMove player move gameState
-
-                cmd =
-                    if player == Player.X && gameSettings == LocalVsAI then
-                        getAIMove newState
-
+            case gameSettings of
+                Remote2Players gameId thisPlayer InProgress ->
+                    if thisPlayer == player then
+                        ( model
+                        , GameServer.playMove config.remotePlayServerUrl gameId player move
+                        )
                     else
-                        Cmd.none
-            in
-            ( { model | gameState = newState }
-            , cmd
-            )
+                        ( model
+                        , Cmd.none
+                        )
+
+                _ ->
+                    let
+                        newState =
+                            UltimateTicTacToe.performMove player move gameState
+
+                        cmd =
+                            if player == Player.X && gameSettings == LocalVsAI then
+                                getAIMove newState
+
+                            else
+                                Cmd.none
+                    in
+                    ( { model | gameState = newState }
+                    , cmd
+                    )
 
         NewWindowSize size ->
             ( { model | windowSize = size }
@@ -195,7 +207,7 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
             )
 
 handleRemoteMessage : GameId.GameId -> Player -> RemoteMsg -> Model -> ( Model, Cmd Msg)
-handleRemoteMessage gameId player message ({ config, gameSettings } as model) =
+handleRemoteMessage gameId player message ({ config, gameSettings, gameState } as model) =
     case message of
         RemoteGameIdCreated ->
             ( { model | gameSettings = (Remote2Players gameId player Creating) }
@@ -257,6 +269,11 @@ handleRemoteMessage gameId player message ({ config, gameSettings } as model) =
 
         RemoteGameReceivedEvent GameServer.GameStarted ->
             ( { model | gameSettings = (Remote2Players gameId player InProgress) }
+            , Cmd.none
+            )
+
+        RemoteGameReceivedEvent (GameServer.PlayerMove p move) ->
+            ( { model | gameState = UltimateTicTacToe.performMove p move gameState }
             , Cmd.none
             )
 

@@ -98,11 +98,32 @@ joinGame f serverUrl gameId player =
      -- A bit hackish but we're replacing https with wss since it's a websocket connection
      joinRemoteGame (String.replace "https" "wss" (serverUrl ++ "/games/" ++ gameId ++ "/ws/" ++ p ))
 
-sendGameMove : ServerUrl -> GameId.GameId -> Player -> UltimateTicTacToe.Move -> Cmd msg
-sendGameMove serverUrl gameId player move =
-  Debug.todo "todo"
+playMove : ServerUrl -> GameId.GameId -> Player -> UltimateTicTacToe.Move -> Cmd msg
+playMove serverUrl gameId player move =
+   sendGameMessage ("M " ++ (encodePlayer player) ++ " " ++ (encodeMove move))
 
--- GAME MESSAGE ENCODING/DECODING
+
+-- GAME MESSAGE ENCODING
+
+encodeTuple3Index : Tuple3.Index -> String
+encodeTuple3Index idx =
+    case idx of
+        Tuple3.I1 -> "1"
+        Tuple3.I2 -> "2"
+        Tuple3.I3 -> "3"
+
+encodeCoords : Board.Coords -> String
+encodeCoords (x, y) =
+    (encodeTuple3Index x) ++ " " ++ (encodeTuple3Index y)
+
+encodeMove : UltimateTicTacToe.Move -> String
+encodeMove { boardCoords, cellCoords } =
+    (encodeCoords boardCoords) ++ " " ++ (encodeCoords cellCoords)
+
+encodePlayer : Player.Player -> String
+encodePlayer = Player.toString
+
+-- GAME MESSAGE DECODING
 
 playerParser : Parser.Parser Player
 playerParser =
