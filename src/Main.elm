@@ -15,6 +15,7 @@ import Svg.Attributes as SA
 import SvgUtils
 import Task
 import Url
+import Url.Builder as UrlBuilder
 import Url.Parser as UrlParser
 import UrlUtils
 
@@ -59,7 +60,8 @@ type alias Config =
 
 
 type alias Model =
-    { baseUrl: Url.Url
+    { baseUrl : Url.Url
+    , navigationKey : Nav.Key
     , config : Config
     , gameState : GameState
     , gameSettings : GameSettings
@@ -97,6 +99,7 @@ init conf url key =
                       )
         model =
             { baseUrl = UrlUtils.baseUrl url
+            , navigationKey = key
             , config = conf
             , gameState = UltimateTicTacToe.init
             , gameSettings = gameSettings_
@@ -191,7 +194,7 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
 
         RequestedMainMenu ->
             ( { model | gameSettings = NotYetSelected }
-            , Cmd.none
+            , Nav.replaceUrl model.navigationKey (UrlBuilder.absolute [] [])
             )
 
         RemoteGameMsg gameId player message ->
@@ -207,7 +210,7 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
             )
 
 handleRemoteMessage : GameId.GameId -> Player -> RemoteMsg -> Model -> ( Model, Cmd Msg)
-handleRemoteMessage gameId player message ({ config, gameSettings, gameState } as model) =
+handleRemoteMessage gameId player message ({ config, gameSettings } as model) =
     case message of
         RemoteGameIdCreated ->
             ( { model | gameSettings = (Remote2Players gameId player Creating) }
@@ -264,7 +267,7 @@ handleRemoteMessage gameId player message ({ config, gameSettings, gameState } a
         RemoteGameReceivedEvent (GameServer.PlayerJoined Player.X) ->
             -- We successfully joined the game!
             ( { model | gameSettings = (Remote2Players gameId player WaitingForPlayers) }
-            , Cmd.none
+            , Nav.replaceUrl model.navigationKey (UrlBuilder.absolute [ gameId ] [])
             )
 
         RemoteGameReceivedEvent GameServer.GameStarted ->
@@ -273,7 +276,7 @@ handleRemoteMessage gameId player message ({ config, gameSettings, gameState } a
             )
 
         RemoteGameReceivedEvent (GameServer.PlayerMove p move) ->
-            ( { model | gameState = UltimateTicTacToe.performMove p move gameState }
+            ( { model | gameState = UltimateTicTacToe.performMove p move model.gameState }
             , Cmd.none
             )
 
