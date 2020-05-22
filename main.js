@@ -6424,6 +6424,7 @@ var $author$project$Main$init = F3(
 			config: conf,
 			gameSettings: gameSettings_,
 			gameState: $author$project$UltimateTicTacToe$init,
+			navigationKey: key,
 			windowSize: {height: 0, width: 0}
 		};
 		return _Utils_Tuple2(
@@ -7281,6 +7282,25 @@ var $author$project$Main$subscriptions = function (model) {
 	}
 };
 var $author$project$Main$LocalVsAI = {$: 'LocalVsAI'};
+var $elm$url$Url$Builder$toQueryPair = function (_v0) {
+	var key = _v0.a;
+	var value = _v0.b;
+	return key + ('=' + value);
+};
+var $elm$url$Url$Builder$toQuery = function (parameters) {
+	if (!parameters.b) {
+		return '';
+	} else {
+		return '?' + A2(
+			$elm$core$String$join,
+			'&',
+			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
+	}
+};
+var $elm$url$Url$Builder$absolute = F2(
+	function (pathSegments, parameters) {
+		return '/' + (A2($elm$core$String$join, '/', pathSegments) + $elm$url$Url$Builder$toQuery(parameters));
+	});
 var $author$project$Main$Local2Players = {$: 'Local2Players'};
 var $author$project$Main$RemoteGameIdCreated = {$: 'RemoteGameIdCreated'};
 var $author$project$GameServer$GeneratedGameId = function (a) {
@@ -8578,11 +8598,11 @@ var $author$project$GameServer$createGame = F3(
 					url: serverUrl + ('/games/' + gameId)
 				}));
 	});
+var $elm$browser$Browser$Navigation$replaceUrl = _Browser_replaceUrl;
 var $author$project$Main$handleRemoteMessage = F4(
 	function (gameId, player, message, model) {
 		var config = model.config;
 		var gameSettings = model.gameSettings;
-		var gameState = model.gameState;
 		_v0$13:
 		while (true) {
 			switch (message.$) {
@@ -8754,7 +8774,14 @@ var $author$project$Main$handleRemoteMessage = F4(
 										{
 											gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$WaitingForPlayers)
 										}),
-									$elm$core$Platform$Cmd$none);
+									A2(
+										$elm$browser$Browser$Navigation$replaceUrl,
+										model.navigationKey,
+										A2(
+											$elm$url$Url$Builder$absolute,
+											_List_fromArray(
+												[gameId]),
+											_List_Nil)));
 							} else {
 								break _v0$13;
 							}
@@ -8775,7 +8802,7 @@ var $author$project$Main$handleRemoteMessage = F4(
 								_Utils_update(
 									model,
 									{
-										gameState: A3($author$project$UltimateTicTacToe$performMove, p, move, gameState)
+										gameState: A3($author$project$UltimateTicTacToe$performMove, p, move, model.gameState)
 									}),
 								$elm$core$Platform$Cmd$none);
 						default:
@@ -8861,7 +8888,10 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{gameSettings: $author$project$Main$NotYetSelected}),
-					$elm$core$Platform$Cmd$none);
+					A2(
+						$elm$browser$Browser$Navigation$replaceUrl,
+						model.navigationKey,
+						A2($elm$url$Url$Builder$absolute, _List_Nil, _List_Nil)));
 			case 'RemoteGameMsg':
 				var gameId = msg.a;
 				var player = msg.b;
