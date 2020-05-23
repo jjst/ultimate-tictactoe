@@ -67,9 +67,12 @@ type alias Model =
     , windowSize : WindowSize
     }
 
+
 type SinglePlayerState
-    = WaitingForAI
-    | Playing
+    = ChoosingDifficulty
+    | WaitingForAI AI.Difficulty
+    | Playing AI.Difficulty
+
 
 type RemoteState
     = Creating
@@ -159,6 +162,7 @@ type Msg
     | NewWindowSize WindowSize
     | RemoteGameMsg GameId.GameId Player RemoteMsg
     | ChoseGameMode GameMode.Mode
+    | ChoseDifficulty AI.Difficulty
     | RequestedMainMenu
     | ClickedLink Browser.UrlRequest
     | ChangedUrl Url.Url
@@ -180,6 +184,7 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
             ( model
             , getAIMove gameState
             )
+
         PerformedMove player move ->
             -- FIXME: this branch is in need of a cleanup!
             case gameSettings of
@@ -194,42 +199,40 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
                         , Cmd.none
                         )
 
-                LocalVsAI Playing ->
+                LocalVsAI (Playing difficulty) ->
                     let
                         newState =
                             UltimateTicTacToe.performMove player move gameState
 
                         cmd =
-                            if player == Player.X && gameSettings == (LocalVsAI Playing) then
+                            if player == Player.X then
                                 Process.sleep 1000.0 |> Task.perform (\_ -> WaitedForAI)
+
                             else
                                 Cmd.none
                     in
-                    ( { model | gameState = newState, gameSettings = (LocalVsAI WaitingForAI) }
+                    ( { model | gameState = newState, gameSettings = LocalVsAI (WaitingForAI difficulty) }
                     , cmd
                     )
-                LocalVsAI WaitingForAI ->
+
+                LocalVsAI (WaitingForAI difficulty) ->
                     let
                         newState =
                             UltimateTicTacToe.performMove player move gameState
-
-                        cmd =
-                            if player == Player.X && gameSettings == (LocalVsAI Playing) then
-                                Process.sleep 1000.0 |> Task.perform (\_ -> WaitedForAI)
-                            else
-                                Cmd.none
                     in
-                    ( { model | gameState = newState, gameSettings = (LocalVsAI Playing) }
-                    , cmd
+                    ( { model | gameState = newState, gameSettings = LocalVsAI (Playing difficulty) }
+                    , Cmd.none
                     )
+
                 _ ->
                     let
                         newState =
                             UltimateTicTacToe.performMove player move gameState
 
-                        cmd = Cmd.none
+                        cmd =
+                            Cmd.none
                     in
-                    ( { model | gameState = newState, gameSettings = (LocalVsAI Playing) }
+                    ( { model | gameState = newState }
                     , cmd
                     )
 
@@ -243,11 +246,14 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
             , Nav.replaceUrl model.navigationKey (UrlBuilder.absolute [] [])
             )
 
-        RemoteGameMsg gameId player message ->
-            handleRemoteMessage gameId player message model
-
         ChoseGameMode mode ->
             chooseGameMode mode model
+
+        ChoseDifficulty difficulty ->
+            chooseDifficulty difficulty model
+
+        RemoteGameMsg gameId player message ->
+            handleRemoteMessage gameId player message model
 
         _ ->
             ( model
@@ -346,7 +352,7 @@ chooseGameMode : GameMode.Mode -> Model -> ( Model, Cmd Msg )
 chooseGameMode mode model =
     case mode of
         GameMode.OnePlayerVsAI ->
-            ( { model | gameSettings = (LocalVsAI Playing), gameState = UltimateTicTacToe.init }
+            ( { model | gameSettings = LocalVsAI ChoosingDifficulty, gameState = UltimateTicTacToe.init }
             , Cmd.none
             )
 
@@ -361,6 +367,13 @@ chooseGameMode mode model =
             )
 
 
+chooseDifficulty : AI.Difficulty -> Model -> ( Model, Cmd Msg )
+chooseDifficulty difficulty model =
+    ( { model | gameSettings = LocalVsAI (Playing difficulty), gameState = UltimateTicTacToe.init }
+    , Cmd.none
+    )
+
+
 getInitialWindowSize : Cmd Msg
 getInitialWindowSize =
     Task.perform (\viewport -> NewWindowSize { width = round viewport.viewport.width, height = round viewport.viewport.height }) Browser.Dom.getViewport
@@ -370,11 +383,16 @@ getAIMove : GameState -> Cmd Msg
 getAIMove currentBoard =
     AI.nextMove moveOrIgnore AI.Hard currentBoard
 
+
 moveOrIgnore : Maybe Move -> Msg
 moveOrIgnore maybeMove =
     case maybeMove of
-        Just move -> PerformedMove Player.O move
-        Nothing -> Ignored
+        Just move ->
+            PerformedMove Player.O move
+
+        Nothing ->
+            Ignored
+
 
 
 -- SUBSCRIPTIONS
@@ -423,8 +441,9 @@ view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
 
         cursorStyle =
             case gameSettings of
-                LocalVsAI WaitingForAI ->
+                LocalVsAI (WaitingForAI _) ->
                     "wait"
+
                 Remote2Players gameId player InProgress ->
                     if player == gameState.currentPlayer then
                         "auto"
@@ -450,6 +469,9 @@ view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
             case ( gameSettings, UltimateTicTacToe.winner gameState.board ) of
                 ( NotYetSelected, _ ) ->
                     Just (viewMainMenu Nothing)
+
+                ( LocalVsAI ChoosingDifficulty, _ ) ->
+                    Just viewChooseDifficultyMenu
 
                 ( Remote2Players gameId _ (RemoteError error), _ ) ->
                     Just (viewError error)
@@ -552,6 +574,34 @@ viewWaitingForPlayerMenu maybeGameUrl player =
 
         menu =
             div [ HA.id "menu" ] [ titleDiv, mainDiv ]
+
+        containerClass =
+            "fade-in"
+
+        menuContainer =
+            div [ HA.id "menu-container", HA.class containerClass ] [ menu ]
+    in
+    menuContainer
+
+
+viewChooseDifficultyMenu : Html Msg
+viewChooseDifficultyMenu =
+    let
+        title =
+            "Choose difficulty:"
+
+        titleDiv =
+            div [ HA.class "menutitle" ] [ text title ]
+
+        options =
+            div [ HA.class "buttons" ]
+                [ button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Easy) ] [ text "Easy" ]
+                , button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Normal) ] [ text "Normal" ]
+                , button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Hard) ] [ text "Hard" ]
+                ]
+
+        menu =
+            div [ HA.id "menu" ] [ titleDiv, options ]
 
         containerClass =
             "fade-in"

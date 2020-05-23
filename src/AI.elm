@@ -1,12 +1,11 @@
 module AI exposing (..)
 
-import Random
-import Random.Extra
-
 import Board
 import Cell
 import Debug
 import Player exposing (..)
+import Random
+import Random.Extra
 import TicTacToe
 import Tuple3
 import UltimateTicTacToe exposing (GameState, Move, performMove)
@@ -57,8 +56,11 @@ nextMove f difficulty gameState =
         -- Select a random move from the best moves, or no moves if we can't do anything
         randomNextMove =
             case bestMoves of
-                Nothing -> Random.constant Nothing
-                Just moves -> Random.Extra.sample moves
+                Nothing ->
+                    Random.constant Nothing
+
+                Just moves ->
+                    Random.Extra.sample moves
     in
     Random.generate identity randomNextMove
         |> Cmd.map f
