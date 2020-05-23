@@ -1,6 +1,5 @@
 module TicTacToe exposing (Move, TicTacToeBoard, fromString, init, performMoveFor, render, winner)
 
-import Sizes
 import Board exposing (Board)
 import Cell
 import Html exposing (Html, button, div, text)
@@ -8,6 +7,7 @@ import Html.Attributes
 import Html.Events exposing (onClick)
 import List as L
 import Player exposing (..)
+import Sizes
 import String
 import Svg exposing (..)
 import Svg.Attributes exposing (..)

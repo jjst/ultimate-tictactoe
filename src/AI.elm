@@ -1,11 +1,11 @@
 module AI exposing (..)
 
 import Board
+import Cell
 import Debug
 import Player exposing (..)
 import TicTacToe
 import Tuple3
-import Cell
 import UltimateTicTacToe exposing (GameState, Move, performMove)
 
 
@@ -23,12 +23,12 @@ nextMove gameState =
         potentialMoves =
             validMoves gameState
 
-        scoredMoves = potentialMoves
-            |> List.map (\m -> ( m, minimaxScore m ))
-            |> List.sortBy Tuple.second
-            |> List.reverse
-            |> Debug.log "available moves"
-
+        scoredMoves =
+            potentialMoves
+                |> List.map (\m -> ( m, minimaxScore m ))
+                |> List.sortBy Tuple.second
+                |> List.reverse
+                |> Debug.log "available moves"
     in
     scoredMoves
         |> List.head
@@ -119,9 +119,11 @@ minimax ticTacToe depth action =
         Nothing ->
             if depth == 0 then
                 let
-                    scores = evalPosition ticTacToe
+                    scores =
+                        evalPosition ticTacToe
                 in
                 scores.o - scores.x
+
             else
                 case action of
                     Maximize ->
@@ -152,60 +154,100 @@ minimax ticTacToe depth action =
                         in
                         min
 
+
 type alias Scores =
     { o : Int
     , x : Int
     }
 
+
+
 -- Heuristic to evaluate the current board
+
+
 evalPosition : GameState -> Scores
 evalPosition gameState =
     let
-        rows : List (List (TicTacToe.TicTacToeBoard))
-        rows = Board.allRows |> List.map (\row ->
-                row |> Tuple3.toList |> List.map (\coords -> Board.get coords gameState.board)
-            )
+        rows : List (List TicTacToe.TicTacToeBoard)
+        rows =
+            Board.allRows
+                |> List.map
+                    (\row ->
+                        row |> Tuple3.toList |> List.map (\coords -> Board.get coords gameState.board)
+                    )
+
         scoreWholeBoardFor : Player -> Int
-        scoreWholeBoardFor player = rows |> List.map (scoreRow player) |> List.sum
-        scores = { o = scoreWholeBoardFor O, x = scoreWholeBoardFor X }
+        scoreWholeBoardFor player =
+            rows |> List.map (scoreRow player) |> List.sum
+
+        scores =
+            { o = scoreWholeBoardFor O, x = scoreWholeBoardFor X }
+
         -- If the player can choose to play on any grid, that counts as a bonus (or malus if it's our opponent)
         scoresWithBonus =
             case gameState.currentBoardCoords of
                 Nothing ->
                     case gameState.currentPlayer of
-                        O -> { scores | o = scores.o + 20 }
-                        X -> { scores | x = scores.x + 20 }
-                _ -> scores
+                        O ->
+                            { scores | o = scores.o + 20 }
+
+                        X ->
+                            { scores | x = scores.x + 20 }
+
+                _ ->
+                    scores
     in
-       scoresWithBonus
+    scoresWithBonus
+
+
 
 -- Give a winnability score to a row of boards for a given player
-scoreRow : Player -> List (TicTacToe.TicTacToeBoard) -> Int
+
+
+scoreRow : Player -> List TicTacToe.TicTacToeBoard -> Int
 scoreRow player row =
     row |> List.map (score player) |> List.product
 
 
+
 -- Give a winnability score to a board for a given player
+
+
 score : Player -> TicTacToe.TicTacToeBoard -> Int
 score player ticTacToe =
     case TicTacToe.winner ticTacToe of
-        Just (Left p) -> if (p == player) then 6 else 0
-        Just (Right Draw) -> 0
+        Just (Left p) ->
+            if p == player then
+                6
+
+            else
+                0
+
+        Just (Right Draw) ->
+            0
+
         Nothing ->
             let
                 rows : List (List Cell.Cell)
-                rows = Board.allRows
-                    |> List.map (\row ->
-                        row |> Tuple3.toList |> List.map (\coords -> Board.get coords ticTacToe))
-                count : Maybe Player -> List (Maybe Player) -> Int
-                count item row = row |> List.filter (\e -> e == item) |> List.length
-            in
-                if List.any (\r -> count (Just player) r == 2 && List.member Nothing r) rows then
-                    4
-                else if List.any (\r -> count Nothing r == 2 && List.member (Just player) r) rows then
-                    2
-                else if List.any (\r -> count Nothing r == 3) rows then
-                    1
-                else
-                    0
+                rows =
+                    Board.allRows
+                        |> List.map
+                            (\row ->
+                                row |> Tuple3.toList |> List.map (\coords -> Board.get coords ticTacToe)
+                            )
 
+                count : Maybe Player -> List (Maybe Player) -> Int
+                count item row =
+                    row |> List.filter (\e -> e == item) |> List.length
+            in
+            if List.any (\r -> count (Just player) r == 2 && List.member Nothing r) rows then
+                4
+
+            else if List.any (\r -> count Nothing r == 2 && List.member (Just player) r) rows then
+                2
+
+            else if List.any (\r -> count Nothing r == 3) rows then
+                1
+
+            else
+                0

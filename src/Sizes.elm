@@ -2,6 +2,7 @@ module Sizes exposing (..)
 
 -- Deprecated, to refactor out
 
+
 cellSize : Int
 cellSize =
     300
@@ -10,4 +11,3 @@ cellSize =
 boardSize : Int
 boardSize =
     cellSize * 3
-

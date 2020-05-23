@@ -20,11 +20,16 @@ opponent player =
         O ->
             X
 
+
 toString : Player -> String
 toString player =
     case player of
-        X -> "X"
-        O -> "O"
+        X ->
+            "X"
+
+        O ->
+            "O"
+
 
 type Draw
     = Draw

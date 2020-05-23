@@ -1,6 +1,5 @@
 module TicTacToeBase exposing (SvgViewCell, grid, gridStyle, init, strikeThrough, svgView)
 
-import Sizes
 import Board exposing (..)
 import Cell
 import Html exposing (Html, button, div, text)
@@ -8,6 +7,7 @@ import Html.Attributes
 import Html.Events exposing (onClick)
 import List as L
 import Player exposing (..)
+import Sizes
 import Svg exposing (..)
 import Svg.Attributes as SA exposing (..)
 import SvgUtils
@@ -60,7 +60,6 @@ strikeThrough color cellSize ( i1, j1 ) ( i2, j2 ) =
 gridStyle : Attribute msg
 gridStyle =
     SA.style "stroke:black;stroke-width:4"
-
 
 
 type alias SvgViewCell a b =

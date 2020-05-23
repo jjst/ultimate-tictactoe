@@ -1,9 +1,9 @@
 module SvgUtils exposing (applyTransform, scale, translate)
 
+import String
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
-import String
 
 applyTransform : String -> Svg a -> Svg a
 applyTransform eltTransform element =

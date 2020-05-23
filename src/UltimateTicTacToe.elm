@@ -8,18 +8,19 @@ import Html.Events exposing (onClick)
 import List as L
 import Player exposing (..)
 import Regex
+import Sizes
 import String
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import SvgUtils
 import TicTacToe exposing (TicTacToeBoard)
 import TicTacToeBase exposing (grid, strikeThrough)
-import Sizes
 import Tuple3 as T3
 
 
 type alias UltimateTicTacToeBoard =
     Board TicTacToeBoard
+
 
 
 -- MODEL
@@ -75,8 +76,8 @@ fromString player currentBoardCoords str =
 
         horizontalSeparator : Regex.Regex
         horizontalSeparator =
-          Maybe.withDefault Regex.never <|
-            Regex.fromString "-.+"
+            Maybe.withDefault Regex.never <|
+                Regex.fromString "-.+"
 
         subBoardsAsStrings : List (List String)
         subBoardsAsStrings =
