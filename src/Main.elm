@@ -388,11 +388,15 @@ view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
                     Just (viewMainMenu Nothing)
                 (Remote2Players gameId _ (RemoteError error), _) ->
                     Just (viewError error)
+                (Remote2Players gameId player Creating, _) ->
+                    Just (viewWaitingForPlayerMenu Nothing player)
+                (Remote2Players gameId player Joining, _) ->
+                    Just (viewWaitingForPlayerMenu Nothing player)
                 (Remote2Players gameId player WaitingForPlayers, _) ->
                     let
                         gameUrl = { baseUrl | path = "/" ++ gameId }
                     in
-                    Just (viewWaitingForPlayerMenu gameUrl player)
+                    Just (viewWaitingForPlayerMenu (Just gameUrl) player)
                 (_, Just winner) ->
                     Just (viewMainMenu (Just winner))
                 (_, _) ->
@@ -435,23 +439,31 @@ viewError error =
     in
     menuContainer
 
-viewWaitingForPlayerMenu : Url.Url -> Player.Player -> Html Msg
-viewWaitingForPlayerMenu gameUrl player =
+viewWaitingForPlayerMenu : Maybe Url.Url -> Player.Player -> Html Msg
+viewWaitingForPlayerMenu maybeGameUrl player =
     let
         title = "Waiting for players..."
 
         titleDiv =
             div [ HA.class "menutitle" ] [ text title ]
 
-        mainDiv =
-            div [ HA.class "buttons" ]
-               [ div [ HA.class "menu-item" ]
-                 [ p [] [ text ("Waiting for another player. You'll be playing as '" ++ (Player.toString player) ++ "'") ]
-                 , p [] [ text "They can join using the following link:" ]
-                 ]
-               , input [ HA.class "menu-item", HA.readonly True, HA.value (Url.toString gameUrl) ] []
-               , button [ HA.class "menu-item", onClick (RequestedMainMenu) ] [ text "Cancel" ]
-               ]
+        mainDiv = case maybeGameUrl of
+            Just gameUrl ->
+                div [ HA.class "buttons" ]
+                   [ div [ HA.class "menu-item" ]
+                     [ p [] [ text ("Waiting for another player. You'll be playing as '" ++ (Player.toString player) ++ "'") ]
+                     , p [] [ text "They can join using the following link:" ]
+                     ]
+                   , input [ HA.class "menu-item", HA.readonly True, HA.value (Url.toString gameUrl) ] []
+                   , button [ HA.class "menu-item", onClick (RequestedMainMenu) ] [ text "Cancel" ]
+                   ]
+            Nothing ->
+                div [ HA.class "buttons" ]
+                   [ div [ HA.class "menu-item" ]
+                     [ p [] [ text ("Creating game...") ]
+                     ]
+                   , button [ HA.class "menu-item", onClick (RequestedMainMenu) ] [ text "Cancel" ]
+                   ]
 
         menu = div [ HA.id "menu" ] [ titleDiv, mainDiv ]
 
