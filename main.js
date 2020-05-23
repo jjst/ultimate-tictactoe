@@ -9666,7 +9666,7 @@ var $elm$url$Url$toString = function (url) {
 };
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$viewWaitingForPlayerMenu = F2(
-	function (gameUrl, player) {
+	function (maybeGameUrl, player) {
 		var title = 'Waiting for players...';
 		var titleDiv = A2(
 			$elm$html$Html$div,
@@ -9678,60 +9678,102 @@ var $author$project$Main$viewWaitingForPlayerMenu = F2(
 				[
 					$elm$html$Html$text(title)
 				]));
-		var mainDiv = A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('buttons')
-				]),
-			_List_fromArray(
-				[
-					A2(
+		var mainDiv = function () {
+			if (maybeGameUrl.$ === 'Just') {
+				var gameUrl = maybeGameUrl.a;
+				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('menu-item')
+							$elm$html$Html$Attributes$class('buttons')
 						]),
 					_List_fromArray(
 						[
 							A2(
-							$elm$html$Html$p,
-							_List_Nil,
+							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$text(
-									'Waiting for another player. You\'ll be playing as \'' + ($author$project$Player$toString(player) + '\''))
+									$elm$html$Html$Attributes$class('menu-item')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											'Waiting for another player. You\'ll be playing as \'' + ($author$project$Player$toString(player) + '\''))
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('They can join using the following link:')
+										]))
 								])),
 							A2(
-							$elm$html$Html$p,
-							_List_Nil,
+							$elm$html$Html$input,
 							_List_fromArray(
 								[
-									$elm$html$Html$text('They can join using the following link:')
+									$elm$html$Html$Attributes$class('menu-item'),
+									$elm$html$Html$Attributes$readonly(true),
+									$elm$html$Html$Attributes$value(
+									$elm$url$Url$toString(gameUrl))
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('menu-item'),
+									$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Cancel')
 								]))
-						])),
-					A2(
-					$elm$html$Html$input,
+						]));
+			} else {
+				return A2(
+					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('menu-item'),
-							$elm$html$Html$Attributes$readonly(true),
-							$elm$html$Html$Attributes$value(
-							$elm$url$Url$toString(gameUrl))
-						]),
-					_List_Nil),
-					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('menu-item'),
-							$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+							$elm$html$Html$Attributes$class('buttons')
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Cancel')
-						]))
-				]));
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('menu-item')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Creating game...')
+										]))
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('menu-item'),
+									$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Cancel')
+								]))
+						]));
+			}
+		}();
 		var menu = A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -9764,9 +9806,9 @@ var $author$project$Main$view = function (model) {
 		var _v2 = _Utils_Tuple2(
 			gameSettings,
 			$author$project$UltimateTicTacToe$winner(gameState.board));
-		_v2$3:
+		_v2$5:
 		while (true) {
-			_v2$4:
+			_v2$6:
 			while (true) {
 				switch (_v2.a.$) {
 					case 'NotYetSelected':
@@ -9781,28 +9823,45 @@ var $author$project$Main$view = function (model) {
 								var error = _v4.c.a;
 								return $elm$core$Maybe$Just(
 									$author$project$Main$viewError(error));
-							case 'WaitingForPlayers':
+							case 'Creating':
 								var _v5 = _v2.a;
 								var gameId = _v5.a;
 								var player = _v5.b;
 								var _v6 = _v5.c;
+								return $elm$core$Maybe$Just(
+									A2($author$project$Main$viewWaitingForPlayerMenu, $elm$core$Maybe$Nothing, player));
+							case 'Joining':
+								var _v7 = _v2.a;
+								var gameId = _v7.a;
+								var player = _v7.b;
+								var _v8 = _v7.c;
+								return $elm$core$Maybe$Just(
+									A2($author$project$Main$viewWaitingForPlayerMenu, $elm$core$Maybe$Nothing, player));
+							case 'WaitingForPlayers':
+								var _v9 = _v2.a;
+								var gameId = _v9.a;
+								var player = _v9.b;
+								var _v10 = _v9.c;
 								var gameUrl = _Utils_update(
 									baseUrl,
 									{path: '/' + gameId});
 								return $elm$core$Maybe$Just(
-									A2($author$project$Main$viewWaitingForPlayerMenu, gameUrl, player));
+									A2(
+										$author$project$Main$viewWaitingForPlayerMenu,
+										$elm$core$Maybe$Just(gameUrl),
+										player));
 							default:
 								if (_v2.b.$ === 'Just') {
-									break _v2$3;
+									break _v2$5;
 								} else {
-									break _v2$4;
+									break _v2$6;
 								}
 						}
 					default:
 						if (_v2.b.$ === 'Just') {
-							break _v2$3;
+							break _v2$5;
 						} else {
-							break _v2$4;
+							break _v2$6;
 						}
 				}
 			}
