@@ -26,7 +26,7 @@ nextMove f difficulty gameState =
     let
         minimaxScore : Move -> Int
         minimaxScore move =
-            minimax difficulty (performMove gameState.currentPlayer move gameState) 1 Minimize
+            minimax (performMove gameState.currentPlayer move gameState) 1 Minimize
 
         -- List all potential moves
         potentialMoves =
@@ -132,8 +132,8 @@ type Action
 -- Assume that AI is always O for now
 
 
-minimax : Difficulty -> GameState -> Int -> Action -> Int
-minimax difficulty ticTacToe depth action =
+minimax : GameState -> Int -> Action -> Int
+minimax ticTacToe depth action =
     case UltimateTicTacToe.winner ticTacToe.board of
         Just winner ->
             case winner of
@@ -150,7 +150,7 @@ minimax difficulty ticTacToe depth action =
             if depth == 0 then
                 let
                     scores =
-                        evalPosition difficulty ticTacToe
+                        evalPosition ticTacToe
                 in
                 scores.o - scores.x
 
@@ -162,7 +162,7 @@ minimax difficulty ticTacToe depth action =
                                 validMoves ticTacToe
                                     |> List.map
                                         (\move ->
-                                            minimax difficulty (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Minimize
+                                            minimax (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Minimize
                                         )
 
                             max =
@@ -176,7 +176,7 @@ minimax difficulty ticTacToe depth action =
                                 validMoves ticTacToe
                                     |> List.map
                                         (\move ->
-                                            minimax difficulty (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Maximize
+                                            minimax (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Maximize
                                         )
 
                             min =
@@ -195,8 +195,8 @@ type alias Scores =
 -- Heuristic to evaluate the current board
 
 
-evalPosition : Difficulty -> GameState -> Scores
-evalPosition difficulty gameState =
+evalPosition : GameState -> Scores
+evalPosition gameState =
     let
         rows : List (List TicTacToe.TicTacToeBoard)
         rows =
@@ -208,7 +208,7 @@ evalPosition difficulty gameState =
 
         scoreWholeBoardFor : Player -> Int
         scoreWholeBoardFor player =
-            rows |> List.map (scoreRow difficulty player) |> List.sum
+            rows |> List.map (scoreRow player) |> List.sum
 
         scores =
             { o = scoreWholeBoardFor O, x = scoreWholeBoardFor X }
@@ -234,20 +234,19 @@ evalPosition difficulty gameState =
 -- Give a winnability score to a row of boards for a given player
 
 
-scoreRow : Difficulty -> Player -> List TicTacToe.TicTacToeBoard -> Int
-scoreRow difficulty player row =
-    row |> List.map (score difficulty player) |> List.product
+scoreRow : Player -> List TicTacToe.TicTacToeBoard -> Int
+scoreRow player row =
+    row |> List.map (score player) |> List.product
 
 
 
 -- Give a winnability score to a board for a given player
 
 
-score : Difficulty -> Player -> TicTacToe.TicTacToeBoard -> Int
-score difficulty player ticTacToe =
+score : Player -> TicTacToe.TicTacToeBoard -> Int
+score player ticTacToe =
     let
-        coeffs =
-            coefficients difficulty
+        coeffs = coefficients
     in
     case TicTacToe.winner ticTacToe of
         Just (Left p) ->
@@ -300,29 +299,21 @@ type alias Coefficients =
     }
 
 
-coefficients : Difficulty -> Coefficients
-coefficients difficulty =
-    case difficulty of
+coefficients : Coefficients
+coefficients =
+    { won = 6
+    , noChanceOfWinning = 0
+    , canPlaceThirdInRow = 4
+    , canPlaceSecondInRow = 2
+    , canPlaceFirstInRow = 1
+    }
+
+penaltyFactor : Difficulty -> Float
+penaltyFactor difficulty =
+    case difficulty of 
         Easy ->
-            { won = 2
-            , noChanceOfWinning = 1
-            , canPlaceThirdInRow = 1
-            , canPlaceSecondInRow = 1
-            , canPlaceFirstInRow = 1
-            }
-
+            0.8
         Normal ->
-            { won = 3
-            , noChanceOfWinning = 0
-            , canPlaceThirdInRow = 2
-            , canPlaceSecondInRow = 1
-            , canPlaceFirstInRow = 1
-            }
-
+            0.3
         Hard ->
-            { won = 6
-            , noChanceOfWinning = 0
-            , canPlaceThirdInRow = 4
-            , canPlaceSecondInRow = 2
-            , canPlaceFirstInRow = 1
-            }
+            0.0

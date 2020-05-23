@@ -81,30 +81,6 @@ tests =
                     to equal
                     (7)
         , let
-            currentBoard =
-                fromString Player.O
-                    (Just ( I2, I2 ))
-                    """
-             _ _ _ | _ _ _ | _ _ _
-             _ _ _ | o o o | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-            -------+-------+-------
-             _ _ _ | _ _ _ | _ _ _
-             _ _ _ | o o _ | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-            -------+-------+-------
-             _ _ _ | _ _ _ | _ _ _
-             _ _ _ | o o o | _ _ _
-             _ _ _ | _ _ _ | _ _ _
-            """
-                    |> orCrash
-          in
-            it "plays the winning move" <|
-                expect
-                    (AI.nextMove currentBoard)
-                    to equal
-                    (Just { boardCoords = ( I2, I2 ), cellCoords = ( I2, I3 ) })
-        , let
               currentBoard = fromString Player.O (Just (I2,I2))
                 """
                  _ _ _ | _ _ _ | _ _ _
