@@ -48,7 +48,7 @@ main =
 type GameSettings
     = NotYetSelected
     | Error String
-    | LocalVsAI
+    | LocalVsAI SinglePlayerState
     | Local2Players
     | Remote2Players GameId.GameId Player.Player RemoteState
 
@@ -67,6 +67,9 @@ type alias Model =
     , windowSize : WindowSize
     }
 
+type SinglePlayerState
+    = WaitingForAI
+    | Playing
 
 type RemoteState
     = Creating
@@ -152,6 +155,7 @@ type PlayerType
 
 type Msg
     = PerformedMove Player Move
+    | WaitedForAI
     | NewWindowSize WindowSize
     | RemoteGameMsg GameId.GameId Player RemoteMsg
     | ChoseGameMode GameMode.Mode
@@ -172,7 +176,12 @@ type RemoteMsg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ config, gameState, gameSettings, windowSize } as model) =
     case msg of
+        WaitedForAI ->
+            ( model
+            , getAIMove gameState
+            )
         PerformedMove player move ->
+            -- FIXME: this branch is in need of a cleanup!
             case gameSettings of
                 Remote2Players gameId thisPlayer InProgress ->
                     if thisPlayer == player then
@@ -185,19 +194,42 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
                         , Cmd.none
                         )
 
-                _ ->
+                LocalVsAI Playing ->
                     let
                         newState =
                             UltimateTicTacToe.performMove player move gameState
 
                         cmd =
-                            if player == Player.X && gameSettings == LocalVsAI then
-                                getAIMove newState
-
+                            if player == Player.X && gameSettings == (LocalVsAI Playing) then
+                                Process.sleep 1000.0 |> Task.perform (\_ -> WaitedForAI)
                             else
                                 Cmd.none
                     in
-                    ( { model | gameState = newState }
+                    ( { model | gameState = newState, gameSettings = (LocalVsAI WaitingForAI) }
+                    , cmd
+                    )
+                LocalVsAI WaitingForAI ->
+                    let
+                        newState =
+                            UltimateTicTacToe.performMove player move gameState
+
+                        cmd =
+                            if player == Player.X && gameSettings == (LocalVsAI Playing) then
+                                Process.sleep 1000.0 |> Task.perform (\_ -> WaitedForAI)
+                            else
+                                Cmd.none
+                    in
+                    ( { model | gameState = newState, gameSettings = (LocalVsAI Playing) }
+                    , cmd
+                    )
+                _ ->
+                    let
+                        newState =
+                            UltimateTicTacToe.performMove player move gameState
+
+                        cmd = Cmd.none
+                    in
+                    ( { model | gameState = newState, gameSettings = (LocalVsAI Playing) }
                     , cmd
                     )
 
@@ -314,7 +346,7 @@ chooseGameMode : GameMode.Mode -> Model -> ( Model, Cmd Msg )
 chooseGameMode mode model =
     case mode of
         GameMode.OnePlayerVsAI ->
-            ( { model | gameSettings = LocalVsAI, gameState = UltimateTicTacToe.init }
+            ( { model | gameSettings = (LocalVsAI Playing), gameState = UltimateTicTacToe.init }
             , Cmd.none
             )
 
@@ -336,13 +368,13 @@ getInitialWindowSize =
 
 getAIMove : GameState -> Cmd Msg
 getAIMove currentBoard =
-    case AI.nextMove AI.Hard currentBoard of
-        Just move ->
-            Process.sleep 1000.0 |> Task.perform (\_ -> PerformedMove Player.O move)
+    AI.nextMove moveOrIgnore AI.Hard currentBoard
 
-        Nothing ->
-            Cmd.none
-
+moveOrIgnore : Maybe Move -> Msg
+moveOrIgnore maybeMove =
+    case maybeMove of
+        Just move -> PerformedMove Player.O move
+        Nothing -> Ignored
 
 
 -- SUBSCRIPTIONS
@@ -391,6 +423,8 @@ view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
 
         cursorStyle =
             case gameSettings of
+                LocalVsAI WaitingForAI ->
+                    "wait"
                 Remote2Players gameId player InProgress ->
                     if player == gameState.currentPlayer then
                         "auto"
@@ -585,7 +619,7 @@ viewGameState minSize gameSettings gameState =
 
         msgType =
             case gameSettings of
-                LocalVsAI ->
+                LocalVsAI _ ->
                     PerformedMove Player.X
 
                 _ ->

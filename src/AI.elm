@@ -1,5 +1,8 @@
 module AI exposing (..)
 
+import Random
+import Random.Extra
+
 import Board
 import Cell
 import Debug
@@ -19,27 +22,46 @@ type Difficulty
 -- MODEL
 
 
-nextMove : Difficulty -> GameState -> Maybe Move
-nextMove difficulty gameState =
+nextMove : (Maybe Move -> msg) -> Difficulty -> GameState -> Cmd msg
+nextMove f difficulty gameState =
     let
         minimaxScore : Move -> Int
         minimaxScore move =
             minimax difficulty (performMove gameState.currentPlayer move gameState) 1 Minimize
 
+        -- List all potential moves
         potentialMoves =
             validMoves gameState
 
+        -- Score the moves according to how good/bad they are using minimax
         scoredMoves =
             potentialMoves
                 |> List.map (\m -> ( m, minimaxScore m ))
                 |> List.sortBy Tuple.second
                 |> List.reverse
                 |> Debug.log "available moves"
+
+        -- Find the best score
+        bestScore =
+            scoredMoves
+                |> List.head
+                |> Maybe.map Tuple.second
+
+        -- Pick all of the moves that have the same best score
+        bestMoves =
+            bestScore
+                |> Maybe.map (\best -> List.filter (\elem -> Tuple.second elem == best) scoredMoves)
+                |> Debug.log "next best moves"
+                |> Maybe.map (List.map Tuple.first)
+
+        -- Select a random move from the best moves, or no moves if we can't do anything
+        randomNextMove =
+            case bestMoves of
+                Nothing -> Random.constant Nothing
+                Just moves -> Random.Extra.sample moves
     in
-    scoredMoves
-        |> List.head
-        |> Debug.log "next move"
-        |> Maybe.map Tuple.first
+    Random.generate identity randomNextMove
+        |> Cmd.map f
 
 
 
