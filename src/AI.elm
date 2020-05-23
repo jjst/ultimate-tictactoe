@@ -9,16 +9,22 @@ import Tuple3
 import UltimateTicTacToe exposing (GameState, Move, performMove)
 
 
+type Difficulty
+    = Easy
+    | Normal
+    | Hard
+
+
 
 -- MODEL
 
 
-nextMove : GameState -> Maybe Move
-nextMove gameState =
+nextMove : Difficulty -> GameState -> Maybe Move
+nextMove difficulty gameState =
     let
         minimaxScore : Move -> Int
         minimaxScore move =
-            minimax (performMove gameState.currentPlayer move gameState) 1 Minimize
+            minimax difficulty (performMove gameState.currentPlayer move gameState) 1 Minimize
 
         potentialMoves =
             validMoves gameState
@@ -102,8 +108,8 @@ type Action
 -- Assume that AI is always O for now
 
 
-minimax : GameState -> Int -> Action -> Int
-minimax ticTacToe depth action =
+minimax : Difficulty -> GameState -> Int -> Action -> Int
+minimax difficulty ticTacToe depth action =
     case UltimateTicTacToe.winner ticTacToe.board of
         Just winner ->
             case winner of
@@ -120,7 +126,7 @@ minimax ticTacToe depth action =
             if depth == 0 then
                 let
                     scores =
-                        evalPosition ticTacToe
+                        evalPosition difficulty ticTacToe
                 in
                 scores.o - scores.x
 
@@ -132,7 +138,7 @@ minimax ticTacToe depth action =
                                 validMoves ticTacToe
                                     |> List.map
                                         (\move ->
-                                            minimax (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Minimize
+                                            minimax difficulty (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Minimize
                                         )
 
                             max =
@@ -146,7 +152,7 @@ minimax ticTacToe depth action =
                                 validMoves ticTacToe
                                     |> List.map
                                         (\move ->
-                                            minimax (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Maximize
+                                            minimax difficulty (performMove ticTacToe.currentPlayer move ticTacToe) (depth - 1) Maximize
                                         )
 
                             min =
@@ -165,8 +171,8 @@ type alias Scores =
 -- Heuristic to evaluate the current board
 
 
-evalPosition : GameState -> Scores
-evalPosition gameState =
+evalPosition : Difficulty -> GameState -> Scores
+evalPosition difficulty gameState =
     let
         rows : List (List TicTacToe.TicTacToeBoard)
         rows =
@@ -178,7 +184,7 @@ evalPosition gameState =
 
         scoreWholeBoardFor : Player -> Int
         scoreWholeBoardFor player =
-            rows |> List.map (scoreRow player) |> List.sum
+            rows |> List.map (scoreRow difficulty player) |> List.sum
 
         scores =
             { o = scoreWholeBoardFor O, x = scoreWholeBoardFor X }
@@ -204,27 +210,31 @@ evalPosition gameState =
 -- Give a winnability score to a row of boards for a given player
 
 
-scoreRow : Player -> List TicTacToe.TicTacToeBoard -> Int
-scoreRow player row =
-    row |> List.map (score player) |> List.product
+scoreRow : Difficulty -> Player -> List TicTacToe.TicTacToeBoard -> Int
+scoreRow difficulty player row =
+    row |> List.map (score difficulty player) |> List.product
 
 
 
 -- Give a winnability score to a board for a given player
 
 
-score : Player -> TicTacToe.TicTacToeBoard -> Int
-score player ticTacToe =
+score : Difficulty -> Player -> TicTacToe.TicTacToeBoard -> Int
+score difficulty player ticTacToe =
+    let
+        coeffs =
+            coefficients difficulty
+    in
     case TicTacToe.winner ticTacToe of
         Just (Left p) ->
             if p == player then
-                6
+                coeffs.won
 
             else
-                0
+                coeffs.noChanceOfWinning
 
         Just (Right Draw) ->
-            0
+            coeffs.noChanceOfWinning
 
         Nothing ->
             let
@@ -240,14 +250,55 @@ score player ticTacToe =
                 count item row =
                     row |> List.filter (\e -> e == item) |> List.length
             in
+            -- 2 in a row, last one is free
             if List.any (\r -> count (Just player) r == 2 && List.member Nothing r) rows then
-                4
+                coeffs.canPlaceThirdInRow
+                -- 1 in a row where 2 others are free
 
             else if List.any (\r -> count Nothing r == 2 && List.member (Just player) r) rows then
-                2
+                coeffs.canPlaceSecondInRow
+                -- 3 in row are free somewhere on this board
 
             else if List.any (\r -> count Nothing r == 3) rows then
-                1
+                coeffs.canPlaceFirstInRow
+                -- no chance of winning this board
 
             else
-                0
+                coeffs.noChanceOfWinning
+
+
+type alias Coefficients =
+    { won : Int
+    , noChanceOfWinning : Int
+    , canPlaceThirdInRow : Int
+    , canPlaceSecondInRow : Int
+    , canPlaceFirstInRow : Int
+    }
+
+
+coefficients : Difficulty -> Coefficients
+coefficients difficulty =
+    case difficulty of
+        Easy ->
+            { won = 2
+            , noChanceOfWinning = 1
+            , canPlaceThirdInRow = 1
+            , canPlaceSecondInRow = 1
+            , canPlaceFirstInRow = 1
+            }
+
+        Normal ->
+            { won = 3
+            , noChanceOfWinning = 0
+            , canPlaceThirdInRow = 2
+            , canPlaceSecondInRow = 1
+            , canPlaceFirstInRow = 1
+            }
+
+        Hard ->
+            { won = 6
+            , noChanceOfWinning = 0
+            , canPlaceThirdInRow = 4
+            , canPlaceSecondInRow = 2
+            , canPlaceFirstInRow = 1
+            }

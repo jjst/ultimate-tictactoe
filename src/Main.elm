@@ -336,7 +336,7 @@ getInitialWindowSize =
 
 getAIMove : GameState -> Cmd Msg
 getAIMove currentBoard =
-    case AI.nextMove currentBoard of
+    case AI.nextMove AI.Easy currentBoard of
         Just move ->
             Process.sleep 1000.0 |> Task.perform (\_ -> PerformedMove Player.O move)
 
