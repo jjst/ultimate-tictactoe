@@ -7725,6 +7725,7 @@ var $elm$random$Random$map2 = F3(
 					seed2);
 			});
 	});
+var $author$project$AI$maxScore = 100000;
 var $elm$core$List$maximum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -7785,9 +7786,12 @@ var $author$project$AI$degradeMoves = F2(
 		var maxPenalty = A2(
 			$elm$core$Debug$log,
 			'max penalty',
-			$elm$core$Basics$round(
-				delta * $author$project$AI$penaltyFactor(
-					A2($elm$core$Debug$log, 'difficulty', difficulty))));
+			A2(
+				$elm$core$Basics$min,
+				$author$project$AI$maxScore,
+				$elm$core$Basics$round(
+					delta * $author$project$AI$penaltyFactor(
+						A2($elm$core$Debug$log, 'difficulty', difficulty)))));
 		var randomPenalty = A2($elm$random$Random$int, 0, maxPenalty);
 		var randomPenalties = A2(
 			$elm$random$Random$map,
@@ -8228,7 +8232,6 @@ var $author$project$AI$evalPosition = function (gameState) {
 	}();
 	return scoresWithBonus;
 };
-var $author$project$AI$maxValue = 100000;
 var $author$project$UltimateTicTacToe$moveIsInCurrentBoard = F2(
 	function (move, model) {
 		var _v0 = model.currentBoardCoords;
@@ -8423,10 +8426,10 @@ var $author$project$AI$minimax = F3(
 			if (winner.$ === 'Left') {
 				if (winner.a.$ === 'X') {
 					var _v2 = winner.a;
-					return -$author$project$AI$maxValue;
+					return -$author$project$AI$maxScore;
 				} else {
 					var _v3 = winner.a;
-					return $author$project$AI$maxValue;
+					return $author$project$AI$maxScore;
 				}
 			} else {
 				var _v4 = winner.a;
@@ -8450,7 +8453,7 @@ var $author$project$AI$minimax = F3(
 						$author$project$AI$validMoves(ticTacToe));
 					var max = A2(
 						$elm$core$Maybe$withDefault,
-						-$author$project$AI$maxValue,
+						-$author$project$AI$maxScore,
 						$elm$core$List$maximum(values));
 					return max;
 				} else {
@@ -8466,7 +8469,7 @@ var $author$project$AI$minimax = F3(
 						$author$project$AI$validMoves(ticTacToe));
 					var min = A2(
 						$elm$core$Maybe$withDefault,
-						$author$project$AI$maxValue,
+						$author$project$AI$maxScore,
 						$elm$core$List$minimum(values));
 					return min;
 				}
