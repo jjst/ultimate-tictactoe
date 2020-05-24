@@ -1,4 +1,4 @@
-module Main exposing (GameSettings, Model, Msg(..), PlayerType(..), Route(..), css, getAIMove, init, main, subscriptions, update, view, viewGameState)
+module Main exposing (main)
 
 import AI
 import Browser
