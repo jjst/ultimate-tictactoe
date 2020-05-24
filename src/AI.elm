@@ -16,13 +16,31 @@ type Difficulty
     | Normal
     | Hard
 
-
+-- A scored move - the higher the score the most likely it is to win us the game
+type alias ScoredMove =
+    { move : Move
+    , score : Int
+    }
 
 -- MODEL
 
 
 nextMove : (Maybe Move -> msg) -> Difficulty -> GameState -> Cmd msg
 nextMove f difficulty gameState =
+    let
+        randomNextMove =
+            gameState
+                |> scoreMoves -- score each available move
+                |> degradeMoves difficulty -- degrade the moves according to difficulty level
+                |> Random.andThen pickMove -- pick one of the best scored moves
+    in
+    Random.generate identity randomNextMove
+        |> Cmd.map f
+
+
+-- Score all available moves given the current game state
+scoreMoves : GameState -> List ScoredMove
+scoreMoves gameState =
     let
         minimaxScore : Move -> Int
         minimaxScore move =
@@ -35,23 +53,65 @@ nextMove f difficulty gameState =
         -- Score the moves according to how good/bad they are using minimax
         scoredMoves =
             potentialMoves
-                |> List.map (\m -> ( m, minimaxScore m ))
-                |> List.sortBy Tuple.second
+                |> List.map (\m -> { move = m, score = (minimaxScore m) } )
+                |> List.sortBy .score
                 |> List.reverse
                 |> Debug.log "available moves"
+    in
+    scoredMoves
 
+-- Degrade the quality of the move predictions according to the difficulty level
+degradeMoves : Difficulty -> List ScoredMove -> Random.Generator (List ScoredMove)
+degradeMoves difficulty scoredMoves =
+    let
+        -- Find what's the delta between min and max score
+        delta =
+            scoredMoves
+                |> List.map .score
+                |> (\l -> Maybe.map2 (-) (List.maximum l) (List.minimum l))
+                |> Maybe.withDefault 0
+                |> Debug.log "delta"
+
+        -- Determine max penalty according to difficulty
+        maxPenalty = 
+            Debug.log "difficulty" difficulty
+                |> penaltyFactor
+                |> (*) (toFloat delta)
+                |> round
+                |> Debug.log "max penalty"
+        initialScores : Random.Generator (List ScoredMove)
+        initialScores =
+            Random.constant scoredMoves
+        randomPenalty = 
+            Random.int 0 maxPenalty
+        -- Generate random penalties for each move
+        randomPenalties : Random.Generator (List Int)
+        randomPenalties =
+            Random.list (List.length scoredMoves) randomPenalty
+            |> Random.map (Debug.log "penalties")
+        -- Apply the penalties
+        degradedScores =
+            Random.map2 (List.map2 (\m penalty -> { m | score = m.score - penalty } )) initialScores randomPenalties
+            |> Random.map (List.sortBy .score >> List.reverse)
+            |> Random.map (Debug.log "degraded moves")
+    in
+    degradedScores
+
+pickMove : List ScoredMove -> Random.Generator (Maybe Move)
+pickMove scoredMoves =
+    let
         -- Find the best score
         bestScore =
             scoredMoves
                 |> List.head
-                |> Maybe.map Tuple.second
+                |> Maybe.map .score
 
         -- Pick all of the moves that have the same best score
         bestMoves =
             bestScore
-                |> Maybe.map (\best -> List.filter (\elem -> Tuple.second elem == best) scoredMoves)
+                |> Maybe.map (\best -> List.filter (\move -> move.score == best) scoredMoves)
                 |> Debug.log "next best moves"
-                |> Maybe.map (List.map Tuple.first)
+                |> Maybe.map (List.map .move)
 
         -- Select a random move from the best moves, or no moves if we can't do anything
         randomNextMove =
@@ -62,9 +122,7 @@ nextMove f difficulty gameState =
                 Just moves ->
                     Random.Extra.sample moves
     in
-    Random.generate identity randomNextMove
-        |> Cmd.map f
-
+    randomNextMove
 
 
 -- List all valid moves given current state of the game
@@ -312,8 +370,8 @@ penaltyFactor : Difficulty -> Float
 penaltyFactor difficulty =
     case difficulty of 
         Easy ->
-            0.8
+            2.0
         Normal ->
-            0.3
+            1.0
         Hard ->
             0.0

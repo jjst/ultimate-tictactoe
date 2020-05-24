@@ -181,9 +181,15 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ config, gameState, gameSettings, windowSize } as model) =
     case msg of
         WaitedForAI ->
-            ( model
-            , getAIMove gameState
-            )
+            case gameSettings of
+                LocalVsAI (WaitingForAI difficulty) ->
+                    ( model
+                    , getAIMove difficulty gameState
+                    )
+                _ ->
+                    ( model
+                    , Cmd.none
+                    )
 
         PerformedMove player move ->
             -- FIXME: this branch is in need of a cleanup!
@@ -379,9 +385,9 @@ getInitialWindowSize =
     Task.perform (\viewport -> NewWindowSize { width = round viewport.viewport.width, height = round viewport.viewport.height }) Browser.Dom.getViewport
 
 
-getAIMove : GameState -> Cmd Msg
-getAIMove currentBoard =
-    AI.nextMove moveOrIgnore AI.Hard currentBoard
+getAIMove : AI.Difficulty -> GameState -> Cmd Msg
+getAIMove difficulty currentBoard =
+    AI.nextMove moveOrIgnore difficulty currentBoard
 
 
 moveOrIgnore : Maybe Move -> Msg
