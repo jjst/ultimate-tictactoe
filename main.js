@@ -7668,7 +7668,6 @@ var $author$project$Main$chooseGameMode = F2(
 						}));
 		}
 	});
-var $author$project$AI$Hard = {$: 'Hard'};
 var $author$project$Main$Ignored = {$: 'Ignored'};
 var $author$project$Main$PerformedMove = F2(
 	function (a, b) {
@@ -7682,13 +7681,146 @@ var $author$project$Main$moveOrIgnore = function (maybeMove) {
 		return $author$project$Main$Ignored;
 	}
 };
-var $author$project$AI$Minimize = {$: 'Minimize'};
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
 var $elm$random$Random$constant = function (value) {
 	return $elm$random$Random$Generator(
 		function (seed) {
 			return _Utils_Tuple2(value, seed);
 		});
 };
+var $elm$core$Debug$log = _Debug_log;
+var $elm$core$Maybe$map2 = F3(
+	function (func, ma, mb) {
+		if (ma.$ === 'Nothing') {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var a = ma.a;
+			if (mb.$ === 'Nothing') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var b = mb.a;
+				return $elm$core$Maybe$Just(
+					A2(func, a, b));
+			}
+		}
+	});
+var $elm$random$Random$map2 = F3(
+	function (func, _v0, _v1) {
+		var genA = _v0.a;
+		var genB = _v1.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v2 = genA(seed0);
+				var a = _v2.a;
+				var seed1 = _v2.b;
+				var _v3 = genB(seed1);
+				var b = _v3.a;
+				var seed2 = _v3.b;
+				return _Utils_Tuple2(
+					A2(func, a, b),
+					seed2);
+			});
+	});
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
+	});
+var $elm$core$List$minimum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$AI$penaltyFactor = function (difficulty) {
+	switch (difficulty.$) {
+		case 'Easy':
+			return 2.0;
+		case 'Normal':
+			return 1.0;
+		default:
+			return 0.0;
+	}
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $author$project$AI$degradeMoves = F2(
+	function (difficulty, scoredMoves) {
+		var initialScores = $elm$random$Random$constant(scoredMoves);
+		var delta = A2(
+			$elm$core$Debug$log,
+			'delta',
+			A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				function (l) {
+					return A3(
+						$elm$core$Maybe$map2,
+						$elm$core$Basics$sub,
+						$elm$core$List$maximum(l),
+						$elm$core$List$minimum(l));
+				}(
+					A2(
+						$elm$core$List$map,
+						function ($) {
+							return $.score;
+						},
+						scoredMoves))));
+		var maxPenalty = A2(
+			$elm$core$Debug$log,
+			'max penalty',
+			$elm$core$Basics$round(
+				delta * $author$project$AI$penaltyFactor(
+					A2($elm$core$Debug$log, 'difficulty', difficulty))));
+		var randomPenalty = A2($elm$random$Random$int, 0, maxPenalty);
+		var randomPenalties = A2(
+			$elm$random$Random$map,
+			$elm$core$Debug$log('penalties'),
+			A2(
+				$elm$random$Random$list,
+				$elm$core$List$length(scoredMoves),
+				randomPenalty));
+		var degradedScores = A2(
+			$elm$random$Random$map,
+			$elm$core$Debug$log('degraded moves'),
+			A2(
+				$elm$random$Random$map,
+				A2(
+					$elm$core$Basics$composeR,
+					$elm$core$List$sortBy(
+						function ($) {
+							return $.score;
+						}),
+					$elm$core$List$reverse),
+				A3(
+					$elm$random$Random$map2,
+					$elm$core$List$map2(
+						F2(
+							function (m, penalty) {
+								return _Utils_update(
+									m,
+									{score: m.score - penalty});
+							})),
+					initialScores,
+					randomPenalties)));
+		return degradedScores;
+	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -7709,7 +7841,6 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -7720,6 +7851,78 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $elm_community$random_extra$Random$Extra$sample = function () {
+	var find = F2(
+		function (k, ys) {
+			find:
+			while (true) {
+				if (!ys.b) {
+					return $elm$core$Maybe$Nothing;
+				} else {
+					var z = ys.a;
+					var zs = ys.b;
+					if (!k) {
+						return $elm$core$Maybe$Just(z);
+					} else {
+						var $temp$k = k - 1,
+							$temp$ys = zs;
+						k = $temp$k;
+						ys = $temp$ys;
+						continue find;
+					}
+				}
+			}
+		});
+	return function (xs) {
+		return A2(
+			$elm$random$Random$map,
+			function (i) {
+				return A2(find, i, xs);
+			},
+			A2(
+				$elm$random$Random$int,
+				0,
+				$elm$core$List$length(xs) - 1));
+	};
+}();
+var $author$project$AI$pickMove = function (scoredMoves) {
+	var bestScore = A2(
+		$elm$core$Maybe$map,
+		function ($) {
+			return $.score;
+		},
+		$elm$core$List$head(scoredMoves));
+	var bestMoves = A2(
+		$elm$core$Maybe$map,
+		$elm$core$List$map(
+			function ($) {
+				return $.move;
+			}),
+		A2(
+			$elm$core$Debug$log,
+			'next best moves',
+			A2(
+				$elm$core$Maybe$map,
+				function (best) {
+					return A2(
+						$elm$core$List$filter,
+						function (move) {
+							return _Utils_eq(move.score, best);
+						},
+						scoredMoves);
+				},
+				bestScore)));
+	var randomNextMove = function () {
+		if (bestMoves.$ === 'Nothing') {
+			return $elm$random$Random$constant($elm$core$Maybe$Nothing);
+		} else {
+			var moves = bestMoves.a;
+			return $elm_community$random_extra$Random$Extra$sample(moves);
+		}
+	}();
+	return randomNextMove;
+};
+var $author$project$AI$Minimize = {$: 'Minimize'};
 var $author$project$AI$Maximize = {$: 'Maximize'};
 var $author$project$Tuple3$map = F2(
 	function (f, _v0) {
@@ -8026,30 +8229,6 @@ var $author$project$AI$evalPosition = function (gameState) {
 	return scoresWithBonus;
 };
 var $author$project$AI$maxValue = 100000;
-var $elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$Basics$min = F2(
-	function (x, y) {
-		return (_Utils_cmp(x, y) < 0) ? x : y;
-	});
-var $elm$core$List$minimum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$UltimateTicTacToe$moveIsInCurrentBoard = F2(
 	function (move, model) {
 		var _v0 = model.currentBoardCoords;
@@ -8294,103 +8473,53 @@ var $author$project$AI$minimax = F3(
 			}
 		}
 	});
-var $elm_community$random_extra$Random$Extra$sample = function () {
-	var find = F2(
-		function (k, ys) {
-			find:
-			while (true) {
-				if (!ys.b) {
-					return $elm$core$Maybe$Nothing;
-				} else {
-					var z = ys.a;
-					var zs = ys.b;
-					if (!k) {
-						return $elm$core$Maybe$Just(z);
-					} else {
-						var $temp$k = k - 1,
-							$temp$ys = zs;
-						k = $temp$k;
-						ys = $temp$ys;
-						continue find;
-					}
-				}
-			}
-		});
-	return function (xs) {
-		return A2(
-			$elm$random$Random$map,
-			function (i) {
-				return A2(find, i, xs);
-			},
-			A2(
-				$elm$random$Random$int,
-				0,
-				$elm$core$List$length(xs) - 1));
+var $author$project$AI$scoreMoves = function (gameState) {
+	var potentialMoves = $author$project$AI$validMoves(gameState);
+	var minimaxScore = function (move) {
+		return A3(
+			$author$project$AI$minimax,
+			A3($author$project$UltimateTicTacToe$performMove, gameState.currentPlayer, move, gameState),
+			1,
+			$author$project$AI$Minimize);
 	};
-}();
-var $elm$core$List$sortBy = _List_sortBy;
+	var scoredMoves = A2(
+		$elm$core$Debug$log,
+		'available moves',
+		$elm$core$List$reverse(
+			A2(
+				$elm$core$List$sortBy,
+				function ($) {
+					return $.score;
+				},
+				A2(
+					$elm$core$List$map,
+					function (m) {
+						return {
+							move: m,
+							score: minimaxScore(m)
+						};
+					},
+					potentialMoves))));
+	return scoredMoves;
+};
 var $author$project$AI$nextMove = F3(
 	function (f, difficulty, gameState) {
-		var potentialMoves = $author$project$AI$validMoves(gameState);
-		var minimaxScore = function (move) {
-			return A3(
-				$author$project$AI$minimax,
-				A3($author$project$UltimateTicTacToe$performMove, gameState.currentPlayer, move, gameState),
-				1,
-				$author$project$AI$Minimize);
-		};
-		var scoredMoves = A2(
-			$elm$core$Debug$log,
-			'available moves',
-			$elm$core$List$reverse(
-				A2(
-					$elm$core$List$sortBy,
-					$elm$core$Tuple$second,
-					A2(
-						$elm$core$List$map,
-						function (m) {
-							return _Utils_Tuple2(
-								m,
-								minimaxScore(m));
-						},
-						potentialMoves))));
-		var bestScore = A2(
-			$elm$core$Maybe$map,
-			$elm$core$Tuple$second,
-			$elm$core$List$head(scoredMoves));
-		var bestMoves = A2(
-			$elm$core$Maybe$map,
-			$elm$core$List$map($elm$core$Tuple$first),
+		var randomNextMove = A2(
+			$elm$random$Random$andThen,
+			$author$project$AI$pickMove,
 			A2(
-				$elm$core$Debug$log,
-				'next best moves',
-				A2(
-					$elm$core$Maybe$map,
-					function (best) {
-						return A2(
-							$elm$core$List$filter,
-							function (elem) {
-								return _Utils_eq(elem.b, best);
-							},
-							scoredMoves);
-					},
-					bestScore)));
-		var randomNextMove = function () {
-			if (bestMoves.$ === 'Nothing') {
-				return $elm$random$Random$constant($elm$core$Maybe$Nothing);
-			} else {
-				var moves = bestMoves.a;
-				return $elm_community$random_extra$Random$Extra$sample(moves);
-			}
-		}();
+				$author$project$AI$degradeMoves,
+				difficulty,
+				$author$project$AI$scoreMoves(gameState)));
 		return A2(
 			$elm$core$Platform$Cmd$map,
 			f,
 			A2($elm$random$Random$generate, $elm$core$Basics$identity, randomNextMove));
 	});
-var $author$project$Main$getAIMove = function (currentBoard) {
-	return A3($author$project$AI$nextMove, $author$project$Main$moveOrIgnore, $author$project$AI$Hard, currentBoard);
-};
+var $author$project$Main$getAIMove = F2(
+	function (difficulty, currentBoard) {
+		return A3($author$project$AI$nextMove, $author$project$Main$moveOrIgnore, difficulty, currentBoard);
+	});
 var $author$project$Main$Creating = {$: 'Creating'};
 var $author$project$Main$Expected = function (a) {
 	return {$: 'Expected', a: a};
@@ -8436,11 +8565,6 @@ var $elm$core$Maybe$isJust = function (maybe) {
 	}
 };
 var $elm$http$Http$emptyBody = _Http_emptyBody;
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $elm$http$Http$expectBytesResponse = F2(
 	function (toMsg, toResult) {
 		return A3(
@@ -8951,25 +9075,30 @@ var $author$project$Main$update = F2(
 		var windowSize = model.windowSize;
 		switch (msg.$) {
 			case 'WaitedForAI':
-				return _Utils_Tuple2(
-					model,
-					$author$project$Main$getAIMove(gameState));
+				if ((gameSettings.$ === 'LocalVsAI') && (gameSettings.a.$ === 'WaitingForAI')) {
+					var difficulty = gameSettings.a.a;
+					return _Utils_Tuple2(
+						model,
+						A2($author$project$Main$getAIMove, difficulty, gameState));
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
 			case 'PerformedMove':
 				var player = msg.a;
 				var move = msg.b;
-				_v1$3:
+				_v2$3:
 				while (true) {
 					switch (gameSettings.$) {
 						case 'Remote2Players':
 							if (gameSettings.c.$ === 'InProgress') {
 								var gameId = gameSettings.a;
 								var thisPlayer = gameSettings.b;
-								var _v2 = gameSettings.c;
+								var _v3 = gameSettings.c;
 								return _Utils_eq(thisPlayer, player) ? _Utils_Tuple2(
 									model,
 									A4($author$project$GameServer$playMove, config.remotePlayServerUrl, gameId, player, move)) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							} else {
-								break _v1$3;
+								break _v2$3;
 							}
 						case 'LocalVsAI':
 							switch (gameSettings.a.$) {
@@ -8978,7 +9107,7 @@ var $author$project$Main$update = F2(
 									var newState = A3($author$project$UltimateTicTacToe$performMove, player, move, gameState);
 									var cmd = _Utils_eq(player, $author$project$Player$X) ? A2(
 										$elm$core$Task$perform,
-										function (_v3) {
+										function (_v4) {
 											return $author$project$Main$WaitedForAI;
 										},
 										$elm$core$Process$sleep(1000.0)) : $elm$core$Platform$Cmd$none;
@@ -9004,10 +9133,10 @@ var $author$project$Main$update = F2(
 											}),
 										$elm$core$Platform$Cmd$none);
 								default:
-									break _v1$3;
+									break _v2$3;
 							}
 						default:
-							break _v1$3;
+							break _v2$3;
 					}
 				}
 				var newState = A3($author$project$UltimateTicTacToe$performMove, player, move, gameState);
@@ -9095,6 +9224,7 @@ var $author$project$Main$ChoseDifficulty = function (a) {
 	return {$: 'ChoseDifficulty', a: a};
 };
 var $author$project$AI$Easy = {$: 'Easy'};
+var $author$project$AI$Hard = {$: 'Hard'};
 var $author$project$AI$Normal = {$: 'Normal'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
