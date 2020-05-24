@@ -78,6 +78,7 @@ degradeMoves difficulty scoredMoves =
                 |> penaltyFactor
                 |> (*) (toFloat delta)
                 |> round
+                |> min maxScore -- don't make penalty greater than max possible score
                 |> Debug.log "max penalty"
         initialScores : Random.Generator (List ScoredMove)
         initialScores =
@@ -177,7 +178,7 @@ validMovesOnBoard ticTacToeBoard =
             []
 
 
-maxValue =
+maxScore =
     100000
 
 
@@ -196,10 +197,10 @@ minimax ticTacToe depth action =
         Just winner ->
             case winner of
                 Left X ->
-                    -maxValue
+                    -maxScore
 
                 Left O ->
-                    maxValue
+                    maxScore
 
                 Right Draw ->
                     0
@@ -224,7 +225,7 @@ minimax ticTacToe depth action =
                                         )
 
                             max =
-                                List.maximum values |> Maybe.withDefault -maxValue
+                                List.maximum values |> Maybe.withDefault -maxScore
                         in
                         max
 
@@ -238,7 +239,7 @@ minimax ticTacToe depth action =
                                         )
 
                             min =
-                                List.minimum values |> Maybe.withDefault maxValue
+                                List.minimum values |> Maybe.withDefault maxScore
                         in
                         min
 
