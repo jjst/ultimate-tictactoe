@@ -28,6 +28,7 @@ import Url
 import Url.Builder as UrlBuilder
 import Url.Parser as UrlParser
 import UrlUtils
+import Window
 
 
 main : Program Config Model Msg
@@ -523,9 +524,6 @@ viewError error =
         title =
             "Woops..."
 
-        titleDiv =
-            div [ HA.class "menutitle" ] [ text title ]
-
         errorMessage =
             case error of
                 Expected e ->
@@ -534,24 +532,15 @@ viewError error =
                 _ ->
                     "Error communicating with the server, cannot play remotely :-("
 
-        mainDiv =
-            div [ HA.class "buttons" ]
+        contents =
                 [ div [ HA.class "menu-item" ]
                     [ p [] [ text errorMessage ]
                     ]
                 , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Back to main menu" ]
                 ]
 
-        menu =
-            div [ HA.id "menu" ] [ titleDiv, mainDiv ]
-
-        containerClass =
-            "fade-in"
-
-        menuContainer =
-            div [ HA.id "menu-container", HA.class containerClass ] [ menu ]
     in
-    menuContainer
+    Window.show title [] (div [] contents)
 
 
 viewWaitingForPlayerMenu : Maybe Url.Url -> Player.Player -> Html Msg
@@ -560,67 +549,39 @@ viewWaitingForPlayerMenu maybeGameUrl player =
         title =
             "Waiting for players..."
 
-        titleDiv =
-            div [ HA.class "menutitle" ] [ text title ]
-
-        mainDiv =
+        contents =
             case maybeGameUrl of
                 Just gameUrl ->
-                    div [ HA.class "buttons" ]
-                        [ div [ HA.class "menu-item" ]
-                            [ p [] [ text ("Waiting for another player. You'll be playing as '" ++ Player.toString player ++ "'") ]
-                            , p [] [ text "They can join using the following link:" ]
-                            ]
-                        , input [ HA.class "menu-item", HA.readonly True, HA.value (Url.toString gameUrl) ] []
-                        , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
+                    [ div [ HA.class "menu-item" ]
+                        [ p [] [ text ("Waiting for another player. You'll be playing as '" ++ Player.toString player ++ "'") ]
+                        , p [] [ text "They can join using the following link:" ]
                         ]
+                    , input [ HA.class "menu-item", HA.readonly True, HA.value (Url.toString gameUrl) ] []
+                    , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
+                    ]
 
                 Nothing ->
-                    div [ HA.class "buttons" ]
-                        [ div [ HA.class "menu-item" ]
-                            [ p [] [ text "Creating game..." ]
-                            ]
-                        , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
+                    [ div [ HA.class "menu-item" ]
+                        [ p [] [ text "Creating game..." ]
                         ]
-
-        menu =
-            div [ HA.id "menu" ] [ titleDiv, mainDiv ]
-
-        containerClass =
-            "fade-in"
-
-        menuContainer =
-            div [ HA.id "menu-container", HA.class containerClass ] [ menu ]
+                    , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
+                    ]
     in
-    menuContainer
+    Window.show title [] (div [] contents)
 
 
 viewChooseDifficultyMenu : Html Msg
 viewChooseDifficultyMenu =
     let
-        title =
-            "Choose difficulty:"
-
-        titleDiv =
-            div [ HA.class "menutitle" ] [ text title ]
-
         options =
-            div [ HA.class "buttons" ]
+            div []
                 [ button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Easy) ] [ text "Easy" ]
                 , button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Normal) ] [ text "Normal" ]
                 , button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Hard) ] [ text "Hard" ]
                 ]
 
-        menu =
-            div [ HA.id "menu" ] [ titleDiv, options ]
-
-        containerClass =
-            "fade-in"
-
-        menuContainer =
-            div [ HA.id "menu-container", HA.class containerClass ] [ menu ]
     in
-    menuContainer
+    Window.show "Choose difficulty:" [] options
 
 
 viewMainMenu : Maybe Winner -> Html Msg
@@ -640,19 +601,13 @@ viewMainMenu maybeWinner =
                 Just (Left O) ->
                     "O wins! Replay:"
 
-        titleDiv =
-            div [ HA.class "menutitle" ] [ text title ]
-
-        options =
-            div [ HA.class "buttons" ]
+        contents =
+            div []
                 [ button [ HA.class "menu-item", onClick (ChoseMainMenuOption WatchTutorial) ] [ text "How to play" ]
                 , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.OnePlayerVsAI)) ] [ text "1 Player vs AI" ]
                 , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.TwoPlayersLocal)) ] [ text "2 Players (local)" ]
                 , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.TwoPlayersRemote)) ] [ text "2 Players (remote)" ]
                 ]
-
-        menu =
-            div [ HA.id "menu" ] [ titleDiv, options ]
 
         containerClass =
             if maybeWinner == Nothing then
@@ -661,10 +616,8 @@ viewMainMenu maybeWinner =
             else
                 "fade-in delay"
 
-        menuContainer =
-            div [ HA.id "menu-container", HA.class containerClass ] [ menu ]
     in
-    menuContainer
+    Window.show title [ HA.class containerClass ] contents
 
 
 viewGameState : Float -> GameSettings -> GameState -> Html Msg

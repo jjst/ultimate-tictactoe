@@ -1,4 +1,4 @@
-.menutitle {
+.windowtitle {
     color: #111111;
     font-family: 'Oswald', sans-serif;
     text-transform: uppercase;
@@ -39,7 +39,7 @@ button.menu-item {
     font-size: 16px;
 }
 
-div#menu-container {
+div#window-container {
     border: 2px solid #1C140D;
     background: #E6E8E6;
     overflow: hidden;
@@ -50,12 +50,12 @@ div#menu-container {
     width: 80%;
 }
 
-div#menu {
+div#window {
   position: relative;
   padding: 50px;
 }
 
-div#buttons {
+div#windowcontent {
   position: relative;
 }
 
