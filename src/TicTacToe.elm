@@ -99,9 +99,10 @@ performMoveFor player ( x, y ) board =
 -- VIEW
 
 
-render : TicTacToeBoard -> Svg Move
-render =
-    TicTacToeBase.svgView identity svgViewCell
+render : (Move -> msg) -> TicTacToeBoard -> Svg msg
+render f ttt =
+    TicTacToeBase.svgView identity svgViewCell ttt
+        |> Svg.map  f
 
 
 svgViewCell : Board.Coords -> Cell.Cell -> Svg Move

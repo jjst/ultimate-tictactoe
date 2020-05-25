@@ -22,6 +22,7 @@ import SvgUtils
 import Task
 import TicTacToeBase
 import Tuple3 as T3
+import Tutorial
 import UltimateTicTacToe exposing (GameState, Move)
 import Url
 import Url.Builder as UrlBuilder
@@ -47,11 +48,11 @@ main =
 
 type GameSettings
     = NotYetSelected
+    | ViewingTutorial Tutorial.Model
     | Error String
     | LocalVsAI SinglePlayerState
     | Local2Players
     | Remote2Players GameId.GameId Player.Player RemoteState
-
 
 type alias Config =
     { remotePlayServerUrl : String
@@ -161,7 +162,7 @@ type Msg
     | WaitedForAI
     | NewWindowSize WindowSize
     | RemoteGameMsg GameId.GameId Player RemoteMsg
-    | ChoseGameMode GameMode.Mode
+    | ChoseMainMenuOption MainMenuOption
     | ChoseDifficulty AI.Difficulty
     | RequestedMainMenu
     | ClickedLink Browser.UrlRequest
@@ -169,6 +170,9 @@ type Msg
     | Ignored
     | InputMsg String
 
+type MainMenuOption
+    = Play GameMode.Mode
+    | WatchTutorial
 
 type RemoteMsg
     = RemoteGameIdCreated
@@ -250,8 +254,13 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
             , Nav.replaceUrl model.navigationKey (UrlBuilder.absolute [] [])
             )
 
-        ChoseGameMode mode ->
-            chooseGameMode mode model
+        ChoseMainMenuOption (Play gameMode) ->
+            chooseGameMode gameMode model
+
+        ChoseMainMenuOption WatchTutorial ->
+            ( { model | gameSettings = (ViewingTutorial Tutorial.init) }
+            , Cmd.none
+            )
 
         ChoseDifficulty difficulty ->
             chooseDifficulty difficulty model
@@ -443,28 +452,29 @@ view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
         size =
             String.fromFloat minSize
 
-        cursorStyle =
-            case gameSettings of
-                LocalVsAI (WaitingForAI _) ->
-                    "wait"
-
-                Remote2Players gameId player InProgress ->
-                    if player == gameState.currentPlayer then
-                        "auto"
-
-                    else
-                        "wait"
-
-                _ ->
-                    "auto"
-
         mainDivStyles =
             [ HA.style "margin" "auto"
             , HA.style "position" "relative"
             , HA.style "width" (size ++ "px")
             , HA.style "height" (size ++ "px")
-            , HA.style "cursor" cursorStyle
             ]
+        elementsToDisplay =
+            case gameSettings of
+                ViewingTutorial m -> [ Tutorial.view m ]
+                other -> viewMainElements model
+
+        html =
+            div mainDivStyles ([ css "style.css" ] ++ elementsToDisplay)
+    in
+    { title = "Ultimate Tic-Tac-Toe"
+    , body = [ html ]
+    }
+
+viewMainElements : Model -> List (Html Msg) 
+viewMainElements ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
+    let
+        minSize =
+            (Basics.min windowSize.width windowSize.height |> toFloat) - 5
 
         gameBoardView =
             viewGameState minSize gameSettings gameState
@@ -501,14 +511,11 @@ view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
 
         elementsToDisplay =
             prependMaybe [ gameBoardView ] maybeMenu
-
-        html =
-            div mainDivStyles ([ css "style.css" ] ++ elementsToDisplay)
     in
-    { title = "Ultimate Tic-Tac-Toe"
-    , body = [ html ]
-    }
+    elementsToDisplay
 
+
+    
 
 viewError : RemoteProblem -> Html Msg
 viewError error =
@@ -638,9 +645,10 @@ viewMainMenu maybeWinner =
 
         options =
             div [ HA.class "buttons" ]
-                [ button [ HA.class "menu-item", onClick (ChoseGameMode GameMode.OnePlayerVsAI) ] [ text "1 Player vs AI" ]
-                , button [ HA.class "menu-item", onClick (ChoseGameMode GameMode.TwoPlayersLocal) ] [ text "2 Players (local)" ]
-                , button [ HA.class "menu-item", onClick (ChoseGameMode GameMode.TwoPlayersRemote) ] [ text "2 Players (remote)" ]
+                [ button [ HA.class "menu-item", onClick (ChoseMainMenuOption WatchTutorial) ] [ text "How to play" ]
+                , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.OnePlayerVsAI)) ] [ text "1 Player vs AI" ]
+                , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.TwoPlayersLocal)) ] [ text "2 Players (local)" ]
+                , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.TwoPlayersRemote)) ] [ text "2 Players (remote)" ]
                 ]
 
         menu =
@@ -671,6 +679,21 @@ viewGameState minSize gameSettings gameState =
         size =
             String.fromFloat minSize
 
+        cursorStyle =
+            case gameSettings of
+                LocalVsAI (WaitingForAI _) ->
+                    "wait"
+
+                Remote2Players gameId player InProgress ->
+                    if player == gameState.currentPlayer then
+                        "auto"
+
+                    else
+                        "wait"
+
+                _ ->
+                    "auto"
+
         msgType =
             case gameSettings of
                 LocalVsAI _ ->
@@ -680,11 +703,14 @@ viewGameState minSize gameSettings gameState =
                     PerformedMove gameState.currentPlayer
 
         svgView =
-            UltimateTicTacToe.svgView gameState
+            UltimateTicTacToe.svgView msgType gameState
                 |> SvgUtils.scale scale
-                |> Svg.map msgType
     in
-    svg [ SA.viewBox ("0 0 " ++ size ++ " " ++ size), SA.width (size ++ "px") ] [ svgView ]
+    svg 
+        [ SA.viewBox ("0 0 " ++ size ++ " " ++ size)
+        , SA.width (size ++ "px")
+        , HA.style "cursor" cursorStyle 
+        ] [ svgView ]
 
 
 css : String -> Html a

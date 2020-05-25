@@ -213,11 +213,11 @@ fadedOutOpacity =
     0.15
 
 
-svgView : GameState -> Svg Move
-svgView ({ board } as model) =
+svgView : (Move -> msg) -> GameState -> Svg msg
+svgView f ({ board } as model) =
     let
         cells =
-            g [] (flatten <| indexedMap (renderTicTacToeBoard model) board)
+            g [] (flatten <| indexedMap (renderTicTacToeBoard f model) board)
 
         st =
             case ( winningRow boardOwner board, winner board ) of
@@ -238,11 +238,11 @@ svgView ({ board } as model) =
     g [] ([ cells, grid Sizes.cellSize ] ++ st)
 
 
-renderTicTacToeBoard : GameState -> Coords -> TicTacToeBoard -> Svg Move
-renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
+renderTicTacToeBoard : (Move -> msg) -> GameState -> Coords -> TicTacToeBoard -> Svg msg
+renderTicTacToeBoard f model (( i, j ) as coords) ticTacToeBoard =
     let
         renderedBoard =
-            TicTacToe.render ticTacToeBoard
+            TicTacToe.render (\cellCoords -> f { boardCoords = coords, cellCoords = cellCoords }) ticTacToeBoard
 
         boardWinner =
             TicTacToe.winner ticTacToeBoard
@@ -271,7 +271,6 @@ renderTicTacToeBoard model (( i, j ) as coords) ticTacToeBoard =
     group
         |> SvgUtils.scale (1.0 / 3.0)
         |> SvgUtils.translate (toFloat (T3.toInt i * Sizes.cellSize)) (toFloat (T3.toInt j * Sizes.cellSize))
-        |> Svg.map (\cellCoords -> { boardCoords = coords, cellCoords = cellCoords })
 
 
 shouldFadeOut : GameState -> Coords -> TicTacToeBoard -> Bool
