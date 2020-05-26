@@ -12,6 +12,7 @@ git remote add upstream "https://$GH_TOKEN@github.com/jjst/elmtimate-tictactoe.g
 git fetch upstream
 git reset upstream/gh-pages
 
+envsubst < index.html > index-new.html && mv index-new.html index.html
 
 git add -A main.js index.html 404.html style.css
 git commit -m "Rebuild pages at ${rev}"
