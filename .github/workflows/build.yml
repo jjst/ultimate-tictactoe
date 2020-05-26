@@ -32,4 +32,5 @@ jobs:
     - name: Deploy
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        CSS_HASH: ${{ hashFiles('style.css') }}
       run: bash deploy.sh
