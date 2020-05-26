@@ -30,4 +30,6 @@ jobs:
     - name: build
       run: elm make src/Main.elm --output=main.js
     - name: Deploy
+      env:
+        GH_SECRET: ${{ secrets.GH_SECRET }}
       run: bash deploy.sh
