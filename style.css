@@ -79,6 +79,25 @@ a:hover {
     color: #5C540D;
 }
 
+g.cross {
+  animation-name: blinkAnimation;
+  animation-duration: 1s;
+}
+
+.circle {
+  animation-name: blinkAnimation;
+  animation-duration: 1s;
+}
+
+@keyframes blinkAnimation {
+  0%   {opacity: 0.0;}
+  20%  {opacity: 1.0;}
+  40%  {opacity: 0.2;}
+  60%  {opacity: 1.0;}
+  80%  {opacity: 0.2;}
+  100% {opacity: 1.0;}
+}
+
 /* make keyframes that tell the start state and the end state of our object */
 @-webkit-keyframes fadeIn { from { opacity:0; } to { opacity:0.9; } }
 @-moz-keyframes fadeIn { from { opacity:0; } to { opacity:0.9; } }

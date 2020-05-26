@@ -212,7 +212,7 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
 
                         cmd =
                             if player == Player.X then
-                                Process.sleep 1000.0 |> Task.perform (\_ -> WaitedForAI)
+                                Process.sleep 2000.0 |> Task.perform (\_ -> WaitedForAI)
 
                             else
                                 Cmd.none
