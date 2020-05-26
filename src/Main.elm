@@ -210,17 +210,15 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
                         newState =
                             UltimateTicTacToe.performMove player move gameState
 
-                        cmd =
-                            if player == Player.X then
-                                Process.sleep 2000.0 |> Task.perform (\_ -> WaitedForAI)
-
-                            else
-                                Cmd.none
                     in
-                    ( { model | gameState = newState, gameSettings = LocalVsAI (WaitingForAI difficulty) }
-                    , cmd
-                    )
-
+                        if player == Player.X && (UltimateTicTacToe.winner newState.board == Nothing) then
+                            ( { model | gameState = newState, gameSettings = LocalVsAI (WaitingForAI difficulty) }
+                            , Process.sleep 2000.0 |> Task.perform (\_ -> WaitedForAI)
+                            )
+                        else
+                            ( { model | gameState = newState }
+                            , Cmd.none
+                            )
                 LocalVsAI (WaitingForAI difficulty) ->
                     let
                         newState =
