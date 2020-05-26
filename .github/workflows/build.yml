@@ -29,3 +29,8 @@ jobs:
       run: elm-test
     - name: build
       run: elm make src/Main.elm --output=main.js
+    - name: Deploy
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        CSS_HASH: ${{ hashFiles('style.css') }}
+      run: bash deploy.sh
