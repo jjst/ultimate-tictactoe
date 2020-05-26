@@ -9113,7 +9113,7 @@ var $author$project$Main$update = F2(
 										function (_v4) {
 											return $author$project$Main$WaitedForAI;
 										},
-										$elm$core$Process$sleep(1000.0)) : $elm$core$Platform$Cmd$none;
+										$elm$core$Process$sleep(2000.0)) : $elm$core$Platform$Cmd$none;
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -9505,6 +9505,7 @@ var $author$project$TicTacToeBase$grid = function (cellSize) {
 			]));
 };
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
+var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
 var $elm$svg$Svg$Attributes$fillOpacity = _VirtualDom_attribute('fill-opacity');
@@ -9517,6 +9518,7 @@ var $author$project$Cell$drawCircle = A2(
 			$elm$svg$Svg$Attributes$cy('50'),
 			$elm$svg$Svg$Attributes$r('40'),
 			$elm$svg$Svg$Attributes$fillOpacity('0.0'),
+			$elm$svg$Svg$Attributes$class('circle'),
 			$elm$svg$Svg$Attributes$style('stroke:red;stroke-width:6')
 		]),
 	_List_Nil);
@@ -9524,6 +9526,7 @@ var $author$project$Cell$drawCross = A2(
 	$elm$svg$Svg$g,
 	_List_fromArray(
 		[
+			$elm$svg$Svg$Attributes$class('cross'),
 			$elm$svg$Svg$Attributes$style('stroke:blue;stroke-width:6')
 		]),
 	_List_fromArray(
