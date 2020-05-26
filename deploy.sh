@@ -15,5 +15,5 @@ git reset upstream/gh-pages
 envsubst < index.html > index-new.html && mv index-new.html index.html
 
 git add -A main.js index.html 404.html style.css
-git commit -m "Rebuild pages at ${rev}"
+git commit --allow-empty -m "Rebuild pages at ${rev}"
 git push -q upstream HEAD:gh-pages
