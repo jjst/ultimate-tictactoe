@@ -31,5 +31,5 @@ jobs:
       run: elm make src/Main.elm --output=main.js
     - name: Deploy
       env:
-        GH_SECRET: ${{ secrets.GH_SECRET }}
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: bash deploy.sh
