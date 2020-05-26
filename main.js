@@ -9108,13 +9108,9 @@ var $author$project$Main$update = F2(
 								case 'Playing':
 									var difficulty = gameSettings.a.a;
 									var newState = A3($author$project$UltimateTicTacToe$performMove, player, move, gameState);
-									var cmd = _Utils_eq(player, $author$project$Player$X) ? A2(
-										$elm$core$Task$perform,
-										function (_v4) {
-											return $author$project$Main$WaitedForAI;
-										},
-										$elm$core$Process$sleep(2000.0)) : $elm$core$Platform$Cmd$none;
-									return _Utils_Tuple2(
+									return (_Utils_eq(player, $author$project$Player$X) && _Utils_eq(
+										$author$project$UltimateTicTacToe$winner(newState.board),
+										$elm$core$Maybe$Nothing)) ? _Utils_Tuple2(
 										_Utils_update(
 											model,
 											{
@@ -9122,7 +9118,16 @@ var $author$project$Main$update = F2(
 													$author$project$Main$WaitingForAI(difficulty)),
 												gameState: newState
 											}),
-										cmd);
+										A2(
+											$elm$core$Task$perform,
+											function (_v4) {
+												return $author$project$Main$WaitedForAI;
+											},
+											$elm$core$Process$sleep(2000.0))) : _Utils_Tuple2(
+										_Utils_update(
+											model,
+											{gameState: newState}),
+										$elm$core$Platform$Cmd$none);
 								case 'WaitingForAI':
 									var difficulty = gameSettings.a.a;
 									var newState = A3($author$project$UltimateTicTacToe$performMove, player, move, gameState);
