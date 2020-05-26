@@ -540,7 +540,7 @@ viewError error =
                 ]
 
     in
-    Window.show title [] (div [] contents)
+    Window.show title [] contents
 
 
 viewWaitingForPlayerMenu : Maybe Url.Url -> Player.Player -> Html Msg
@@ -567,14 +567,13 @@ viewWaitingForPlayerMenu maybeGameUrl player =
                     , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
                     ]
     in
-    Window.show title [] (div [] contents)
+    Window.show title [] contents
 
 
 viewChooseDifficultyMenu : Html Msg
 viewChooseDifficultyMenu =
     let
         options =
-            div []
                 [ button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Easy) ] [ text "Easy" ]
                 , button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Normal) ] [ text "Normal" ]
                 , button [ HA.class "menu-item", onClick (ChoseDifficulty AI.Hard) ] [ text "Hard" ]
@@ -602,7 +601,6 @@ viewMainMenu maybeWinner =
                     "O wins! Replay:"
 
         contents =
-            div []
                 [ button [ HA.class "menu-item", onClick (ChoseMainMenuOption WatchTutorial) ] [ text "How to play" ]
                 , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.OnePlayerVsAI)) ] [ text "1 Player vs AI" ]
                 , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.TwoPlayersLocal)) ] [ text "2 Players (local)" ]
