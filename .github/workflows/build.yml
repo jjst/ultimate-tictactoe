@@ -29,3 +29,5 @@ jobs:
       run: elm-test
     - name: build
       run: elm make src/Main.elm --output=main.js
+    - name: Deploy
+      run: bash deploy.sh
