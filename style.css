@@ -90,11 +90,10 @@ g.cross {
 }
 
 @keyframes blinkAnimation {
-  0%   {opacity: 0.0;}
-  20%  {opacity: 1.0;}
-  40%  {opacity: 0.2;}
-  60%  {opacity: 1.0;}
-  80%  {opacity: 0.2;}
+  0%   {opacity: 1.0;}
+  25% {opacity: 0.2;}
+  50% {opacity: 1.0;}
+  75% {opacity: 0.2;}
   100% {opacity: 1.0;}
 }
 
