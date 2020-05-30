@@ -3,8 +3,8 @@
 
 [Play it here!](https://ultimate-tictactoe.live)
 
-# Elmtimate Tic-tac-toe
-An implementation of [Ultimate Tic-tac-toe](https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/) in your browser, in Elm.
+# Ultimate Tic-tac-toe
+An implementation of [Ultimate Tic-tac-toe](https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/) in your browser, in Elm. Supports singleplayer, as well as local and remote multiplayer modes.
 
 ![board](http://i.imgur.com/VbXU7vj.png)
 
