@@ -7287,6 +7287,9 @@ var $author$project$Main$LocalVsAI = function (a) {
 var $author$project$Main$Playing = function (a) {
 	return {$: 'Playing', a: a};
 };
+var $author$project$Main$ViewingTutorial = function (a) {
+	return {$: 'ViewingTutorial', a: a};
+};
 var $author$project$Main$WaitedForAI = {$: 'WaitedForAI'};
 var $author$project$Main$WaitingForAI = function (a) {
 	return {$: 'WaitingForAI', a: a};
@@ -9035,6 +9038,8 @@ var $author$project$Main$handleRemoteMessage = F4(
 		}(
 			A2($elm$core$Debug$log, 'Received unprocessed game event', otherEvent));
 	});
+var $author$project$Tutorial$Model = {$: 'Model'};
+var $author$project$Tutorial$init = $author$project$Tutorial$Model;
 var $author$project$GameServer$encodeTuple3Index = function (idx) {
 	switch (idx.$) {
 		case 'I1':
@@ -9170,9 +9175,20 @@ var $author$project$Main$update = F2(
 						$elm$browser$Browser$Navigation$replaceUrl,
 						model.navigationKey,
 						A2($elm$url$Url$Builder$absolute, _List_Nil, _List_Nil)));
-			case 'ChoseGameMode':
-				var mode = msg.a;
-				return A2($author$project$Main$chooseGameMode, mode, model);
+			case 'ChoseMainMenuOption':
+				if (msg.a.$ === 'Play') {
+					var gameMode = msg.a.a;
+					return A2($author$project$Main$chooseGameMode, gameMode, model);
+				} else {
+					var _v5 = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								gameSettings: $author$project$Main$ViewingTutorial($author$project$Tutorial$init)
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
 			case 'ChoseDifficulty':
 				var difficulty = msg.a;
 				return A2($author$project$Main$chooseDifficulty, difficulty, model);
@@ -9217,6 +9233,80 @@ var $author$project$Main$css = function (path) {
 };
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$core$String$fromFloat = _String_fromNumber;
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Window$show = F3(
+	function (title, attrs, contents) {
+		var titleDiv = A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('windowtitle')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(title)
+				]));
+		var window = A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$id('window')
+				]),
+			_Utils_ap(
+				_List_fromArray(
+					[titleDiv]),
+				contents));
+		var menuContainer = A2(
+			$elm$html$Html$div,
+			_Utils_ap(
+				attrs,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('window-container')
+					])),
+			_List_fromArray(
+				[window]));
+		return menuContainer;
+	});
+var $author$project$Tutorial$view = function (model) {
+	var contents = _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$p,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Just testing...')
+						]))
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Okay')
+				]))
+		]);
+	return A3($author$project$Window$show, 'Test', _List_Nil, contents);
+};
 var $author$project$Main$prependMaybe = F2(
 	function (list, maybe) {
 		if (maybe.$ === 'Just') {
@@ -9226,17 +9316,12 @@ var $author$project$Main$prependMaybe = F2(
 			return list;
 		}
 	});
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Main$ChoseDifficulty = function (a) {
 	return {$: 'ChoseDifficulty', a: a};
 };
 var $author$project$AI$Easy = {$: 'Easy'};
 var $author$project$AI$Hard = {$: 'Hard'};
 var $author$project$AI$Normal = {$: 'Normal'};
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -9254,99 +9339,51 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$viewChooseDifficultyMenu = function () {
-	var title = 'Choose difficulty:';
-	var titleDiv = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('menutitle')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text(title)
-			]));
-	var options = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('buttons')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Events$onClick(
-						$author$project$Main$ChoseDifficulty($author$project$AI$Easy))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Easy')
-					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Events$onClick(
-						$author$project$Main$ChoseDifficulty($author$project$AI$Normal))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Normal')
-					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Events$onClick(
-						$author$project$Main$ChoseDifficulty($author$project$AI$Hard))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Hard')
-					]))
-			]));
-	var menu = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$id('menu')
-			]),
-		_List_fromArray(
-			[titleDiv, options]));
-	var containerClass = 'fade-in';
-	var menuContainer = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$id('menu-container'),
-				$elm$html$Html$Attributes$class(containerClass)
-			]),
-		_List_fromArray(
-			[menu]));
-	return menuContainer;
+	var options = _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$ChoseDifficulty($author$project$AI$Easy))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Easy')
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$ChoseDifficulty($author$project$AI$Normal))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Normal')
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$ChoseDifficulty($author$project$AI$Hard))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Hard')
+				]))
+		]);
+	return A3($author$project$Window$show, 'Choose difficulty:', _List_Nil, options);
 }();
 var $author$project$Main$RequestedMainMenu = {$: 'RequestedMainMenu'};
-var $elm$html$Html$p = _VirtualDom_node('p');
 var $author$project$Main$viewError = function (error) {
 	var title = 'Woops...';
-	var titleDiv = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('menutitle')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text(title)
-			]));
 	var errorMessage = function () {
 		if (error.$ === 'Expected') {
 			var e = error.a;
@@ -9355,66 +9392,40 @@ var $author$project$Main$viewError = function (error) {
 			return 'Error communicating with the server, cannot play remotely :-(';
 		}
 	}();
-	var mainDiv = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('buttons')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$p,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text(errorMessage)
-							]))
-					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Back to main menu')
-					]))
-			]));
-	var menu = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$id('menu')
-			]),
-		_List_fromArray(
-			[titleDiv, mainDiv]));
-	var containerClass = 'fade-in';
-	var menuContainer = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$id('menu-container'),
-				$elm$html$Html$Attributes$class(containerClass)
-			]),
-		_List_fromArray(
-			[menu]));
-	return menuContainer;
+	var contents = _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$p,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(errorMessage)
+						]))
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item'),
+					$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Back to main menu')
+				]))
+		]);
+	return A3($author$project$Window$show, title, _List_Nil, contents);
 };
 var $author$project$Sizes$cellSize = 300;
 var $author$project$Sizes$boardSize = $author$project$Sizes$cellSize * 3;
-var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
-var $elm$svg$Svg$map = $elm$virtual_dom$VirtualDom$map;
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
 var $elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
@@ -9560,6 +9571,8 @@ var $author$project$Cell$drawCross = A2(
 var $author$project$UltimateTicTacToe$fadedOutOpacity = 0.15;
 var $author$project$UltimateTicTacToe$normalOpacity = 1.0;
 var $elm$svg$Svg$Attributes$opacity = _VirtualDom_attribute('opacity');
+var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
+var $elm$svg$Svg$map = $elm$virtual_dom$VirtualDom$map;
 var $author$project$Tuple3$toInt = function (index) {
 	switch (index.$) {
 		case 'I1':
@@ -9722,7 +9735,13 @@ var $author$project$TicTacToe$svgViewCell = F2(
 					model,
 					_Utils_Tuple2(i, j))));
 	});
-var $author$project$TicTacToe$render = A2($author$project$TicTacToeBase$svgView, $elm$core$Basics$identity, $author$project$TicTacToe$svgViewCell);
+var $author$project$TicTacToe$render = F2(
+	function (f, ttt) {
+		return A2(
+			$elm$svg$Svg$map,
+			f,
+			A3($author$project$TicTacToeBase$svgView, $elm$core$Basics$identity, $author$project$TicTacToe$svgViewCell, ttt));
+	});
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$UltimateTicTacToe$shouldFadeOut = F3(
 	function (model, boardCoords, ticTacToeBoard) {
@@ -9741,11 +9760,17 @@ var $author$project$UltimateTicTacToe$shouldFadeOut = F3(
 			}
 		}
 	});
-var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F3(
-	function (model, coords, ticTacToeBoard) {
+var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F4(
+	function (f, model, coords, ticTacToeBoard) {
 		var i = coords.a;
 		var j = coords.b;
-		var renderedBoard = $author$project$TicTacToe$render(ticTacToeBoard);
+		var renderedBoard = A2(
+			$author$project$TicTacToe$render,
+			function (cellCoords) {
+				return f(
+					{boardCoords: coords, cellCoords: cellCoords});
+			},
+			ticTacToeBoard);
 		var boardWinner = $author$project$TicTacToe$winner(ticTacToeBoard);
 		var winningMark = function () {
 			if ((boardWinner.$ === 'Just') && (boardWinner.a.$ === 'Left')) {
@@ -9784,69 +9809,65 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F3(
 						_List_fromArray(
 							[renderedBoard]))
 					])));
-		return A2(
-			$elm$svg$Svg$map,
-			function (cellCoords) {
-				return {boardCoords: coords, cellCoords: cellCoords};
-			},
-			A3(
-				$author$project$SvgUtils$translate,
-				$author$project$Tuple3$toInt(i) * $author$project$Sizes$cellSize,
-				$author$project$Tuple3$toInt(j) * $author$project$Sizes$cellSize,
-				A2($author$project$SvgUtils$scale, 1.0 / 3.0, group)));
+		return A3(
+			$author$project$SvgUtils$translate,
+			$author$project$Tuple3$toInt(i) * $author$project$Sizes$cellSize,
+			$author$project$Tuple3$toInt(j) * $author$project$Sizes$cellSize,
+			A2($author$project$SvgUtils$scale, 1.0 / 3.0, group));
 	});
-var $author$project$UltimateTicTacToe$svgView = function (model) {
-	var board = model.board;
-	var st = function () {
-		var _v0 = _Utils_Tuple2(
-			A2($author$project$Board$winningRow, $author$project$UltimateTicTacToe$boardOwner, board),
-			$author$project$UltimateTicTacToe$winner(board));
-		if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
-			var _v1 = _v0.a.a;
-			var first = _v1.a;
-			var middle = _v1.b;
-			var last = _v1.c;
-			var theWinner = _v0.b.a;
-			if (theWinner.$ === 'Left') {
-				if (theWinner.a.$ === 'O') {
-					var _v3 = theWinner.a;
-					return _List_fromArray(
-						[
-							A4($author$project$TicTacToeBase$strikeThrough, 'red', $author$project$Sizes$cellSize, first, last)
-						]);
+var $author$project$UltimateTicTacToe$svgView = F2(
+	function (f, model) {
+		var board = model.board;
+		var st = function () {
+			var _v0 = _Utils_Tuple2(
+				A2($author$project$Board$winningRow, $author$project$UltimateTicTacToe$boardOwner, board),
+				$author$project$UltimateTicTacToe$winner(board));
+			if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
+				var _v1 = _v0.a.a;
+				var first = _v1.a;
+				var middle = _v1.b;
+				var last = _v1.c;
+				var theWinner = _v0.b.a;
+				if (theWinner.$ === 'Left') {
+					if (theWinner.a.$ === 'O') {
+						var _v3 = theWinner.a;
+						return _List_fromArray(
+							[
+								A4($author$project$TicTacToeBase$strikeThrough, 'red', $author$project$Sizes$cellSize, first, last)
+							]);
+					} else {
+						var _v4 = theWinner.a;
+						return _List_fromArray(
+							[
+								A4($author$project$TicTacToeBase$strikeThrough, 'blue', $author$project$Sizes$cellSize, first, last)
+							]);
+					}
 				} else {
-					var _v4 = theWinner.a;
-					return _List_fromArray(
-						[
-							A4($author$project$TicTacToeBase$strikeThrough, 'blue', $author$project$Sizes$cellSize, first, last)
-						]);
+					return _List_Nil;
 				}
 			} else {
 				return _List_Nil;
 			}
-		} else {
-			return _List_Nil;
-		}
-	}();
-	var cells = A2(
-		$elm$svg$Svg$g,
-		_List_Nil,
-		$author$project$Board$flatten(
-			A2(
-				$author$project$Board$indexedMap,
-				$author$project$UltimateTicTacToe$renderTicTacToeBoard(model),
-				board)));
-	return A2(
-		$elm$svg$Svg$g,
-		_List_Nil,
-		_Utils_ap(
-			_List_fromArray(
-				[
-					cells,
-					$author$project$TicTacToeBase$grid($author$project$Sizes$cellSize)
-				]),
-			st));
-};
+		}();
+		var cells = A2(
+			$elm$svg$Svg$g,
+			_List_Nil,
+			$author$project$Board$flatten(
+				A2(
+					$author$project$Board$indexedMap,
+					A2($author$project$UltimateTicTacToe$renderTicTacToeBoard, f, model),
+					board)));
+		return A2(
+			$elm$svg$Svg$g,
+			_List_Nil,
+			_Utils_ap(
+				_List_fromArray(
+					[
+						cells,
+						$author$project$TicTacToeBase$grid($author$project$Sizes$cellSize)
+					]),
+				st));
+	});
 var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
 var $author$project$Main$viewGameState = F3(
 	function (minSize, gameSettings, gameState) {
@@ -9858,29 +9879,55 @@ var $author$project$Main$viewGameState = F3(
 				return $author$project$Main$PerformedMove(gameState.currentPlayer);
 			}
 		}();
+		var cursorStyle = function () {
+			_v0$2:
+			while (true) {
+				switch (gameSettings.$) {
+					case 'LocalVsAI':
+						if (gameSettings.a.$ === 'WaitingForAI') {
+							return 'wait';
+						} else {
+							break _v0$2;
+						}
+					case 'Remote2Players':
+						if (gameSettings.c.$ === 'InProgress') {
+							var gameId = gameSettings.a;
+							var player = gameSettings.b;
+							var _v1 = gameSettings.c;
+							return _Utils_eq(player, gameState.currentPlayer) ? 'auto' : 'wait';
+						} else {
+							break _v0$2;
+						}
+					default:
+						break _v0$2;
+				}
+			}
+			return 'auto';
+		}();
 		var baseBoardSize = $author$project$Sizes$boardSize;
 		var scale = minSize / baseBoardSize;
 		var svgView = A2(
-			$elm$svg$Svg$map,
-			msgType,
-			A2(
-				$author$project$SvgUtils$scale,
-				scale,
-				$author$project$UltimateTicTacToe$svgView(gameState)));
+			$author$project$SvgUtils$scale,
+			scale,
+			A2($author$project$UltimateTicTacToe$svgView, msgType, gameState));
 		return A2(
 			$elm$svg$Svg$svg,
 			_List_fromArray(
 				[
 					$elm$svg$Svg$Attributes$viewBox('0 0 ' + (size + (' ' + size))),
-					$elm$svg$Svg$Attributes$width(size + 'px')
+					$elm$svg$Svg$Attributes$width(size + 'px'),
+					A2($elm$html$Html$Attributes$style, 'cursor', cursorStyle)
 				]),
 			_List_fromArray(
 				[svgView]));
 	});
-var $author$project$Main$ChoseGameMode = function (a) {
-	return {$: 'ChoseGameMode', a: a};
+var $author$project$Main$ChoseMainMenuOption = function (a) {
+	return {$: 'ChoseMainMenuOption', a: a};
 };
 var $author$project$GameMode$OnePlayerVsAI = {$: 'OnePlayerVsAI'};
+var $author$project$Main$Play = function (a) {
+	return {$: 'Play', a: a};
+};
 var $author$project$GameMode$TwoPlayersLocal = {$: 'TwoPlayersLocal'};
 var $author$project$GameMode$TwoPlayersRemote = {$: 'TwoPlayersRemote'};
 var $author$project$Main$viewMainMenu = function (maybeWinner) {
@@ -9902,80 +9949,57 @@ var $author$project$Main$viewMainMenu = function (maybeWinner) {
 			}
 		}
 	}();
-	var titleDiv = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('menutitle')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text(title)
-			]));
-	var options = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('buttons')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Events$onClick(
-						$author$project$Main$ChoseGameMode($author$project$GameMode$OnePlayerVsAI))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('1 Player vs AI')
-					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Events$onClick(
-						$author$project$Main$ChoseGameMode($author$project$GameMode$TwoPlayersLocal))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('2 Players (local)')
-					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('menu-item'),
-						$elm$html$Html$Events$onClick(
-						$author$project$Main$ChoseGameMode($author$project$GameMode$TwoPlayersRemote))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('2 Players (remote)')
-					]))
-			]));
-	var menu = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$id('menu')
-			]),
-		_List_fromArray(
-			[titleDiv, options]));
+	var contents = _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$ChoseMainMenuOption(
+						$author$project$Main$Play($author$project$GameMode$OnePlayerVsAI)))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('1 Player vs AI')
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$ChoseMainMenuOption(
+						$author$project$Main$Play($author$project$GameMode$TwoPlayersLocal)))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('2 Players (local)')
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$ChoseMainMenuOption(
+						$author$project$Main$Play($author$project$GameMode$TwoPlayersRemote)))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('2 Players (remote)')
+				]))
+		]);
 	var containerClass = _Utils_eq(maybeWinner, $elm$core$Maybe$Nothing) ? 'fade-in' : 'fade-in delay';
-	var menuContainer = A2(
-		$elm$html$Html$div,
+	return A3(
+		$author$project$Window$show,
+		title,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$id('menu-container'),
 				$elm$html$Html$Attributes$class(containerClass)
 			]),
-		_List_fromArray(
-			[menu]));
-	return menuContainer;
+		contents);
 };
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$json$Json$Encode$bool = _Json_wrap;
@@ -10035,191 +10059,150 @@ var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('
 var $author$project$Main$viewWaitingForPlayerMenu = F2(
 	function (maybeGameUrl, player) {
 		var title = 'Waiting for players...';
-		var titleDiv = A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('menutitle')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text(title)
-				]));
-		var mainDiv = function () {
+		var contents = function () {
 			if (maybeGameUrl.$ === 'Just') {
 				var gameUrl = maybeGameUrl.a;
-				return A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('buttons')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('menu-item')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											'Waiting for another player. You\'ll be playing as \'' + ($author$project$Player$toString(player) + '\''))
-										])),
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text('They can join using the following link:')
-										]))
-								])),
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('menu-item'),
-									$elm$html$Html$Attributes$readonly(true),
-									$elm$html$Html$Attributes$value(
-									$elm$url$Url$toString(gameUrl))
-								]),
-							_List_Nil),
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('menu-item'),
-									$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Cancel')
-								]))
-						]));
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('menu-item')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										'Waiting for another player. You\'ll be playing as \'' + ($author$project$Player$toString(player) + '\''))
+									])),
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('They can join using the following link:')
+									]))
+							])),
+						A2(
+						$elm$html$Html$input,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('menu-item'),
+								$elm$html$Html$Attributes$readonly(true),
+								$elm$html$Html$Attributes$value(
+								$elm$url$Url$toString(gameUrl))
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('menu-item'),
+								$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Cancel')
+							]))
+					]);
 			} else {
-				return A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('buttons')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('menu-item')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Creating game...')
-										]))
-								])),
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('menu-item'),
-									$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Cancel')
-								]))
-						]));
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('menu-item')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Creating game...')
+									]))
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('menu-item'),
+								$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Cancel')
+							]))
+					]);
 			}
 		}();
-		var menu = A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$id('menu')
-				]),
-			_List_fromArray(
-				[titleDiv, mainDiv]));
-		var containerClass = 'fade-in';
-		var menuContainer = A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$id('menu-container'),
-					$elm$html$Html$Attributes$class(containerClass)
-				]),
-			_List_fromArray(
-				[menu]));
-		return menuContainer;
+		return A3($author$project$Window$show, title, _List_Nil, contents);
 	});
-var $author$project$Main$view = function (model) {
+var $author$project$Main$viewMainElements = function (model) {
 	var baseUrl = model.baseUrl;
 	var config = model.config;
 	var gameState = model.gameState;
 	var gameSettings = model.gameSettings;
 	var windowSize = model.windowSize;
 	var minSize = A2($elm$core$Basics$min, windowSize.width, windowSize.height) - 5;
-	var size = $elm$core$String$fromFloat(minSize);
 	var maybeMenu = function () {
-		var _v2 = _Utils_Tuple2(
+		var _v0 = _Utils_Tuple2(
 			gameSettings,
 			$author$project$UltimateTicTacToe$winner(gameState.board));
-		_v2$6:
+		_v0$6:
 		while (true) {
-			_v2$7:
+			_v0$7:
 			while (true) {
-				switch (_v2.a.$) {
+				switch (_v0.a.$) {
 					case 'NotYetSelected':
-						var _v3 = _v2.a;
+						var _v1 = _v0.a;
 						return $elm$core$Maybe$Just(
 							$author$project$Main$viewMainMenu($elm$core$Maybe$Nothing));
 					case 'LocalVsAI':
-						if (_v2.a.a.$ === 'ChoosingDifficulty') {
-							var _v4 = _v2.a.a;
+						if (_v0.a.a.$ === 'ChoosingDifficulty') {
+							var _v2 = _v0.a.a;
 							return $elm$core$Maybe$Just($author$project$Main$viewChooseDifficultyMenu);
 						} else {
-							if (_v2.b.$ === 'Just') {
-								break _v2$6;
+							if (_v0.b.$ === 'Just') {
+								break _v0$6;
 							} else {
-								break _v2$7;
+								break _v0$7;
 							}
 						}
 					case 'Remote2Players':
-						switch (_v2.a.c.$) {
+						switch (_v0.a.c.$) {
 							case 'RemoteError':
-								var _v5 = _v2.a;
-								var gameId = _v5.a;
-								var error = _v5.c.a;
+								var _v3 = _v0.a;
+								var gameId = _v3.a;
+								var error = _v3.c.a;
 								return $elm$core$Maybe$Just(
 									$author$project$Main$viewError(error));
 							case 'Creating':
-								var _v6 = _v2.a;
+								var _v4 = _v0.a;
+								var gameId = _v4.a;
+								var player = _v4.b;
+								var _v5 = _v4.c;
+								return $elm$core$Maybe$Just(
+									A2($author$project$Main$viewWaitingForPlayerMenu, $elm$core$Maybe$Nothing, player));
+							case 'Joining':
+								var _v6 = _v0.a;
 								var gameId = _v6.a;
 								var player = _v6.b;
 								var _v7 = _v6.c;
 								return $elm$core$Maybe$Just(
 									A2($author$project$Main$viewWaitingForPlayerMenu, $elm$core$Maybe$Nothing, player));
-							case 'Joining':
-								var _v8 = _v2.a;
+							case 'WaitingForPlayers':
+								var _v8 = _v0.a;
 								var gameId = _v8.a;
 								var player = _v8.b;
 								var _v9 = _v8.c;
-								return $elm$core$Maybe$Just(
-									A2($author$project$Main$viewWaitingForPlayerMenu, $elm$core$Maybe$Nothing, player));
-							case 'WaitingForPlayers':
-								var _v10 = _v2.a;
-								var gameId = _v10.a;
-								var player = _v10.b;
-								var _v11 = _v10.c;
 								var gameUrl = _Utils_update(
 									baseUrl,
 									{path: '/' + gameId});
@@ -10229,23 +10212,23 @@ var $author$project$Main$view = function (model) {
 										$elm$core$Maybe$Just(gameUrl),
 										player));
 							default:
-								if (_v2.b.$ === 'Just') {
-									break _v2$6;
+								if (_v0.b.$ === 'Just') {
+									break _v0$6;
 								} else {
-									break _v2$7;
+									break _v0$7;
 								}
 						}
 					default:
-						if (_v2.b.$ === 'Just') {
-							break _v2$6;
+						if (_v0.b.$ === 'Just') {
+							break _v0$6;
 						} else {
-							break _v2$7;
+							break _v0$7;
 						}
 				}
 			}
 			return $elm$core$Maybe$Nothing;
 		}
-		var winner = _v2.b.a;
+		var winner = _v0.b.a;
 		return $elm$core$Maybe$Just(
 			$author$project$Main$viewMainMenu(
 				$elm$core$Maybe$Just(winner)));
@@ -10256,39 +10239,35 @@ var $author$project$Main$view = function (model) {
 		_List_fromArray(
 			[gameBoardView]),
 		maybeMenu);
-	var cursorStyle = function () {
-		_v0$2:
-		while (true) {
-			switch (gameSettings.$) {
-				case 'LocalVsAI':
-					if (gameSettings.a.$ === 'WaitingForAI') {
-						return 'wait';
-					} else {
-						break _v0$2;
-					}
-				case 'Remote2Players':
-					if (gameSettings.c.$ === 'InProgress') {
-						var gameId = gameSettings.a;
-						var player = gameSettings.b;
-						var _v1 = gameSettings.c;
-						return _Utils_eq(player, gameState.currentPlayer) ? 'auto' : 'wait';
-					} else {
-						break _v0$2;
-					}
-				default:
-					break _v0$2;
-			}
-		}
-		return 'auto';
-	}();
+	return elementsToDisplay;
+};
+var $author$project$Main$view = function (model) {
+	var baseUrl = model.baseUrl;
+	var config = model.config;
+	var gameState = model.gameState;
+	var gameSettings = model.gameSettings;
+	var windowSize = model.windowSize;
+	var minSize = A2($elm$core$Basics$min, windowSize.width, windowSize.height) - 5;
+	var size = $elm$core$String$fromFloat(minSize);
 	var mainDivStyles = _List_fromArray(
 		[
 			A2($elm$html$Html$Attributes$style, 'margin', 'auto'),
 			A2($elm$html$Html$Attributes$style, 'position', 'relative'),
 			A2($elm$html$Html$Attributes$style, 'width', size + 'px'),
-			A2($elm$html$Html$Attributes$style, 'height', size + 'px'),
-			A2($elm$html$Html$Attributes$style, 'cursor', cursorStyle)
+			A2($elm$html$Html$Attributes$style, 'height', size + 'px')
 		]);
+	var elementsToDisplay = function () {
+		if (gameSettings.$ === 'ViewingTutorial') {
+			var m = gameSettings.a;
+			return _List_fromArray(
+				[
+					$author$project$Tutorial$view(m)
+				]);
+		} else {
+			var other = gameSettings;
+			return $author$project$Main$viewMainElements(model);
+		}
+	}();
 	var html = A2(
 		$elm$html$Html$div,
 		mainDivStyles,
