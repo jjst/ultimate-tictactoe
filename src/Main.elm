@@ -471,7 +471,7 @@ view ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
     , body = [ html ]
     }
 
-viewMainElements : Model -> List (Html Msg) 
+viewMainElements : Model -> List (Html Msg)
 viewMainElements ({ baseUrl, config, gameState, gameSettings, windowSize } as model) =
     let
         minSize =
@@ -516,7 +516,7 @@ viewMainElements ({ baseUrl, config, gameState, gameSettings, windowSize } as mo
     elementsToDisplay
 
 
-    
+
 
 viewError : RemoteProblem -> Html Msg
 viewError error =
@@ -601,8 +601,9 @@ viewMainMenu maybeWinner =
                     "O wins! Replay:"
 
         contents =
-                [ button [ HA.class "menu-item", onClick (ChoseMainMenuOption WatchTutorial) ] [ text "How to play" ]
-                , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.OnePlayerVsAI)) ] [ text "1 Player vs AI" ]
+                [
+                  -- button [ HA.class "menu-item", onClick (ChoseMainMenuOption WatchTutorial) ] [ text "How to play" ]
+                  button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.OnePlayerVsAI)) ] [ text "1 Player vs AI" ]
                 , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.TwoPlayersLocal)) ] [ text "2 Players (local)" ]
                 , button [ HA.class "menu-item", onClick (ChoseMainMenuOption (Play GameMode.TwoPlayersRemote)) ] [ text "2 Players (remote)" ]
                 ]
@@ -657,10 +658,10 @@ viewGameState minSize gameSettings gameState =
             UltimateTicTacToe.svgView msgType gameState
                 |> SvgUtils.scale scale
     in
-    svg 
+    svg
         [ SA.viewBox ("0 0 " ++ size ++ " " ++ size)
         , SA.width (size ++ "px")
-        , HA.style "cursor" cursorStyle 
+        , HA.style "cursor" cursorStyle
         ] [ svgView ]
 
 
