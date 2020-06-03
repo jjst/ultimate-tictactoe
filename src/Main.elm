@@ -81,6 +81,7 @@ type RemoteState
     | Joining
     | RemoteError RemoteProblem
     | WaitingForPlayers
+    | PlayerDisconnected
     | InProgress
 
 
@@ -337,10 +338,22 @@ handleRemoteMessage gameId player message ({ config, gameSettings } as model) =
                         )
                    )
 
-        RemoteGameReceivedEvent (GameServer.PlayerJoined Player.X) ->
-            -- We successfully joined the game!
-            ( { model | gameSettings = Remote2Players gameId player WaitingForPlayers }
-            , Nav.replaceUrl model.navigationKey (UrlBuilder.absolute [ gameId ] [])
+        RemoteGameReceivedEvent (GameServer.PlayerJoined p) ->
+            if p == player then
+                -- We successfully joined the game!
+                ( { model | gameSettings = Remote2Players gameId player WaitingForPlayers }
+                , Nav.replaceUrl model.navigationKey (UrlBuilder.absolute [ gameId ] [])
+                )
+            else
+                -- Our opponent joined the game, there's nothing to do, we wait for a game start message from the server
+                ( model
+                , Cmd.none
+                )
+
+        RemoteGameReceivedEvent (GameServer.PlayerLeft p) ->
+            -- Oh no, a player disconnected
+            ( { model | gameSettings = Remote2Players gameId player PlayerDisconnected }
+            , Cmd.none
             )
 
         RemoteGameReceivedEvent GameServer.GameStarted ->
@@ -492,17 +505,24 @@ viewMainElements ({ baseUrl, config, gameState, gameSettings, windowSize } as mo
                     Just (viewError error)
 
                 ( Remote2Players gameId player Creating, _ ) ->
-                    Just (viewWaitingForPlayerMenu Nothing player)
+                    Just (viewCreatingGameMenu)
 
                 ( Remote2Players gameId player Joining, _ ) ->
-                    Just (viewWaitingForPlayerMenu Nothing player)
+                    Just (viewCreatingGameMenu)
 
                 ( Remote2Players gameId player WaitingForPlayers, _ ) ->
                     let
                         gameUrl =
                             { baseUrl | path = "/" ++ gameId }
                     in
-                    Just (viewWaitingForPlayerMenu (Just gameUrl) player)
+                    Just (viewWaitingForPlayerMenu gameUrl player)
+
+                ( Remote2Players gameId player PlayerDisconnected, _ ) ->
+                    let
+                        gameUrl =
+                            { baseUrl | path = "/" ++ gameId }
+                    in
+                    Just (viewPlayerDisconnectedMenu gameUrl player)
 
                 ( _, Just winner ) ->
                     Just (viewMainMenu (Just winner))
@@ -542,33 +562,54 @@ viewError error =
     in
     Window.show title [] contents
 
-
-viewWaitingForPlayerMenu : Maybe Url.Url -> Player.Player -> Html Msg
-viewWaitingForPlayerMenu maybeGameUrl player =
+viewCreatingGameMenu : Html Msg
+viewCreatingGameMenu =
     let
         title =
             "Waiting for players..."
 
         contents =
-            case maybeGameUrl of
-                Just gameUrl ->
-                    [ div [ HA.class "menu-item" ]
-                        [ p [] [ text ("Waiting for another player. You'll be playing as '" ++ Player.toString player ++ "'") ]
-                        , p [] [ text "They can join using the following link:" ]
-                        ]
-                    , input [ HA.class "menu-item", HA.readonly True, HA.value (Url.toString gameUrl) ] []
-                    , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
-                    ]
-
-                Nothing ->
-                    [ div [ HA.class "menu-item" ]
-                        [ p [] [ text "Creating game..." ]
-                        ]
-                    , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
-                    ]
+            [ div [ HA.class "menu-item" ]
+                [ p [] [ text "Creating game..." ]
+                ]
+            , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
+            ]
     in
     Window.show title [] contents
 
+viewWaitingForPlayerMenu : Url.Url -> Player.Player -> Html Msg
+viewWaitingForPlayerMenu gameUrl player =
+    let
+        title =
+            "Waiting for players..."
+
+        contents =
+            [ div [ HA.class "menu-item" ]
+                [ p [] [ text ("Waiting for another player. You'll be playing as '" ++ Player.toString player ++ "'") ]
+                , p [] [ text "They can join using the following link:" ]
+                ]
+            , input [ HA.class "menu-item", HA.readonly True, HA.value (Url.toString gameUrl) ] []
+            , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
+            ]
+    in
+    Window.show title [] contents
+
+viewPlayerDisconnectedMenu : Url.Url -> Player.Player -> Html Msg
+viewPlayerDisconnectedMenu gameUrl player =
+    let
+        title =
+            "Oh no!"
+
+        contents =
+            [ div [ HA.class "menu-item" ]
+                [ p [] [ text "The other player disconnected." ]
+                , p [] [ text "They can re-join using the following link:" ]
+                ]
+            , input [ HA.class "menu-item", HA.readonly True, HA.value (Url.toString gameUrl) ] []
+            , button [ HA.class "menu-item", onClick RequestedMainMenu ] [ text "Cancel" ]
+            ]
+    in
+    Window.show title [] contents
 
 viewChooseDifficultyMenu : Html Msg
 viewChooseDifficultyMenu =
