@@ -78,11 +78,15 @@ type SinglePlayerState
 
 type RemoteState
     = Creating
-    | Joining
+    | Joining Try
     | RemoteError RemoteProblem
     | WaitingForPlayers
     | PlayerDisconnected
     | InProgress
+
+type Try
+    = FirstTry
+    | SecondTry
 
 
 type RemoteProblem
@@ -94,35 +98,25 @@ type RemoteProblem
 init : Config -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init conf url key =
     let
-        ( gameSettings_, msgs ) =
-            case route url of
-                Home ->
-                    ( NotYetSelected
-                    , []
-                    )
-
-                JoinRemoteGame gameId ->
-                    let
-                        player =
-                            Player.O
-                    in
-                    ( Remote2Players gameId player Joining
-                    , [ GameServer.joinGame (\e -> RemoteGameMsg gameId player (RemoteGameJoined e)) conf.remotePlayServerUrl gameId Player.O ]
-                    )
-
         model =
             { baseUrl = UrlUtils.baseUrl url
             , navigationKey = key
             , config = conf
             , gameState = UltimateTicTacToe.init
-            , gameSettings = gameSettings_
+            , gameSettings = NotYetSelected
             , windowSize = { width = 0, height = 0 }
             }
-    in
-    ( model
-    , Cmd.batch (getInitialWindowSize :: msgs)
-    )
 
+    in
+        case route url of
+            Home ->
+                ( model
+                , getInitialWindowSize
+                )
+
+            JoinRemoteGame gameId ->
+                joinRemoteGame gameId Player.O model
+                    |> Tuple.mapSecond (\msg -> Cmd.batch [getInitialWindowSize, msg])
 
 
 -- URL PARSING
@@ -285,9 +279,7 @@ handleRemoteMessage gameId player message ({ config, gameSettings } as model) =
             )
 
         RemoteGameCreated GameServer.Success ->
-            ( { model | gameSettings = Remote2Players gameId player Joining }
-            , GameServer.joinGame (\e -> RemoteGameMsg gameId player (RemoteGameJoined e)) config.remotePlayServerUrl gameId Player.X
-            )
+            joinRemoteGame gameId Player.X model
 
         RemoteGameCreated (GameServer.Problem GameServer.AlreadyExistsError) ->
             ( model
@@ -295,7 +287,7 @@ handleRemoteMessage gameId player message ({ config, gameSettings } as model) =
             )
 
         RemoteGameCreated (GameServer.UnexpectedError error) ->
-            Debug.log ("Oh no! We got an unexpected error communicating with the remote play server @ " ++ config.remotePlayServerUrl) error
+            Debug.log ("Oh no! We got an unexpected error trying to create a game @ " ++ config.remotePlayServerUrl) error
                 |> (\_ ->
                         ( { model | gameSettings = Remote2Players gameId player (RemoteError (UnexpectedHttpError error)) }
                         , Cmd.none
@@ -303,12 +295,18 @@ handleRemoteMessage gameId player message ({ config, gameSettings } as model) =
                    )
 
         RemoteGameJoined (GameServer.UnexpectedError error) ->
-            Debug.log ("Oh no! We got an unexpected error communicating with the remote play server @ " ++ config.remotePlayServerUrl) error
-                |> (\_ ->
-                        ( { model | gameSettings = Remote2Players gameId player (RemoteError (UnexpectedHttpError error)) }
-                        , Cmd.none
-                        )
-                   )
+            case gameSettings of
+                Remote2Players _ _ (Joining FirstTry) ->
+                    -- Try to join as other player
+                    Debug.log ("Failed to join server, will retry as other player") error
+                        |> (\_ -> joinRemoteGame gameId (Player.opponent player) model)
+                _ ->
+                    Debug.log ("Oh no! We got an unexpected error trying to join a game @ " ++ config.remotePlayServerUrl) model
+                        |> (\_ ->
+                                ( { model | gameSettings = Remote2Players gameId player (RemoteError (UnexpectedHttpError error)) }
+                                , Cmd.none
+                                )
+                           )
 
         RemoteGameJoined GameServer.Success ->
             ( { model | gameSettings = Remote2Players gameId player WaitingForPlayers }
@@ -331,12 +329,18 @@ handleRemoteMessage gameId player message ({ config, gameSettings } as model) =
             )
 
         RemoteGameReceivedEvent (GameServer.Error error) ->
-            Debug.log ("Oh no! We got an unexpected error communicating with the remote play server @ " ++ config.remotePlayServerUrl) error
-                |> (\_ ->
-                        ( { model | gameSettings = Remote2Players gameId player (RemoteError (UnexpectedOther error)) }
-                        , Cmd.none
-                        )
-                   )
+            case gameSettings of
+                Remote2Players _ _ (Joining FirstTry) ->
+                    -- Try to join as other player
+                    Debug.log ("Failed to join server, will retry as other player") error
+                        |> (\_ -> joinRemoteGame gameId (Player.opponent player) model)
+                _ ->
+                    Debug.log ("Oh no! We got an unexpected error trying to join a game @ " ++ config.remotePlayServerUrl) model
+                        |> (\_ ->
+                            ( { model | gameSettings = Remote2Players gameId player (RemoteError (UnexpectedOther error)) }
+                            , Cmd.none
+                            )
+                           )
 
         RemoteGameReceivedEvent (GameServer.PlayerJoined p) ->
             if p == player then
@@ -393,6 +397,19 @@ chooseGameMode mode model =
             , GameServer.generateGameId (\gameId -> RemoteGameMsg gameId Player.X RemoteGameIdCreated)
             )
 
+joinRemoteGame : GameId.GameId -> Player -> Model -> ( Model, Cmd Msg )
+joinRemoteGame gameId player model =
+    let
+        try =
+            case model.gameSettings of
+                Remote2Players _ _ (Joining FirstTry) ->
+                    SecondTry
+                _ ->
+                    FirstTry
+    in
+    ( { model | gameSettings = Remote2Players gameId player (Joining try) }
+    , GameServer.joinGame (\e -> RemoteGameMsg gameId player (RemoteGameJoined e)) model.config.remotePlayServerUrl gameId player
+    )
 
 chooseDifficulty : AI.Difficulty -> Model -> ( Model, Cmd Msg )
 chooseDifficulty difficulty model =
@@ -507,7 +524,7 @@ viewMainElements ({ baseUrl, config, gameState, gameSettings, windowSize } as mo
                 ( Remote2Players gameId player Creating, _ ) ->
                     Just (viewCreatingGameMenu)
 
-                ( Remote2Players gameId player Joining, _ ) ->
+                ( Remote2Players gameId player (Joining _), _ ) ->
                     Just (viewCreatingGameMenu)
 
                 ( Remote2Players gameId player WaitingForPlayers, _ ) ->
