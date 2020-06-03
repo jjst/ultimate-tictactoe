@@ -5557,20 +5557,8 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$application = _Browser_application;
 var $elm$json$Json$Decode$field = _Json_decodeField;
-var $author$project$Main$Joining = {$: 'Joining'};
 var $author$project$Main$NotYetSelected = {$: 'NotYetSelected'};
 var $author$project$Player$O = {$: 'O'};
-var $author$project$Main$Remote2Players = F3(
-	function (a, b, c) {
-		return {$: 'Remote2Players', a: a, b: b, c: c};
-	});
-var $author$project$Main$RemoteGameJoined = function (a) {
-	return {$: 'RemoteGameJoined', a: a};
-};
-var $author$project$Main$RemoteGameMsg = F3(
-	function (a, b, c) {
-		return {$: 'RemoteGameMsg', a: a, b: b, c: c};
-	});
 var $author$project$UrlUtils$baseUrl = function (url) {
 	return _Utils_update(
 		url,
@@ -5607,6 +5595,22 @@ var $author$project$UltimateTicTacToe$init = {
 	currentBoardCoords: $elm$core$Maybe$Nothing,
 	currentPlayer: $author$project$Player$X
 };
+var $author$project$Main$FirstTry = {$: 'FirstTry'};
+var $author$project$Main$Joining = function (a) {
+	return {$: 'Joining', a: a};
+};
+var $author$project$Main$Remote2Players = F3(
+	function (a, b, c) {
+		return {$: 'Remote2Players', a: a, b: b, c: c};
+	});
+var $author$project$Main$RemoteGameJoined = function (a) {
+	return {$: 'RemoteGameJoined', a: a};
+};
+var $author$project$Main$RemoteGameMsg = F3(
+	function (a, b, c) {
+		return {$: 'RemoteGameMsg', a: a, b: b, c: c};
+	});
+var $author$project$Main$SecondTry = {$: 'SecondTry'};
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$GameServer$joinRemoteGame = _Platform_outgoingPort('joinRemoteGame', $elm$json$Json$Encode$string);
 var $elm$core$String$replace = F3(
@@ -5627,6 +5631,48 @@ var $author$project$GameServer$joinGame = F4(
 		}();
 		return $author$project$GameServer$joinRemoteGame(
 			A3($elm$core$String$replace, 'https', 'wss', serverUrl + ('/games/' + (gameId + ('/ws/' + p)))));
+	});
+var $author$project$Main$joinRemoteGame = F3(
+	function (gameId, player, model) {
+		var _try = function () {
+			var _v0 = model.gameSettings;
+			if (((_v0.$ === 'Remote2Players') && (_v0.c.$ === 'Joining')) && (_v0.c.a.$ === 'FirstTry')) {
+				var _v1 = _v0.c.a;
+				return $author$project$Main$SecondTry;
+			} else {
+				return $author$project$Main$FirstTry;
+			}
+		}();
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{
+					gameSettings: A3(
+						$author$project$Main$Remote2Players,
+						gameId,
+						player,
+						$author$project$Main$Joining(_try))
+				}),
+			A4(
+				$author$project$GameServer$joinGame,
+				function (e) {
+					return A3(
+						$author$project$Main$RemoteGameMsg,
+						gameId,
+						player,
+						$author$project$Main$RemoteGameJoined(e));
+				},
+				model.config.remotePlayServerUrl,
+				gameId,
+				player));
+	});
+var $elm$core$Tuple$mapSecond = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			x,
+			func(y));
 	});
 var $author$project$Main$Home = {$: 'Home'};
 var $elm$url$Url$Parser$State = F5(
@@ -6391,46 +6437,28 @@ var $author$project$Main$route = function (url) {
 };
 var $author$project$Main$init = F3(
 	function (conf, url, key) {
-		var _v0 = function () {
-			var _v1 = $author$project$Main$route(url);
-			if (_v1.$ === 'Home') {
-				return _Utils_Tuple2($author$project$Main$NotYetSelected, _List_Nil);
-			} else {
-				var gameId = _v1.a;
-				var player = $author$project$Player$O;
-				return _Utils_Tuple2(
-					A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$Joining),
-					_List_fromArray(
-						[
-							A4(
-							$author$project$GameServer$joinGame,
-							function (e) {
-								return A3(
-									$author$project$Main$RemoteGameMsg,
-									gameId,
-									player,
-									$author$project$Main$RemoteGameJoined(e));
-							},
-							conf.remotePlayServerUrl,
-							gameId,
-							$author$project$Player$O)
-						]));
-			}
-		}();
-		var gameSettings_ = _v0.a;
-		var msgs = _v0.b;
 		var model = {
 			baseUrl: $author$project$UrlUtils$baseUrl(url),
 			config: conf,
-			gameSettings: gameSettings_,
+			gameSettings: $author$project$Main$NotYetSelected,
 			gameState: $author$project$UltimateTicTacToe$init,
 			navigationKey: key,
 			windowSize: {height: 0, width: 0}
 		};
-		return _Utils_Tuple2(
-			model,
-			$elm$core$Platform$Cmd$batch(
-				A2($elm$core$List$cons, $author$project$Main$getInitialWindowSize, msgs)));
+		var _v0 = $author$project$Main$route(url);
+		if (_v0.$ === 'Home') {
+			return _Utils_Tuple2(model, $author$project$Main$getInitialWindowSize);
+		} else {
+			var gameId = _v0.a;
+			return A2(
+				$elm$core$Tuple$mapSecond,
+				function (msg) {
+					return $elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[$author$project$Main$getInitialWindowSize, msg]));
+				},
+				A3($author$project$Main$joinRemoteGame, gameId, $author$project$Player$O, model));
+		}
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$RemoteGameReceivedEvent = function (a) {
@@ -8531,6 +8559,7 @@ var $author$project$Main$Expected = function (a) {
 	return {$: 'Expected', a: a};
 };
 var $author$project$Main$InProgress = {$: 'InProgress'};
+var $author$project$Main$PlayerDisconnected = {$: 'PlayerDisconnected'};
 var $author$project$Main$RemoteError = function (a) {
 	return {$: 'RemoteError', a: a};
 };
@@ -8825,154 +8854,158 @@ var $author$project$Main$handleRemoteMessage = F4(
 	function (gameId, player, message, model) {
 		var config = model.config;
 		var gameSettings = model.gameSettings;
-		_v0$13:
-		while (true) {
-			switch (message.$) {
-				case 'RemoteGameIdCreated':
-					return _Utils_Tuple2(
-						_Utils_update(
+		switch (message.$) {
+			case 'RemoteGameIdCreated':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$Creating)
+						}),
+					A3(
+						$author$project$GameServer$createGame,
+						function (e) {
+							return A3(
+								$author$project$Main$RemoteGameMsg,
+								gameId,
+								player,
+								$author$project$Main$RemoteGameCreated(e));
+						},
+						config.remotePlayServerUrl,
+						gameId));
+			case 'RemoteGameCreated':
+				switch (message.a.$) {
+					case 'Success':
+						var _v1 = message.a;
+						return A3($author$project$Main$joinRemoteGame, gameId, $author$project$Player$X, model);
+					case 'Problem':
+						var _v2 = message.a.a;
+						return _Utils_Tuple2(
 							model,
-							{
-								gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$Creating)
-							}),
-						A3(
-							$author$project$GameServer$createGame,
-							function (e) {
-								return A3(
-									$author$project$Main$RemoteGameMsg,
-									gameId,
-									player,
-									$author$project$Main$RemoteGameCreated(e));
-							},
-							config.remotePlayServerUrl,
-							gameId));
-				case 'RemoteGameCreated':
-					switch (message.a.$) {
-						case 'Success':
-							var _v1 = message.a;
+							$author$project$GameServer$generateGameId(
+								function (e) {
+									return A3($author$project$Main$RemoteGameMsg, gameId, player, $author$project$Main$RemoteGameIdCreated);
+								}));
+					default:
+						var error = message.a.a;
+						return function (_v3) {
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
 									{
-										gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$Joining)
-									}),
-								A4(
-									$author$project$GameServer$joinGame,
-									function (e) {
-										return A3(
-											$author$project$Main$RemoteGameMsg,
+										gameSettings: A3(
+											$author$project$Main$Remote2Players,
 											gameId,
 											player,
-											$author$project$Main$RemoteGameJoined(e));
-									},
-									config.remotePlayServerUrl,
-									gameId,
-									$author$project$Player$X));
-						case 'Problem':
-							var _v2 = message.a.a;
-							return _Utils_Tuple2(
-								model,
-								$author$project$GameServer$generateGameId(
-									function (e) {
-										return A3($author$project$Main$RemoteGameMsg, gameId, player, $author$project$Main$RemoteGameIdCreated);
-									}));
-						default:
-							var error = message.a.a;
-							return function (_v3) {
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											gameSettings: A3(
-												$author$project$Main$Remote2Players,
-												gameId,
-												player,
-												$author$project$Main$RemoteError(
-													$author$project$Main$UnexpectedHttpError(error)))
-										}),
-									$elm$core$Platform$Cmd$none);
-							}(
-								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
-					}
-				case 'RemoteGameJoined':
-					switch (message.a.$) {
-						case 'UnexpectedError':
-							var error = message.a.a;
-							return function (_v4) {
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											gameSettings: A3(
-												$author$project$Main$Remote2Players,
-												gameId,
-												player,
-												$author$project$Main$RemoteError(
-													$author$project$Main$UnexpectedHttpError(error)))
-										}),
-									$elm$core$Platform$Cmd$none);
-							}(
-								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
-						case 'Success':
-							var _v5 = message.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$WaitingForPlayers)
+											$author$project$Main$RemoteError(
+												$author$project$Main$UnexpectedHttpError(error)))
 									}),
 								$elm$core$Platform$Cmd$none);
-						default:
-							switch (message.a.a.$) {
-								case 'GameFullError':
-									var _v6 = message.a.a;
-									return _Utils_Tuple2(
-										_Utils_update(
-											model,
-											{
-												gameSettings: A3(
-													$author$project$Main$Remote2Players,
-													gameId,
-													player,
-													$author$project$Main$RemoteError(
-														$author$project$Main$Expected('You cannot join this game, it\'s already full!')))
-											}),
-										$elm$core$Platform$Cmd$none);
-								case 'NotSupportedYet':
-									var _v7 = message.a.a;
-									return _Utils_Tuple2(
-										_Utils_update(
-											model,
-											{
-												gameSettings: A3(
-													$author$project$Main$Remote2Players,
-													gameId,
-													player,
-													$author$project$Main$RemoteError(
-														$author$project$Main$Expected('Remote multiplayer isn\'t supported yet... come back soon :-)')))
-											}),
-										$elm$core$Platform$Cmd$none);
-								default:
-									var _v8 = message.a.a;
-									return _Utils_Tuple2(
-										_Utils_update(
-											model,
-											{
-												gameSettings: A3(
-													$author$project$Main$Remote2Players,
-													gameId,
-													player,
-													$author$project$Main$RemoteError(
-														$author$project$Main$Expected('Sorry, this game does not exist!')))
-											}),
-										$elm$core$Platform$Cmd$none);
-							}
-					}
-				default:
-					switch (message.a.$) {
-						case 'Error':
-							var error = message.a.a;
-							return function (_v9) {
+						}(
+							A2($elm$core$Debug$log, 'Oh no! We got an unexpected error trying to create a game @ ' + config.remotePlayServerUrl, error));
+				}
+			case 'RemoteGameJoined':
+				switch (message.a.$) {
+					case 'UnexpectedError':
+						var error = message.a.a;
+						if (((gameSettings.$ === 'Remote2Players') && (gameSettings.c.$ === 'Joining')) && (gameSettings.c.a.$ === 'FirstTry')) {
+							var _v5 = gameSettings.c.a;
+							return function (_v6) {
+								return A3(
+									$author$project$Main$joinRemoteGame,
+									gameId,
+									$author$project$Player$opponent(player),
+									model);
+							}(
+								A2($elm$core$Debug$log, 'Failed to join server, will retry as other player', error));
+						} else {
+							return function (_v7) {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A3(
+												$author$project$Main$Remote2Players,
+												gameId,
+												player,
+												$author$project$Main$RemoteError(
+													$author$project$Main$UnexpectedHttpError(error)))
+										}),
+									$elm$core$Platform$Cmd$none);
+							}(
+								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error trying to join a game @ ' + config.remotePlayServerUrl, model));
+						}
+					case 'Success':
+						var _v8 = message.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$WaitingForPlayers)
+								}),
+							$elm$core$Platform$Cmd$none);
+					default:
+						switch (message.a.a.$) {
+							case 'GameFullError':
+								var _v9 = message.a.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A3(
+												$author$project$Main$Remote2Players,
+												gameId,
+												player,
+												$author$project$Main$RemoteError(
+													$author$project$Main$Expected('You cannot join this game, it\'s already full!')))
+										}),
+									$elm$core$Platform$Cmd$none);
+							case 'NotSupportedYet':
+								var _v10 = message.a.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A3(
+												$author$project$Main$Remote2Players,
+												gameId,
+												player,
+												$author$project$Main$RemoteError(
+													$author$project$Main$Expected('Remote multiplayer isn\'t supported yet... come back soon :-)')))
+										}),
+									$elm$core$Platform$Cmd$none);
+							default:
+								var _v11 = message.a.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											gameSettings: A3(
+												$author$project$Main$Remote2Players,
+												gameId,
+												player,
+												$author$project$Main$RemoteError(
+													$author$project$Main$Expected('Sorry, this game does not exist!')))
+										}),
+									$elm$core$Platform$Cmd$none);
+						}
+				}
+			default:
+				switch (message.a.$) {
+					case 'Error':
+						var error = message.a.a;
+						if (((gameSettings.$ === 'Remote2Players') && (gameSettings.c.$ === 'Joining')) && (gameSettings.c.a.$ === 'FirstTry')) {
+							var _v13 = gameSettings.c.a;
+							return function (_v14) {
+								return A3(
+									$author$project$Main$joinRemoteGame,
+									gameId,
+									$author$project$Player$opponent(player),
+									model);
+							}(
+								A2($elm$core$Debug$log, 'Failed to join server, will retry as other player', error));
+						} else {
+							return function (_v15) {
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -8986,57 +9019,61 @@ var $author$project$Main$handleRemoteMessage = F4(
 										}),
 									$elm$core$Platform$Cmd$none);
 							}(
-								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error communicating with the remote play server @ ' + config.remotePlayServerUrl, error));
-						case 'PlayerJoined':
-							if (message.a.a.$ === 'X') {
-								var _v10 = message.a.a;
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$WaitingForPlayers)
-										}),
-									A2(
-										$elm$browser$Browser$Navigation$replaceUrl,
-										model.navigationKey,
-										A2(
-											$elm$url$Url$Builder$absolute,
-											_List_fromArray(
-												[gameId]),
-											_List_Nil)));
-							} else {
-								break _v0$13;
-							}
-						case 'GameStarted':
-							var _v11 = message.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$InProgress)
-									}),
-								$elm$core$Platform$Cmd$none);
-						case 'PlayerMove':
-							var _v12 = message.a;
-							var p = _v12.a;
-							var move = _v12.b;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										gameState: A3($author$project$UltimateTicTacToe$performMove, p, move, model.gameState)
-									}),
-								$elm$core$Platform$Cmd$none);
-						default:
-							break _v0$13;
-					}
-			}
+								A2($elm$core$Debug$log, 'Oh no! We got an unexpected error trying to join a game @ ' + config.remotePlayServerUrl, model));
+						}
+					case 'PlayerJoined':
+						var p = message.a.a;
+						return _Utils_eq(p, player) ? _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$WaitingForPlayers)
+								}),
+							A2(
+								$elm$browser$Browser$Navigation$replaceUrl,
+								model.navigationKey,
+								A2(
+									$elm$url$Url$Builder$absolute,
+									_List_fromArray(
+										[gameId]),
+									_List_Nil))) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					case 'PlayerLeft':
+						var p = message.a.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$PlayerDisconnected)
+								}),
+							$elm$core$Platform$Cmd$none);
+					case 'GameStarted':
+						var _v16 = message.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									gameSettings: A3($author$project$Main$Remote2Players, gameId, player, $author$project$Main$InProgress)
+								}),
+							$elm$core$Platform$Cmd$none);
+					case 'PlayerMove':
+						var _v17 = message.a;
+						var p = _v17.a;
+						var move = _v17.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									gameState: A3($author$project$UltimateTicTacToe$performMove, p, move, model.gameState)
+								}),
+							$elm$core$Platform$Cmd$none);
+					default:
+						var otherEvent = message.a;
+						return function (_v18) {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}(
+							A2($elm$core$Debug$log, 'Received unprocessed game event', otherEvent));
+				}
 		}
-		var otherEvent = message.a;
-		return function (_v13) {
-			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-		}(
-			A2($elm$core$Debug$log, 'Received unprocessed game event', otherEvent));
 	});
 var $author$project$Tutorial$Model = {$: 'Model'};
 var $author$project$Tutorial$init = $author$project$Tutorial$Model;
@@ -9382,6 +9419,40 @@ var $author$project$Main$viewChooseDifficultyMenu = function () {
 	return A3($author$project$Window$show, 'Choose difficulty:', _List_Nil, options);
 }();
 var $author$project$Main$RequestedMainMenu = {$: 'RequestedMainMenu'};
+var $author$project$Main$viewCreatingGameMenu = function () {
+	var title = 'Waiting for players...';
+	var contents = _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$p,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Creating game...')
+						]))
+				])),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('menu-item'),
+					$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Cancel')
+				]))
+		]);
+	return A3($author$project$Window$show, title, _List_Nil, contents);
+}();
 var $author$project$Main$viewError = function (error) {
 	var title = 'Woops...';
 	var errorMessage = function () {
@@ -10056,93 +10127,109 @@ var $elm$url$Url$toString = function (url) {
 				url.path)));
 };
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$viewPlayerDisconnectedMenu = F2(
+	function (gameUrl, player) {
+		var title = 'Oh no!';
+		var contents = _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu-item')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('The other player disconnected.')
+							])),
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('They can re-join using the following link:')
+							]))
+					])),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu-item'),
+						$elm$html$Html$Attributes$readonly(true),
+						$elm$html$Html$Attributes$value(
+						$elm$url$Url$toString(gameUrl))
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu-item'),
+						$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Cancel')
+					]))
+			]);
+		return A3($author$project$Window$show, title, _List_Nil, contents);
+	});
 var $author$project$Main$viewWaitingForPlayerMenu = F2(
-	function (maybeGameUrl, player) {
+	function (gameUrl, player) {
 		var title = 'Waiting for players...';
-		var contents = function () {
-			if (maybeGameUrl.$ === 'Just') {
-				var gameUrl = maybeGameUrl.a;
-				return _List_fromArray(
+		var contents = _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu-item')
+					]),
+				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$div,
+						$elm$html$Html$p,
+						_List_Nil,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('menu-item')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$p,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										'Waiting for another player. You\'ll be playing as \'' + ($author$project$Player$toString(player) + '\''))
-									])),
-								A2(
-								$elm$html$Html$p,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text('They can join using the following link:')
-									]))
+								$elm$html$Html$text(
+								'Waiting for another player. You\'ll be playing as \'' + ($author$project$Player$toString(player) + '\''))
 							])),
 						A2(
-						$elm$html$Html$input,
+						$elm$html$Html$p,
+						_List_Nil,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('menu-item'),
-								$elm$html$Html$Attributes$readonly(true),
-								$elm$html$Html$Attributes$value(
-								$elm$url$Url$toString(gameUrl))
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('menu-item'),
-								$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Cancel')
+								$elm$html$Html$text('They can join using the following link:')
 							]))
-					]);
-			} else {
-				return _List_fromArray(
+					])),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('menu-item')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$p,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Creating game...')
-									]))
-							])),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('menu-item'),
-								$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Cancel')
-							]))
-					]);
-			}
-		}();
+						$elm$html$Html$Attributes$class('menu-item'),
+						$elm$html$Html$Attributes$readonly(true),
+						$elm$html$Html$Attributes$value(
+						$elm$url$Url$toString(gameUrl))
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu-item'),
+						$elm$html$Html$Events$onClick($author$project$Main$RequestedMainMenu)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Cancel')
+					]))
+			]);
 		return A3($author$project$Window$show, title, _List_Nil, contents);
 	});
 var $author$project$Main$viewMainElements = function (model) {
@@ -10156,9 +10243,9 @@ var $author$project$Main$viewMainElements = function (model) {
 		var _v0 = _Utils_Tuple2(
 			gameSettings,
 			$author$project$UltimateTicTacToe$winner(gameState.board));
-		_v0$6:
+		_v0$7:
 		while (true) {
-			_v0$7:
+			_v0$8:
 			while (true) {
 				switch (_v0.a.$) {
 					case 'NotYetSelected':
@@ -10171,9 +10258,9 @@ var $author$project$Main$viewMainElements = function (model) {
 							return $elm$core$Maybe$Just($author$project$Main$viewChooseDifficultyMenu);
 						} else {
 							if (_v0.b.$ === 'Just') {
-								break _v0$6;
-							} else {
 								break _v0$7;
+							} else {
+								break _v0$8;
 							}
 						}
 					case 'Remote2Players':
@@ -10189,40 +10276,44 @@ var $author$project$Main$viewMainElements = function (model) {
 								var gameId = _v4.a;
 								var player = _v4.b;
 								var _v5 = _v4.c;
-								return $elm$core$Maybe$Just(
-									A2($author$project$Main$viewWaitingForPlayerMenu, $elm$core$Maybe$Nothing, player));
+								return $elm$core$Maybe$Just($author$project$Main$viewCreatingGameMenu);
 							case 'Joining':
 								var _v6 = _v0.a;
 								var gameId = _v6.a;
 								var player = _v6.b;
-								var _v7 = _v6.c;
-								return $elm$core$Maybe$Just(
-									A2($author$project$Main$viewWaitingForPlayerMenu, $elm$core$Maybe$Nothing, player));
+								return $elm$core$Maybe$Just($author$project$Main$viewCreatingGameMenu);
 							case 'WaitingForPlayers':
-								var _v8 = _v0.a;
-								var gameId = _v8.a;
-								var player = _v8.b;
-								var _v9 = _v8.c;
+								var _v7 = _v0.a;
+								var gameId = _v7.a;
+								var player = _v7.b;
+								var _v8 = _v7.c;
 								var gameUrl = _Utils_update(
 									baseUrl,
 									{path: '/' + gameId});
 								return $elm$core$Maybe$Just(
-									A2(
-										$author$project$Main$viewWaitingForPlayerMenu,
-										$elm$core$Maybe$Just(gameUrl),
-										player));
+									A2($author$project$Main$viewWaitingForPlayerMenu, gameUrl, player));
+							case 'PlayerDisconnected':
+								var _v9 = _v0.a;
+								var gameId = _v9.a;
+								var player = _v9.b;
+								var _v10 = _v9.c;
+								var gameUrl = _Utils_update(
+									baseUrl,
+									{path: '/' + gameId});
+								return $elm$core$Maybe$Just(
+									A2($author$project$Main$viewPlayerDisconnectedMenu, gameUrl, player));
 							default:
 								if (_v0.b.$ === 'Just') {
-									break _v0$6;
-								} else {
 									break _v0$7;
+								} else {
+									break _v0$8;
 								}
 						}
 					default:
 						if (_v0.b.$ === 'Just') {
-							break _v0$6;
-						} else {
 							break _v0$7;
+						} else {
+							break _v0$8;
 						}
 				}
 			}
