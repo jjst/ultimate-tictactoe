@@ -42,7 +42,7 @@ svgView cell message =
                 Just _ ->
                     []
 
-        r =
+        clickArea =
             rect (rectAttrs ++ onClickEvent) []
 
         markDrawing =
@@ -56,7 +56,7 @@ svgView cell message =
                 Just O ->
                     [ drawCircle ]
     in
-    g [] ([ r ] ++ markDrawing)
+    g [] ([ clickArea ] ++ markDrawing)
 
 
 drawCircle : Svg a
