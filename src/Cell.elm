@@ -30,42 +30,44 @@ fromString s =
 
 svgView : Maybe Player -> Cell -> msg -> Svg msg
 svgView maybePlayer cell message =
+    case cell of
+        Nothing ->
+            drawEmptyCell message maybePlayer
+
+        Just player ->
+            drawFilledCell player
+
+
+drawEmptyCell : msg -> Maybe Player -> Svg msg
+drawEmptyCell message maybeGhost =
     let
         rectAttrs =
-            [ x "0", y "0", width "100", height "100", fillOpacity "0.0" ]
-
-        onClickEvent =
-            case cell of
-                Nothing ->
-                    [ onClick message ]
-
-                Just _ ->
-                    []
+            [ x "0", y "0", width "100", height "100", fillOpacity "0.0", onClick message ]
 
         clickArea =
-            rect (rectAttrs ++ onClickEvent) []
-
-        markDrawing =
-            case cell of
-                Nothing ->
-                    drawGhost maybePlayer
-
-                Just X ->
-                    g [ SA.class "mark" ] [ drawCross ]
-
-                Just O ->
-                    g [SA.class "mark" ] [ drawCircle ]
+            rect rectAttrs []
     in
-    g [] ([ markDrawing ] ++ [ clickArea ])
+    g [ SA.class "show-on-hover" ] [ drawGhost maybeGhost, clickArea ]
+
+
 
 drawGhost maybePlayer =
     case maybePlayer of
         Nothing -> 
             g [] []
         Just X ->
-            g [ SA.class "show-on-hover" ] [ drawCross ]
+            g [] [ drawCross ]
         Just O ->
-            g [ SA.class "show-on-hover" ] [ drawCircle ]
+            g [] [ drawCircle ]
+
+drawFilledCell : Player -> Svg a
+drawFilledCell player =
+    let
+        mark = case player of
+            X -> drawCross
+            O -> drawCircle
+    in
+    g [ SA.class "mark" ] [ mark ]
 
 
 
