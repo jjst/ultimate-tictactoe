@@ -28,8 +28,8 @@ fromString s =
             Err <| "Invalid character: " ++ other
 
 
-svgView : Cell -> msg -> Svg msg
-svgView cell message =
+svgView : Maybe Player -> Cell -> msg -> Svg msg
+svgView maybePlayer cell message =
     let
         rectAttrs =
             [ x "0", y "0", width "100", height "100", fillOpacity "0.0" ]
@@ -48,25 +48,35 @@ svgView cell message =
         markDrawing =
             case cell of
                 Nothing ->
-                    []
+                    drawGhost maybePlayer
 
                 Just X ->
-                    [ drawCross ]
+                    g [ SA.class "mark" ] [ drawCross ]
 
                 Just O ->
-                    [ drawCircle ]
+                    g [SA.class "mark" ] [ drawCircle ]
     in
-    g [] ([ clickArea ] ++ markDrawing)
+    g [] ([ markDrawing ] ++ [ clickArea ])
+
+drawGhost maybePlayer =
+    case maybePlayer of
+        Nothing -> 
+            g [] []
+        Just X ->
+            g [ SA.class "show-on-hover" ] [ drawCross ]
+        Just O ->
+            g [ SA.class "show-on-hover" ] [ drawCircle ]
+
 
 
 drawCircle : Svg a
 drawCircle =
-    circle [ cx "50", cy "50", r "40", fillOpacity "0.0", SA.class "circle", SA.style "stroke:red;stroke-width:6" ] []
+    circle [ cx "50", cy "50", r "40", fillOpacity "0.0", SA.style "stroke:red;stroke-width:6" ] []
 
 
 drawCross : Svg a
 drawCross =
-    g [ SA.class "cross", SA.style "stroke:blue;stroke-width:6" ]
+    g [ SA.style "stroke:blue;stroke-width:6" ]
         [ line [ x1 "10", y1 "10", x2 "90", y2 "90" ] []
         , line [ x1 "10", y1 "90", x2 "90", y2 "10" ] []
         ]

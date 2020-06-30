@@ -23,7 +23,7 @@ import Task
 import TicTacToeBase
 import Tuple3 as T3
 import Tutorial
-import UltimateTicTacToe exposing (GameState, Move)
+import UltimateTicTacToe
 import Url
 import Url.Builder as UrlBuilder
 import Url.Parser as UrlParser
@@ -64,7 +64,7 @@ type alias Model =
     { baseUrl : Url.Url
     , navigationKey : Nav.Key
     , config : Config
-    , gameState : GameState
+    , gameState : UltimateTicTacToe.GameState
     , gameSettings : GameSettings
     , windowSize : WindowSize
     }
@@ -78,13 +78,13 @@ type SinglePlayerState
 
 type RemoteState
     = Creating
-    | Joining Try
+    | Joining RemoteJoinTry
     | RemoteError RemoteProblem
     | WaitingForPlayers
     | PlayerDisconnected
     | InProgress
 
-type Try
+type RemoteJoinTry
     = FirstTry
     | SecondTry
 
@@ -154,7 +154,7 @@ type PlayerType
 
 
 type Msg
-    = PerformedMove Player Move
+    = PerformedMove Player UltimateTicTacToe.Move
     | WaitedForAI
     | NewWindowSize WindowSize
     | RemoteGameMsg GameId.GameId Player RemoteMsg
@@ -423,12 +423,12 @@ getInitialWindowSize =
     Task.perform (\viewport -> NewWindowSize { width = round viewport.viewport.width, height = round viewport.viewport.height }) Browser.Dom.getViewport
 
 
-getAIMove : AI.Difficulty -> GameState -> Cmd Msg
+getAIMove : AI.Difficulty -> UltimateTicTacToe.GameState -> Cmd Msg
 getAIMove difficulty currentBoard =
     AI.nextMove moveOrIgnore difficulty currentBoard
 
 
-moveOrIgnore : Maybe Move -> Msg
+moveOrIgnore : Maybe UltimateTicTacToe.Move -> Msg
 moveOrIgnore maybeMove =
     case maybeMove of
         Just move ->
@@ -677,7 +677,7 @@ viewMainMenu maybeWinner =
     Window.show title [ HA.class containerClass ] contents
 
 
-viewGameState : Float -> GameSettings -> GameState -> Html Msg
+viewGameState : Float -> GameSettings -> UltimateTicTacToe.GameState -> Html Msg
 viewGameState minSize gameSettings gameState =
     let
         baseBoardSize =
@@ -712,8 +712,13 @@ viewGameState minSize gameSettings gameState =
                 _ ->
                     PerformedMove gameState.currentPlayer
 
+        playingAs =
+            case gameSettings of
+                LocalVsAI (Playing _) -> Just Player.X
+                _ -> Nothing
+
         svgView =
-            UltimateTicTacToe.svgView msgType gameState
+            UltimateTicTacToe.svgView msgType playingAs gameState
                 |> SvgUtils.scale scale
     in
     svg

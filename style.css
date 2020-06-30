@@ -86,17 +86,12 @@ a:hover {
   animation-duration: 1s;
 }
 
-.circle {
-  animation-name: blinkAnimation;
-  animation-duration: 1s;
-}
-
 .show-on-hover {
   opacity: 0.0;
 }
 
 .show-on-hover:hover {
-  opacity: 0.5;
+  opacity: 0.3;
 }
 
 @keyframes blinkAnimation {

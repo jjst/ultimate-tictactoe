@@ -99,14 +99,14 @@ performMoveFor player ( x, y ) board =
 -- VIEW
 
 
-render : (Move -> msg) -> TicTacToeBoard -> Svg msg
-render f ttt =
-    TicTacToeBase.svgView identity svgViewCell ttt
+render : (Move -> msg) -> Maybe Player -> TicTacToeBoard -> Svg msg
+render f maybePlayer ttt =
+    TicTacToeBase.svgView identity (svgViewCell maybePlayer) ttt
         |> Svg.map  f
 
 
-svgViewCell : Board.Coords -> Cell.Cell -> Svg Move
-svgViewCell ( i, j ) model =
-    Cell.svgView model ( i, j )
+svgViewCell : Maybe Player -> Board.Coords -> Cell.Cell -> Svg Move
+svgViewCell maybePlayer ( i, j ) cell =
+    Cell.svgView maybePlayer cell ( i, j )
         |> SvgUtils.scale (toFloat Sizes.cellSize / 100.0)
         |> SvgUtils.translate (toFloat (T3.toInt i * Sizes.cellSize)) (toFloat (T3.toInt j * Sizes.cellSize))
