@@ -1,4 +1,4 @@
-module UltimateTicTacToe exposing (GameState, Move, Opacity, UltimateTicTacToeBoard, boardOwner, fadedOutOpacity, fromString, init, isValidMove, moveIsInCurrentBoard, normalOpacity, performMove, performMoveFor, renderTicTacToeBoard, shouldFadeOut, svgView, transpose, winner)
+module UltimateTicTacToe exposing (GameState, Move, Opacity, UltimateTicTacToeBoard, boardOwner, fadedOutOpacity, fromString, init, isValidMove, moveIsInCurrentBoard, normalOpacity, performMove, performMoveFor, renderTicTacToeBoard, svgView, transpose, winner)
 
 import Board exposing (..)
 import Cell
@@ -214,10 +214,10 @@ fadedOutOpacity =
 
 
 svgView : (Move -> msg) -> Maybe Player -> GameState -> Svg msg
-svgView f maybePlayingAs ({ board } as model) =
+svgView f ghost ({ board } as model) =
     let
         cells =
-            g [] (flatten <| indexedMap (renderTicTacToeBoard f maybePlayingAs model) board)
+            g [] (flatten <| indexedMap (renderTicTacToeBoard f ghost model) board)
 
         st =
             case ( winningRow boardOwner board, winner board ) of
@@ -241,8 +241,15 @@ svgView f maybePlayingAs ({ board } as model) =
 renderTicTacToeBoard : (Move -> msg) -> Maybe Player -> GameState -> Coords -> TicTacToeBoard -> Svg msg
 renderTicTacToeBoard f maybePlayingAs model (( i, j ) as coords) ticTacToeBoard =
     let
+        boardIsOutOfPlay = isOutOfPlay model coords ticTacToeBoard
+
+        ghost =
+            if boardIsOutOfPlay then
+               Nothing
+            else
+               maybePlayingAs
         renderedBoard =
-            TicTacToe.render (\cellCoords -> f { boardCoords = coords, cellCoords = cellCoords }) maybePlayingAs ticTacToeBoard
+            TicTacToe.render (\cellCoords -> f { boardCoords = coords, cellCoords = cellCoords }) ghost ticTacToeBoard
 
         boardWinner =
             TicTacToe.winner ticTacToeBoard
@@ -259,7 +266,7 @@ renderTicTacToeBoard f maybePlayingAs model (( i, j ) as coords) ticTacToeBoard 
                     []
 
         boardOpacity =
-            if shouldFadeOut model coords ticTacToeBoard then
+            if boardIsOutOfPlay then
                 fadedOutOpacity
 
             else
@@ -273,8 +280,8 @@ renderTicTacToeBoard f maybePlayingAs model (( i, j ) as coords) ticTacToeBoard 
         |> SvgUtils.translate (toFloat (T3.toInt i * Sizes.cellSize)) (toFloat (T3.toInt j * Sizes.cellSize))
 
 
-shouldFadeOut : GameState -> Coords -> TicTacToeBoard -> Bool
-shouldFadeOut model boardCoords ticTacToeBoard =
+isOutOfPlay : GameState -> Coords -> TicTacToeBoard -> Bool
+isOutOfPlay model boardCoords ticTacToeBoard =
     case winner model.board of
         Just _ ->
             True
