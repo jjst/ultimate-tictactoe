@@ -81,14 +81,17 @@ a:hover {
     color: #5C540D;
 }
 
-g.cross {
+.mark {
   animation-name: blinkAnimation;
   animation-duration: 1s;
 }
 
-.circle {
-  animation-name: blinkAnimation;
-  animation-duration: 1s;
+.show-on-hover {
+  opacity: 0.0;
+}
+
+.show-on-hover:hover {
+  opacity: 0.2;
 }
 
 @keyframes blinkAnimation {

@@ -9592,7 +9592,6 @@ var $author$project$TicTacToeBase$grid = function (cellSize) {
 			]));
 };
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
-var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
 var $elm$svg$Svg$Attributes$fillOpacity = _VirtualDom_attribute('fill-opacity');
@@ -9605,7 +9604,6 @@ var $author$project$Cell$drawCircle = A2(
 			$elm$svg$Svg$Attributes$cy('50'),
 			$elm$svg$Svg$Attributes$r('40'),
 			$elm$svg$Svg$Attributes$fillOpacity('0.0'),
-			$elm$svg$Svg$Attributes$class('circle'),
 			$elm$svg$Svg$Attributes$style('stroke:red;stroke-width:6')
 		]),
 	_List_Nil);
@@ -9613,7 +9611,6 @@ var $author$project$Cell$drawCross = A2(
 	$elm$svg$Svg$g,
 	_List_fromArray(
 		[
-			$elm$svg$Svg$Attributes$class('cross'),
 			$elm$svg$Svg$Attributes$style('stroke:blue;stroke-width:6')
 		]),
 	_List_fromArray(
@@ -9640,6 +9637,24 @@ var $author$project$Cell$drawCross = A2(
 			_List_Nil)
 		]));
 var $author$project$UltimateTicTacToe$fadedOutOpacity = 0.15;
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$UltimateTicTacToe$isOutOfPlay = F3(
+	function (model, boardCoords, ticTacToeBoard) {
+		var _v0 = $author$project$UltimateTicTacToe$winner(model.board);
+		if (_v0.$ === 'Just') {
+			return true;
+		} else {
+			var _v1 = model.currentBoardCoords;
+			if (_v1.$ === 'Just') {
+				var cds = _v1.a;
+				return !_Utils_eq(boardCoords, cds);
+			} else {
+				return !_Utils_eq(
+					$author$project$TicTacToe$winner(ticTacToeBoard),
+					$elm$core$Maybe$Nothing);
+			}
+		}
+	});
 var $author$project$UltimateTicTacToe$normalOpacity = 1.0;
 var $elm$svg$Svg$Attributes$opacity = _VirtualDom_attribute('opacity');
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
@@ -9733,65 +9748,90 @@ var $author$project$TicTacToeBase$svgView = F3(
 					]),
 				st));
 	});
+var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
+var $author$project$Cell$drawGhost = function (maybePlayer) {
+	if (maybePlayer.$ === 'Nothing') {
+		return A2($elm$svg$Svg$g, _List_Nil, _List_Nil);
+	} else {
+		if (maybePlayer.a.$ === 'X') {
+			var _v1 = maybePlayer.a;
+			return A2(
+				$elm$svg$Svg$g,
+				_List_Nil,
+				_List_fromArray(
+					[$author$project$Cell$drawCross]));
+		} else {
+			var _v2 = maybePlayer.a;
+			return A2(
+				$elm$svg$Svg$g,
+				_List_Nil,
+				_List_fromArray(
+					[$author$project$Cell$drawCircle]));
+		}
+	}
+};
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
 var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var $elm$svg$Svg$Attributes$x = _VirtualDom_attribute('x');
 var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
-var $author$project$Cell$svgView = F2(
-	function (cell, message) {
+var $author$project$Cell$drawEmptyCell = F2(
+	function (message, maybeGhost) {
 		var rectAttrs = _List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$x('0'),
 				$elm$svg$Svg$Attributes$y('0'),
 				$elm$svg$Svg$Attributes$width('100'),
 				$elm$svg$Svg$Attributes$height('100'),
-				$elm$svg$Svg$Attributes$fillOpacity('0.0')
+				$elm$svg$Svg$Attributes$fillOpacity('0.0'),
+				$elm$html$Html$Events$onClick(message)
 			]);
-		var onClickEvent = function () {
-			if (cell.$ === 'Nothing') {
-				return _List_fromArray(
-					[
-						$elm$html$Html$Events$onClick(message)
-					]);
-			} else {
-				return _List_Nil;
-			}
-		}();
-		var r = A2(
-			$elm$svg$Svg$rect,
-			_Utils_ap(rectAttrs, onClickEvent),
-			_List_Nil);
-		var markDrawing = function () {
-			if (cell.$ === 'Nothing') {
-				return _List_Nil;
-			} else {
-				if (cell.a.$ === 'X') {
-					var _v1 = cell.a;
-					return _List_fromArray(
-						[$author$project$Cell$drawCross]);
-				} else {
-					var _v2 = cell.a;
-					return _List_fromArray(
-						[$author$project$Cell$drawCircle]);
-				}
-			}
-		}();
+		var clickArea = A2($elm$svg$Svg$rect, rectAttrs, _List_Nil);
 		return A2(
 			$elm$svg$Svg$g,
-			_List_Nil,
-			_Utils_ap(
-				_List_fromArray(
-					[r]),
-				markDrawing));
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$class('show-on-hover')
+				]),
+			_List_fromArray(
+				[
+					$author$project$Cell$drawGhost(maybeGhost),
+					clickArea
+				]));
+	});
+var $author$project$Cell$drawFilledCell = function (player) {
+	var mark = function () {
+		if (player.$ === 'X') {
+			return $author$project$Cell$drawCross;
+		} else {
+			return $author$project$Cell$drawCircle;
+		}
+	}();
+	return A2(
+		$elm$svg$Svg$g,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$class('mark')
+			]),
+		_List_fromArray(
+			[mark]));
+};
+var $author$project$Cell$svgView = F3(
+	function (maybePlayer, cell, message) {
+		if (cell.$ === 'Nothing') {
+			return A2($author$project$Cell$drawEmptyCell, message, maybePlayer);
+		} else {
+			var player = cell.a;
+			return $author$project$Cell$drawFilledCell(player);
+		}
 	});
 var $author$project$SvgUtils$translate = F3(
 	function (x, y, elt) {
 		var transform = 'translate(' + ($elm$core$String$fromFloat(x) + (',' + ($elm$core$String$fromFloat(y) + ')')));
 		return A2($author$project$SvgUtils$applyTransform, transform, elt);
 	});
-var $author$project$TicTacToe$svgViewCell = F2(
-	function (_v0, model) {
+var $author$project$TicTacToe$svgViewCell = F3(
+	function (maybePlayer, _v0, cell) {
 		var i = _v0.a;
 		var j = _v0.b;
 		return A3(
@@ -9801,47 +9841,27 @@ var $author$project$TicTacToe$svgViewCell = F2(
 			A2(
 				$author$project$SvgUtils$scale,
 				$author$project$Sizes$cellSize / 100.0,
-				A2(
+				A3(
 					$author$project$Cell$svgView,
-					model,
+					maybePlayer,
+					cell,
 					_Utils_Tuple2(i, j))));
 	});
-var $author$project$TicTacToe$render = F2(
-	function (f, ttt) {
+var $author$project$TicTacToe$render = F3(
+	function (f, maybePlayer, ttt) {
 		return A2(
 			$elm$svg$Svg$map,
 			f,
-			A3($author$project$TicTacToeBase$svgView, $elm$core$Basics$identity, $author$project$TicTacToe$svgViewCell, ttt));
+			A3(
+				$author$project$TicTacToeBase$svgView,
+				$elm$core$Basics$identity,
+				$author$project$TicTacToe$svgViewCell(maybePlayer),
+				ttt));
 	});
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $author$project$UltimateTicTacToe$shouldFadeOut = F3(
-	function (model, boardCoords, ticTacToeBoard) {
-		var _v0 = $author$project$UltimateTicTacToe$winner(model.board);
-		if (_v0.$ === 'Just') {
-			return true;
-		} else {
-			var _v1 = model.currentBoardCoords;
-			if (_v1.$ === 'Just') {
-				var cds = _v1.a;
-				return !_Utils_eq(boardCoords, cds);
-			} else {
-				return !_Utils_eq(
-					$author$project$TicTacToe$winner(ticTacToeBoard),
-					$elm$core$Maybe$Nothing);
-			}
-		}
-	});
-var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F4(
-	function (f, model, coords, ticTacToeBoard) {
+var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F5(
+	function (f, maybePlayingAs, model, coords, ticTacToeBoard) {
 		var i = coords.a;
 		var j = coords.b;
-		var renderedBoard = A2(
-			$author$project$TicTacToe$render,
-			function (cellCoords) {
-				return f(
-					{boardCoords: coords, cellCoords: cellCoords});
-			},
-			ticTacToeBoard);
 		var boardWinner = $author$project$TicTacToe$winner(ticTacToeBoard);
 		var winningMark = function () {
 			if ((boardWinner.$ === 'Just') && (boardWinner.a.$ === 'Left')) {
@@ -9862,7 +9882,17 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F4(
 				return _List_Nil;
 			}
 		}();
-		var boardOpacity = A3($author$project$UltimateTicTacToe$shouldFadeOut, model, coords, ticTacToeBoard) ? $author$project$UltimateTicTacToe$fadedOutOpacity : $author$project$UltimateTicTacToe$normalOpacity;
+		var boardIsOutOfPlay = A3($author$project$UltimateTicTacToe$isOutOfPlay, model, coords, ticTacToeBoard);
+		var boardOpacity = boardIsOutOfPlay ? $author$project$UltimateTicTacToe$fadedOutOpacity : $author$project$UltimateTicTacToe$normalOpacity;
+		var ghost = boardIsOutOfPlay ? $elm$core$Maybe$Nothing : maybePlayingAs;
+		var renderedBoard = A3(
+			$author$project$TicTacToe$render,
+			function (cellCoords) {
+				return f(
+					{boardCoords: coords, cellCoords: cellCoords});
+			},
+			ghost,
+			ticTacToeBoard);
 		var group = A2(
 			$elm$svg$Svg$g,
 			_List_Nil,
@@ -9886,28 +9916,29 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F4(
 			$author$project$Tuple3$toInt(j) * $author$project$Sizes$cellSize,
 			A2($author$project$SvgUtils$scale, 1.0 / 3.0, group));
 	});
-var $author$project$UltimateTicTacToe$svgView = F2(
-	function (f, model) {
+var $author$project$UltimateTicTacToe$svgView = F3(
+	function (f, playingAs, model) {
 		var board = model.board;
+		var currentPlayer = model.currentPlayer;
 		var st = function () {
-			var _v0 = _Utils_Tuple2(
+			var _v1 = _Utils_Tuple2(
 				A2($author$project$Board$winningRow, $author$project$UltimateTicTacToe$boardOwner, board),
 				$author$project$UltimateTicTacToe$winner(board));
-			if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
-				var _v1 = _v0.a.a;
-				var first = _v1.a;
-				var middle = _v1.b;
-				var last = _v1.c;
-				var theWinner = _v0.b.a;
+			if ((_v1.a.$ === 'Just') && (_v1.b.$ === 'Just')) {
+				var _v2 = _v1.a.a;
+				var first = _v2.a;
+				var middle = _v2.b;
+				var last = _v2.c;
+				var theWinner = _v1.b.a;
 				if (theWinner.$ === 'Left') {
 					if (theWinner.a.$ === 'O') {
-						var _v3 = theWinner.a;
+						var _v4 = theWinner.a;
 						return _List_fromArray(
 							[
 								A4($author$project$TicTacToeBase$strikeThrough, 'red', $author$project$Sizes$cellSize, first, last)
 							]);
 					} else {
-						var _v4 = theWinner.a;
+						var _v5 = theWinner.a;
 						return _List_fromArray(
 							[
 								A4($author$project$TicTacToeBase$strikeThrough, 'blue', $author$project$Sizes$cellSize, first, last)
@@ -9920,13 +9951,21 @@ var $author$project$UltimateTicTacToe$svgView = F2(
 				return _List_Nil;
 			}
 		}();
+		var ghost = function () {
+			if (playingAs.$ === 'Nothing') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var p = playingAs.a;
+				return _Utils_eq(currentPlayer, p) ? $elm$core$Maybe$Just(p) : $elm$core$Maybe$Nothing;
+			}
+		}();
 		var cells = A2(
 			$elm$svg$Svg$g,
 			_List_Nil,
 			$author$project$Board$flatten(
 				A2(
 					$author$project$Board$indexedMap,
-					A2($author$project$UltimateTicTacToe$renderTicTacToeBoard, f, model),
+					A3($author$project$UltimateTicTacToe$renderTicTacToeBoard, f, ghost, model),
 					board)));
 		return A2(
 			$elm$svg$Svg$g,
@@ -9943,6 +9982,27 @@ var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
 var $author$project$Main$viewGameState = F3(
 	function (minSize, gameSettings, gameState) {
 		var size = $elm$core$String$fromFloat(minSize);
+		var playingAs = function () {
+			_v3$3:
+			while (true) {
+				switch (gameSettings.$) {
+					case 'LocalVsAI':
+						if (gameSettings.a.$ === 'Playing') {
+							return $elm$core$Maybe$Just($author$project$Player$X);
+						} else {
+							break _v3$3;
+						}
+					case 'Local2Players':
+						return $elm$core$Maybe$Just(gameState.currentPlayer);
+					case 'Remote2Players':
+						var player = gameSettings.b;
+						return $elm$core$Maybe$Just(player);
+					default:
+						break _v3$3;
+				}
+			}
+			return $elm$core$Maybe$Nothing;
+		}();
 		var msgType = function () {
 			if (gameSettings.$ === 'LocalVsAI') {
 				return $author$project$Main$PerformedMove($author$project$Player$X);
@@ -9980,7 +10040,7 @@ var $author$project$Main$viewGameState = F3(
 		var svgView = A2(
 			$author$project$SvgUtils$scale,
 			scale,
-			A2($author$project$UltimateTicTacToe$svgView, msgType, gameState));
+			A3($author$project$UltimateTicTacToe$svgView, msgType, playingAs, gameState));
 		return A2(
 			$elm$svg$Svg$svg,
 			_List_fromArray(
