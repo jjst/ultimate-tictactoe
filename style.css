@@ -81,9 +81,49 @@ a:hover {
     color: #5C540D;
 }
 
-.mark {
-  animation-name: blinkAnimation;
+.animated-meta-circle {
+  opacity: 0.0;
+  animation-name: blinkAnim;
+  animation-delay: 0.9s;
+  animation-duration: 0.7s;
+  animation-fill-mode: forwards;
+}
+
+.animated-meta-cross {
+  opacity: 0.0;
+  animation-name: blinkAnim;
+  animation-delay: 0.9s;
+  animation-duration: 0.7s;
+  animation-fill-mode: forwards;
+}
+
+.animated-circle circle {
+  animation-name: circleAnim;
   animation-duration: 1s;
+  animation-fill-mode: forwards;
+}
+
+.animated-cross line:nth-child(1) {
+  animation-name: crossAnim;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+  stroke-dasharray: 0 20000;
+}
+
+.animated-cross line:nth-child(2) {
+  animation-name: crossAnim;
+  animation-delay: 0.5s;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+  stroke-dasharray: 0 20000;
+}
+
+.animated-stroke {
+  animation-name: strokeAnim;
+  animation-delay: 0.9s;
+  animation-duration: 0.3s;
+  animation-fill-mode: forwards;
+  stroke-dasharray: 0 20000;
 }
 
 .show-on-hover {
@@ -94,11 +134,24 @@ a:hover {
   opacity: 0.2;
 }
 
-@keyframes blinkAnimation {
+@keyframes circleAnim {
+  0%   {stroke-dasharray: 0 20000;}
+  100%   {stroke-dasharray: 360 20000;}
+}
+
+@keyframes crossAnim {
+  0%   {stroke-dasharray: 0 20000;}
+  100%   {stroke-dasharray: 110 20000;}
+}
+
+@keyframes strokeAnim {
+  0%   {stroke-dasharray: 0 20000;}
+  100%   {stroke-dasharray: 650 20000;}
+}
+
+@keyframes blinkAnim {
   0%   {opacity: 1.0;}
-  25% {opacity: 0.2;}
-  50% {opacity: 1.0;}
-  75% {opacity: 0.2;}
+  50% {opacity: 0.2;}
   100% {opacity: 1.0;}
 }
 
@@ -123,7 +176,7 @@ a:hover {
 }
 
 .fade-in.delay {
-  -webkit-animation-delay: 0.6s;
-  -moz-animation-delay: 0.6s;
-  animation-delay: 0.6s;
+  -webkit-animation-delay: 1.5s;
+  -moz-animation-delay: 1.5s;
+  animation-delay: 1.5s;
 }

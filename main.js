@@ -9344,11 +9344,14 @@ var $author$project$Tutorial$view = function (model) {
 		]);
 	return A3($author$project$Window$show, 'Test', _List_Nil, contents);
 };
-var $author$project$Main$prependMaybe = F2(
+var $author$project$Main$appendMaybe = F2(
 	function (list, maybe) {
 		if (maybe.$ === 'Just') {
 			var value = maybe.a;
-			return A2($elm$core$List$cons, value, list);
+			return _Utils_ap(
+				list,
+				_List_fromArray(
+					[value]));
 		} else {
 			return list;
 		}
@@ -9591,6 +9594,7 @@ var $author$project$TicTacToeBase$grid = function (cellSize) {
 				_List_Nil)
 			]));
 };
+var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
 var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
@@ -9688,6 +9692,7 @@ var $author$project$TicTacToeBase$strikeThrough = F4(
 			_List_fromArray(
 				[
 					$elm$svg$Svg$Attributes$style('stroke-width:10;stroke:' + color),
+					$elm$svg$Svg$Attributes$class('animated-stroke'),
 					$elm$svg$Svg$Attributes$x1(
 					A2(toSvgCoords, i1, -0.05)),
 					$elm$svg$Svg$Attributes$y1(
@@ -9748,7 +9753,6 @@ var $author$project$TicTacToeBase$svgView = F3(
 					]),
 				st));
 	});
-var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $author$project$Cell$drawGhost = function (maybePlayer) {
 	if (maybePlayer.$ === 'Nothing') {
 		return A2($elm$svg$Svg$g, _List_Nil, _List_Nil);
@@ -9800,21 +9804,25 @@ var $author$project$Cell$drawEmptyCell = F2(
 				]));
 	});
 var $author$project$Cell$drawFilledCell = function (player) {
-	var mark = function () {
-		if (player.$ === 'X') {
-			return $author$project$Cell$drawCross;
-		} else {
-			return $author$project$Cell$drawCircle;
-		}
-	}();
-	return A2(
-		$elm$svg$Svg$g,
-		_List_fromArray(
-			[
-				$elm$svg$Svg$Attributes$class('mark')
-			]),
-		_List_fromArray(
-			[mark]));
+	if (player.$ === 'X') {
+		return A2(
+			$elm$svg$Svg$g,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$class('animated-cross')
+				]),
+			_List_fromArray(
+				[$author$project$Cell$drawCross]));
+	} else {
+		return A2(
+			$elm$svg$Svg$g,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$class('animated-circle')
+				]),
+			_List_fromArray(
+				[$author$project$Cell$drawCircle]));
+	}
 };
 var $author$project$Cell$svgView = F3(
 	function (maybePlayer, cell, message) {
@@ -9869,13 +9877,31 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F5(
 					var _v1 = boardWinner.a.a;
 					return _List_fromArray(
 						[
-							A2($author$project$SvgUtils$scale, $author$project$Sizes$boardSize / 100.0, $author$project$Cell$drawCross)
+							A2(
+							$elm$svg$Svg$g,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$class('animated-meta-cross')
+								]),
+							_List_fromArray(
+								[
+									A2($author$project$SvgUtils$scale, $author$project$Sizes$boardSize / 100.0, $author$project$Cell$drawCross)
+								]))
 						]);
 				} else {
 					var _v2 = boardWinner.a.a;
 					return _List_fromArray(
 						[
-							A2($author$project$SvgUtils$scale, $author$project$Sizes$boardSize / 100.0, $author$project$Cell$drawCircle)
+							A2(
+							$elm$svg$Svg$g,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$class('animated-meta-circle')
+								]),
+							_List_fromArray(
+								[
+									A2($author$project$SvgUtils$scale, $author$project$Sizes$boardSize / 100.0, $author$project$Cell$drawCircle)
+								]))
 						]);
 				}
 			} else {
@@ -9897,7 +9923,6 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F5(
 			$elm$svg$Svg$g,
 			_List_Nil,
 			_Utils_ap(
-				winningMark,
 				_List_fromArray(
 					[
 						A2(
@@ -9909,7 +9934,8 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F5(
 							]),
 						_List_fromArray(
 							[renderedBoard]))
-					])));
+					]),
+				winningMark));
 		return A3(
 			$author$project$SvgUtils$translate,
 			$author$project$Tuple3$toInt(i) * $author$project$Sizes$cellSize,
@@ -10386,7 +10412,7 @@ var $author$project$Main$viewMainElements = function (model) {
 	}();
 	var gameBoardView = A3($author$project$Main$viewGameState, minSize, gameSettings, gameState);
 	var elementsToDisplay = A2(
-		$author$project$Main$prependMaybe,
+		$author$project$Main$appendMaybe,
 		_List_fromArray(
 			[gameBoardView]),
 		maybeMenu);
