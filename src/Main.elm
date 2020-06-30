@@ -715,6 +715,8 @@ viewGameState minSize gameSettings gameState =
         playingAs =
             case gameSettings of
                 LocalVsAI (Playing _) -> Just Player.X
+                Local2Players -> Just gameState.currentPlayer
+                Remote2Players _ player _ -> Just player
                 _ -> Nothing
 
         svgView =

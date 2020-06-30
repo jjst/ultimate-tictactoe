@@ -214,8 +214,12 @@ fadedOutOpacity =
 
 
 svgView : (Move -> msg) -> Maybe Player -> GameState -> Svg msg
-svgView f ghost ({ board } as model) =
+svgView f playingAs ({ board, currentPlayer } as model) =
     let
+        ghost =
+            case playingAs of
+                Nothing -> Nothing
+                Just p -> if (currentPlayer == p) then (Just p) else Nothing
         cells =
             g [] (flatten <| indexedMap (renderTicTacToeBoard f ghost model) board)
 
