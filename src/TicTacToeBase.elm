@@ -49,6 +49,7 @@ strikeThrough color cellSize ( i1, j1 ) ( i2, j2 ) =
     in
     line
         [ SA.style ("stroke-width:10;stroke:" ++ color)
+        , class "animated-stroke"
         , x1 (toSvgCoords i1 -0.05)
         , y1 (toSvgCoords j1 -0.05)
         , x2 (toSvgCoords i2 0.05)
