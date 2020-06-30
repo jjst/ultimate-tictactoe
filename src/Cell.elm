@@ -53,7 +53,7 @@ drawEmptyCell message maybeGhost =
 
 drawGhost maybePlayer =
     case maybePlayer of
-        Nothing -> 
+        Nothing ->
             g [] []
         Just X ->
             g [] [ drawCross ]
@@ -62,13 +62,11 @@ drawGhost maybePlayer =
 
 drawFilledCell : Player -> Svg a
 drawFilledCell player =
-    let
-        mark = case player of
-            X -> drawCross
-            O -> drawCircle
-    in
-    g [ SA.class "mark" ] [ mark ]
-
+    case player of
+        X ->
+            g [ SA.class "animated-cross" ] [ drawCross ]
+        O ->
+            g [ SA.class "animated-circle" ] [ drawCircle ]
 
 
 drawCircle : Svg a

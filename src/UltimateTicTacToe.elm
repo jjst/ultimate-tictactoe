@@ -261,10 +261,10 @@ renderTicTacToeBoard f maybePlayingAs model (( i, j ) as coords) ticTacToeBoard 
         winningMark =
             case boardWinner of
                 Just (Left Player.X) ->
-                    [ Cell.drawCross |> SvgUtils.scale (toFloat Sizes.boardSize / 100.0) ]
+                    [ g [ class "animated-meta-cross"] [ Cell.drawCross |> SvgUtils.scale (toFloat Sizes.boardSize / 100.0) ] ]
 
                 Just (Left Player.O) ->
-                    [ Cell.drawCircle |> SvgUtils.scale (toFloat Sizes.boardSize / 100.0) ]
+                    [ g [ class "animated-meta-circle"] [ Cell.drawCircle |> SvgUtils.scale (toFloat Sizes.boardSize / 100.0) ] ]
 
                 _ ->
                     []
@@ -277,7 +277,7 @@ renderTicTacToeBoard f maybePlayingAs model (( i, j ) as coords) ticTacToeBoard 
                 normalOpacity
 
         group =
-            g [] (winningMark ++ [ g [ opacity (String.fromFloat boardOpacity) ] [ renderedBoard ] ])
+            g [] ([ g [ opacity (String.fromFloat boardOpacity) ] [ renderedBoard ] ] ++ winningMark)
     in
     group
         |> SvgUtils.scale (1.0 / 3.0)

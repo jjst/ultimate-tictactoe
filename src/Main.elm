@@ -464,11 +464,11 @@ subscriptions model =
 -- VIEW
 
 
-prependMaybe : List a -> Maybe a -> List a
-prependMaybe list maybe =
+appendMaybe : List a -> Maybe a -> List a
+appendMaybe list maybe =
     case maybe of
         Just value ->
-            value :: list
+            list ++ [ value ]
 
         Nothing ->
             list
@@ -548,7 +548,7 @@ viewMainElements ({ baseUrl, config, gameState, gameSettings, windowSize } as mo
                     Nothing
 
         elementsToDisplay =
-            prependMaybe [ gameBoardView ] maybeMenu
+            appendMaybe [ gameBoardView ] maybeMenu
     in
     elementsToDisplay
 
