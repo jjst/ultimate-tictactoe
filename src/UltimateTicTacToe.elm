@@ -1,4 +1,4 @@
-module UltimateTicTacToe exposing (GameState, Move, Opacity, UltimateTicTacToeBoard, boardOwner, fadedOutOpacity, fromString, init, isValidMove, moveIsInCurrentBoard, normalOpacity, performMove, performMoveFor, renderTicTacToeBoard, svgView, transpose, winner)
+module UltimateTicTacToe exposing (GameState, Move, UltimateTicTacToeBoard, boardOwner, fromString, init, isValidMove, moveIsInCurrentBoard, performMove, performMoveFor, renderTicTacToeBoard, svgView, transpose, winner)
 
 import Board exposing (..)
 import Cell
@@ -198,21 +198,6 @@ performMove player ({ boardCoords, cellCoords } as move) ({ board, currentPlayer
 
 -- VIEW
 
-
-type alias Opacity =
-    Float
-
-
-normalOpacity : Opacity
-normalOpacity =
-    1.0
-
-
-fadedOutOpacity : Opacity
-fadedOutOpacity =
-    0.15
-
-
 svgView : (Move -> msg) -> Maybe Player -> GameState -> Svg msg
 svgView f playingAs ({ board, currentPlayer } as model) =
     let
@@ -269,15 +254,15 @@ renderTicTacToeBoard f maybePlayingAs model (( i, j ) as coords) ticTacToeBoard 
                 _ ->
                     []
 
-        boardOpacity =
+        boardClass =
             if boardIsOutOfPlay then
-                fadedOutOpacity
+                "inactive-board"
 
             else
-                normalOpacity
+                "active-board"
 
         group =
-            g [] ([ g [ opacity (String.fromFloat boardOpacity) ] [ renderedBoard ] ] ++ winningMark)
+            g [] ([ g [ class boardClass ] [ renderedBoard ] ] ++ winningMark)
     in
     group
         |> SvgUtils.scale (1.0 / 3.0)

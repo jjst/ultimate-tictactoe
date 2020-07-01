@@ -668,10 +668,10 @@ viewMainMenu maybeWinner =
 
         containerClass =
             if maybeWinner == Nothing then
-                "fade-in"
+                "window-fade-in"
 
             else
-                "fade-in delay"
+                "window-fade-in delay"
 
     in
     Window.show title [ HA.class containerClass ] contents
