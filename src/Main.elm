@@ -213,7 +213,7 @@ update msg ({ config, gameState, gameSettings, windowSize } as model) =
                     in
                         if player == Player.X && (UltimateTicTacToe.winner newState.board == Nothing) then
                             ( { model | gameState = newState, gameSettings = LocalVsAI (WaitingForAI difficulty) }
-                            , Process.sleep 2000.0 |> Task.perform (\_ -> WaitedForAI)
+                            , Process.sleep 1000.0 |> Task.perform (\_ -> WaitedForAI)
                             )
                         else
                             ( { model | gameState = newState }
