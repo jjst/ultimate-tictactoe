@@ -9795,7 +9795,7 @@ var $author$project$Cell$drawEmptyCell = F2(
 			$elm$svg$Svg$g,
 			_List_fromArray(
 				[
-					$elm$svg$Svg$Attributes$class('show-on-hover')
+					$elm$svg$Svg$Attributes$class('ghost')
 				]),
 			_List_fromArray(
 				[
