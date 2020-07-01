@@ -47,7 +47,7 @@ drawEmptyCell message maybeGhost =
         clickArea =
             rect rectAttrs []
     in
-    g [ SA.class "show-on-hover" ] [ drawGhost maybeGhost, clickArea ]
+    g [ SA.class "ghost" ] [ drawGhost maybeGhost, clickArea ]
 
 
 

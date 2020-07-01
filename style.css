@@ -84,7 +84,7 @@ a:hover {
 .animated-meta-circle {
   opacity: 0.0;
   animation-name: blinkAnim;
-  animation-delay: 0.9s;
+  animation-delay: 0.8s;
   animation-duration: 0.7s;
   animation-fill-mode: forwards;
 }
@@ -92,28 +92,28 @@ a:hover {
 .animated-meta-cross {
   opacity: 0.0;
   animation-name: blinkAnim;
-  animation-delay: 0.9s;
+  animation-delay: 0.8s;
   animation-duration: 0.7s;
   animation-fill-mode: forwards;
 }
 
 .animated-circle circle {
   animation-name: circleAnim;
-  animation-duration: 1s;
+  animation-duration: 0.7s;
   animation-fill-mode: forwards;
 }
 
 .animated-cross line:nth-child(1) {
   animation-name: crossAnim;
-  animation-duration: 0.5s;
+  animation-duration: 0.32s;
   animation-fill-mode: forwards;
   stroke-dasharray: 0 20000;
 }
 
 .animated-cross line:nth-child(2) {
   animation-name: crossAnim;
-  animation-delay: 0.5s;
-  animation-duration: 0.5s;
+  animation-delay: 0.32s;
+  animation-duration: 0.32s;
   animation-fill-mode: forwards;
   stroke-dasharray: 0 20000;
 }
@@ -126,12 +126,12 @@ a:hover {
   stroke-dasharray: 0 20000;
 }
 
-.show-on-hover {
+.ghost {
   opacity: 0.0;
 }
 
-.show-on-hover:hover {
-  opacity: 0.2;
+.ghost:hover {
+  opacity: 0.6;
 }
 
 @keyframes circleAnim {
