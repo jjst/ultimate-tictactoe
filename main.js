@@ -9165,7 +9165,7 @@ var $author$project$Main$update = F2(
 											function (_v4) {
 												return $author$project$Main$WaitedForAI;
 											},
-											$elm$core$Process$sleep(2000.0))) : _Utils_Tuple2(
+											$elm$core$Process$sleep(1000.0))) : _Utils_Tuple2(
 										_Utils_update(
 											model,
 											{gameState: newState}),
@@ -9640,7 +9640,6 @@ var $author$project$Cell$drawCross = A2(
 				]),
 			_List_Nil)
 		]));
-var $author$project$UltimateTicTacToe$fadedOutOpacity = 0.15;
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$UltimateTicTacToe$isOutOfPlay = F3(
 	function (model, boardCoords, ticTacToeBoard) {
@@ -9659,8 +9658,6 @@ var $author$project$UltimateTicTacToe$isOutOfPlay = F3(
 			}
 		}
 	});
-var $author$project$UltimateTicTacToe$normalOpacity = 1.0;
-var $elm$svg$Svg$Attributes$opacity = _VirtualDom_attribute('opacity');
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$svg$Svg$map = $elm$virtual_dom$VirtualDom$map;
 var $author$project$Tuple3$toInt = function (index) {
@@ -9909,7 +9906,6 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F5(
 			}
 		}();
 		var boardIsOutOfPlay = A3($author$project$UltimateTicTacToe$isOutOfPlay, model, coords, ticTacToeBoard);
-		var boardOpacity = boardIsOutOfPlay ? $author$project$UltimateTicTacToe$fadedOutOpacity : $author$project$UltimateTicTacToe$normalOpacity;
 		var ghost = boardIsOutOfPlay ? $elm$core$Maybe$Nothing : maybePlayingAs;
 		var renderedBoard = A3(
 			$author$project$TicTacToe$render,
@@ -9919,6 +9915,7 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F5(
 			},
 			ghost,
 			ticTacToeBoard);
+		var boardClass = boardIsOutOfPlay ? 'inactive-board' : 'active-board';
 		var group = A2(
 			$elm$svg$Svg$g,
 			_List_Nil,
@@ -9929,8 +9926,7 @@ var $author$project$UltimateTicTacToe$renderTicTacToeBoard = F5(
 						$elm$svg$Svg$g,
 						_List_fromArray(
 							[
-								$elm$svg$Svg$Attributes$opacity(
-								$elm$core$String$fromFloat(boardOpacity))
+								$elm$svg$Svg$Attributes$class(boardClass)
 							]),
 						_List_fromArray(
 							[renderedBoard]))
@@ -10148,7 +10144,7 @@ var $author$project$Main$viewMainMenu = function (maybeWinner) {
 					$elm$html$Html$text('2 Players (remote)')
 				]))
 		]);
-	var containerClass = _Utils_eq(maybeWinner, $elm$core$Maybe$Nothing) ? 'fade-in' : 'fade-in delay';
+	var containerClass = _Utils_eq(maybeWinner, $elm$core$Maybe$Nothing) ? 'window-fade-in' : 'window-fade-in delay';
 	return A3(
 		$author$project$Window$show,
 		title,
