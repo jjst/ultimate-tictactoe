@@ -82,24 +82,23 @@ a:hover {
 }
 
 @keyframes blinkAnim {
-  0%   {opacity: 1.0;}
-  50% {opacity: 0.2;}
+  0% {opacity: 0.0;}
   100% {opacity: 1.0;}
 }
 
 .animated-meta-circle {
   opacity: 0.0;
   animation-name: blinkAnim;
-  animation-delay: 0.8s;
-  animation-duration: 0.7s;
+  animation-delay: 0.7s;
+  animation-duration: 0.4s;
   animation-fill-mode: forwards;
 }
 
 .animated-meta-cross {
   opacity: 0.0;
   animation-name: blinkAnim;
-  animation-delay: 0.8s;
-  animation-duration: 0.7s;
+  animation-delay: 0.7s;
+  animation-duration: 0.4s;
   animation-fill-mode: forwards;
 }
 
@@ -141,7 +140,7 @@ a:hover {
 
 .animated-stroke {
   animation-name: strokeAnim;
-  animation-delay: 0.9s;
+  animation-delay: 0.5s;
   animation-duration: 0.3s;
   animation-fill-mode: forwards;
   stroke-dasharray: 0 20000;
