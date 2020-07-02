@@ -135,7 +135,7 @@ a:hover {
 
 @keyframes strokeAnim {
   0%   {stroke-dasharray: 0 20000;}
-  100%   {stroke-dasharray: 650 20000;}
+  100%   {stroke-dasharray: 850 20000;}
 }
 
 .animated-stroke {
