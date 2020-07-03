@@ -6,7 +6,7 @@
 # Ultimate Tic-tac-toe
 An implementation of [Ultimate Tic-tac-toe](https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/) in your browser, in Elm. Supports singleplayer, as well as local and remote multiplayer modes.
 
-![board](http://i.imgur.com/VbXU7vj.png)
+![A Gif showing the gameplay](https://i.imgur.com/VblIjJ4.gif)
 
 ## Install and run
 
